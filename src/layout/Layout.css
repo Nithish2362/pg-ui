@@ -1,0 +1,65 @@
+.nav-header-shell {
+  background: #022d46;
+  color: white;
+  border-bottom: none;
+}
+
+.nav-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 100%;
+  padding: 0 2rem;
+}
+
+.logo-text {
+  font-size: 1.25rem;
+  font-weight: 900;
+  margin-right: 2rem;
+  color: #8BC53F;
+}
+
+.nav-item {
+  padding: 0 1rem;
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100%;
+}
+
+.active-indicator {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: #8BC53F;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.active-indicator.visible {
+  opacity: 1;
+}
+
+.user-section {
+  display: flex;
+  align-items: center;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-right: 1rem;
+}
+
+.nav-item:hover .active-indicator {
+  opacity: 0.5;
+}
+
+.nav-item:hover .active-indicator.visible {
+  opacity: 1;
+}
