@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import api from '../api';
+import api from '../../api/Interceptor';
 
 const Tenants = () => {
   const [tenants, setTenants] = useState([]);
   const [rooms, setRooms] = useState([]);
   const [beds, setBeds] = useState([]);
-  console.log(beds,"beds")
   const [showForm, setShowForm] = useState(false);
   const [msg, setMsg] = useState('');
   const [form, setForm] = useState({
@@ -23,7 +22,7 @@ const Tenants = () => {
   const loadBeds = async (roomId) => {
     setForm(f => ({ ...f, roomId, bedId: '' }));
     const res = await api.get(`/admin/beds/room/${roomId}/available`);
-    setBeds(res.data.data.response || res.data.response);
+    setBeds(res.data.response || res.data.data || []);
   };
 
   const save = async (e) => {
@@ -31,7 +30,8 @@ const Tenants = () => {
     try {
       const { roomId, bedId, ...tenantData } = form;
       const res = await api.post(`/admin/tenants?bedId=${bedId}`, tenantData);
-      setMsg(`Tenant created! PG Number: ${res.data.data.pgNumber} | Default password: pg@${tenantData.mobileNumber}`);
+      const createdTenant = res.data.response || res.data.data || {};
+      setMsg(`Tenant created! PG Number: ${createdTenant.pgNumber} | Default password: pg@${tenantData.mobileNumber}`);
       setShowForm(false); setForm({ studentName: '', mobileNumber: '', fatherName: '', fatherMobile: '', motherName: '', motherMobile: '', email: '', dob: '', address: '', roomId: '', bedId: '' });
       load();
     } catch (err) { setMsg(err.response?.data?.message || 'Error creating tenant'); }

@@ -1,9 +1,9 @@
-import { AppShell, Avatar, Button, Container, Group, rem, Tabs } from '@mantine/core';
-import { IconLogout, IconUserCircle } from '@tabler/icons-react';
-import { createContext, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { AppShell, Avatar, Button, Container, Group, Tabs } from '@mantine/core';
+import { IconLogout } from '@tabler/icons-react';
+import { createContext, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { ModuleJson } from '../utils/ModuleJson';
-import './Layout.css';
+import { ModuleJson } from '../moduleData/ModuleJson';
+import '../css/Header.css';
 
 export const ActiveTabContext = createContext();
 
@@ -15,14 +15,12 @@ export default function Layout() {
     childParentId: null,
     buttonGroup: []
   });
-  const [user, setUser] = useState(JSON.parse(localStorage.getItem('user')));
+  const [user] = useState(JSON.parse(localStorage.getItem('user')));
 
   const navigate = useNavigate();
   const { state, pathname } = useLocation();
-  const appShellRef = useRef(null);
   
   const headerData = useMemo(() => ModuleJson(null), []);
-console.log(headerData,"dta")
   useEffect(() => {
     if (state) {
       setStateData((prevState) => ({
@@ -33,39 +31,37 @@ console.log(headerData,"dta")
         childParentId: state.childParentId,
         buttonGroup: state.childParentId ? ModuleJson(state.childParentId) : [],
       }));
-    } else {
-        // Try to find current path in headerData to set active state
-        const findPath = (data, path) => {
-            for(let item of data) {
-                if(item.path === path) return item;
-                if(item.children) {
-                    const found = findPath(item.children, path);
-                    if(found) return found;
-                }
-            }
-            return null;
-        }
-        
-        const currentItem = findPath(headerData, pathname);
-        if(currentItem) {
-            // This is a bit simplified, but helps with refreshes
-        }
+      return;
     }
-  }, [state, headerData, pathname]);
+
+    if (headerData.length > 0) {
+      const firstHeader = headerData[0];
+      const childParentId = firstHeader.defaultChildId || null;
+      setStateData((prevState) => ({
+        ...prevState,
+        parentId: firstHeader.id,
+        activeIndex: 0,
+        childTabs: firstHeader.children || [],
+        childParentId,
+        buttonGroup: childParentId ? ModuleJson(childParentId) : [],
+      }));
+    }
+  }, [state, headerData]);
 
   const handleLinkClick = useCallback((index, tab) => {
     navigate(tab.path, { state: { parentId: tab.id, tabs: tab.children, childParentId: tab.defaultChildId, activeIndex: index } });
   }, [navigate]);
 
   const handleTabClick = useCallback((tabId) => {
-    const tab = stateData.childTabs.find(t => t.id === tabId);
+    const tab = stateData.childTabs.find(t => String(t.id) === String(tabId));
     if(tab) {
         navigate(tab.path, { state: { parentId: stateData.parentId, tabs: stateData.childTabs, buttonGroup: tab.children, childParentId: tab.id, activeIndex: stateData.activeIndex } });
     }
   }, [navigate, stateData]);
 
   const handleButtonClick = useCallback((tab) => {
-    navigate(tab.path, { state: { parentId: stateData.parentId, tabs: stateData.childTabs, buttonGroup: stateData.buttonGroup, childParentId: tab.parentId, activeIndex: stateData.activeIndex } });
+    const parentId = tab.parent_id ?? tab.parentId;
+    navigate(tab.path, { state: { parentId: stateData.parentId, tabs: stateData.childTabs, buttonGroup: stateData.buttonGroup, childParentId: parentId, activeIndex: stateData.activeIndex } });
   }, [navigate, stateData]);
 
   const checkCurrentPathMatch = (button) => {
@@ -109,10 +105,10 @@ console.log(headerData,"dta")
 
         <AppShell.Main>
           {stateData.childTabs?.length > 0 && (
-            <Tabs value={stateData.childParentId} onChange={handleTabClick} variant="pills" mb="md">
+            <Tabs value={stateData.childParentId ? String(stateData.childParentId) : null} onChange={handleTabClick} variant="pills" mb="md">
               <Tabs.List>
                 {stateData.childTabs.map(tab => (
-                  <Tabs.Tab key={tab.id} value={tab.id}>{tab.name}</Tabs.Tab>
+                  <Tabs.Tab key={tab.id} value={String(tab.id)}>{tab.name}</Tabs.Tab>
                 ))}
               </Tabs.List>
             </Tabs>

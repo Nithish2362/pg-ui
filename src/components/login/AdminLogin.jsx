@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../api';
+import api from '../../api/Interceptor';
+import { END_POINTS } from '../../api/EndPoints';
 
-const Login = () => {
+const AdminLogin = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -11,7 +12,7 @@ const Login = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await api.post('/auth/login', { username, password });
+      const res = await api.post(END_POINTS.AUTH_LOGIN, { username, password });
       const loginData = res.data.response;
       if (loginData.role !== 'ROLE_ADMIN' && loginData.role !== 'ADMIN') { 
         setError('Access denied. Admin only.'); 
@@ -27,7 +28,7 @@ const Login = () => {
 
   const handleRegister = async () => {
     try {
-      await api.post('/auth/register', { 
+      await api.post(END_POINTS.AUTH_REGISTER, {
         username, 
         password, 
         role: 'ADMIN',
@@ -65,4 +66,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default AdminLogin;
