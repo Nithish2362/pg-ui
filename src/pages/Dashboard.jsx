@@ -12,7 +12,7 @@ const Dashboard = () => {
 
   return (
     <div>
-      <div className="page-header"><h2>Dashboard</h2></div>
+      <div className="page-header"><h2>DASHBOARD</h2></div>
       <div className="stats-grid">
         <div className="stat-card"><div className="stat-label">Total Rooms</div><div className="stat-value">{stats.totalRooms || 0}</div></div>
         <div className="stat-card success"><div className="stat-label">Active Tenants</div><div className="stat-value">{stats.activeTenants || 0}</div></div>
