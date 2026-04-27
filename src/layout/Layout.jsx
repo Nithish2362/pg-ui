@@ -77,7 +77,7 @@ export default function Layout() {
 
   return (
     <ActiveTabContext.Provider value={contextValue}>
-      <AppShell header={{ height: 60 }} padding="md">
+      <AppShell header={{ height: 50 }} padding="md">
         <AppShell.Header className="nav-header-shell">
           <nav className='nav-bar'>
             <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -95,7 +95,7 @@ export default function Layout() {
                   <span>Hi, {user?.username}</span>
                   <Avatar size="sm" color="blue" radius="xl">{user?.username?.charAt(0).toUpperCase()}</Avatar>
                 </div>
-                <Button variant="subtle" color="gray" size="xs" onClick={handleLogout} leftSection={<IconLogout size={14} />}>
+                <Button color="gray" size="xs" onClick={handleLogout} leftSection={<IconLogout size={14} />}>
                   Logout
                 </Button>
               </Group>
@@ -115,14 +115,13 @@ export default function Layout() {
           )}
 
           {stateData.buttonGroup?.length > 0 && (
-            <Group mb="md">
+            <Group >
               {stateData.buttonGroup.map((button) => (
                 <Button
                   key={button.id}
                   variant={checkCurrentPathMatch(button) ? 'filled' : 'default'}
                   color={checkCurrentPathMatch(button) ? 'blue' : 'gray'}
                   onClick={() => handleButtonClick(button)}
-                  radius="md"
                 >
                   + {button.name}
                 </Button>
