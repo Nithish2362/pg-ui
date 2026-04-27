@@ -52,7 +52,7 @@ const Tenants = () => {
           <h3 style={{ marginBottom: '1rem' }}>Register New Tenant</h3>
           <form onSubmit={save}>
             <div className="form-grid">
-              <div className="form-group"><label>Student Name *</label><input value={form.studentName} onChange={e => setForm({ ...form, studentName: e.target.value })} required /></div>
+              <div className="form-group"><label>Student name *</label><input value={form.studentName} onChange={e => setForm({ ...form, studentName: e.target.value })} required /></div>
               <div className="form-group"><label>Mobile Number *</label><input value={form.mobileNumber} onChange={e => setForm({ ...form, mobileNumber: e.target.value })} required /></div>
               <div className="form-group"><label>Email *</label><input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} required /></div>
               <div className="form-group"><label>Date of Birth</label><input type="date" value={form.dob} onChange={e => setForm({ ...form, dob: e.target.value })} /></div>
