@@ -17,6 +17,7 @@ const Locations = () => {
     state: "",
     city: "",
     locationName: "",
+    locationNumber: "",
     address: "",
   });
 
@@ -60,6 +61,7 @@ const Locations = () => {
         state: "",
         city: "",
         locationName: "",
+        locationNumber: "",
         address: "",
       });
 
@@ -188,6 +190,19 @@ const Locations = () => {
                   setForm({
                     ...form,
                     locationName: e.target.value,
+                  })
+                }
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Location Number</label>
+              <input
+                value={form.locationNumber}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    locationNumber: e.target.value,
                   })
                 }
               />
