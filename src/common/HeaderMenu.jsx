@@ -3,7 +3,8 @@ import { IconBolt } from '@tabler/icons-react';
 import React, { useEffect, useMemo, useState } from 'react';
 import { getpayLoadFromToken } from './JwtPayload';
 import { createB2BAPI } from '../api/Interceptor';
-import notify from '../components/settings/utils/Notification';
+import notify from '../components/utils/Notification';
+
 import moment from 'moment/moment';
 import B2BSelect from './B2BSelect';
 

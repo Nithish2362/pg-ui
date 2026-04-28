@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Modal, Button, TextInput, Select, Text, Group } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import api from "../../../api/Interceptor";
-import notify from "../utils/Notification";
+import notify from "../../utils/Notification";
+
 import useDebounce from "../../../common/useDebounce";
 
 const Buildings = () => {

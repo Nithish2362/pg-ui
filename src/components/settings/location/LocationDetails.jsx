@@ -3,7 +3,8 @@ import { Modal, Button } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import api from "../../../api/Interceptor";
 import indiaLocations from "./StatesAndDistricts.json";
-import notify from "../utils/Notification";
+import notify from "../../utils/Notification";
+
 import useDebounce from "../../../common/useDebounce";
 
 const Locations = () => {
