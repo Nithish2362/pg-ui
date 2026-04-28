@@ -12,6 +12,7 @@ const Tenants = lazy(() => import('./components/crm/Tenants'));
 const Payments = lazy(() => import('./components/settings/payment/Payments'));
 const Locations = lazy(() => import('./components/settings/location/LocationDetails'));
 const Buildings = lazy(() => import('./components/settings/warehouse/Building'));
+const Beds = lazy(() => import('./components/settings/warehouse/Bed'));
 const NotFound = lazy(() => import('./common/NotFound'));
 
 const ProtectedRoute = ({ element: Component }) => {
@@ -45,6 +46,7 @@ function App() {
           <Route path="/buildings" element={<ProtectedRoute element={Buildings} />} />
           <Route path="/floors" element={<ProtectedRoute element={Floors} />} />
           <Route path="/rooms" element={<ProtectedRoute element={Rooms} />} />
+          <Route path="/beds" element={<ProtectedRoute element={Beds} />} />
           <Route path="/tenants" element={<ProtectedRoute element={Tenants} />} />
           <Route path="/payments" element={<ProtectedRoute element={Payments} />} />
           <Route path="/" element={<Navigate to="/dashboard" />} />
