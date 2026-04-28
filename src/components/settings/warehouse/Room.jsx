@@ -19,10 +19,10 @@ const Rooms = () => {
     roomType: "AC",
     sharingType: 2,
     monthlyRent: "",
-    totalBeds: "",
+    totalBeds: 2,
     floorId: "",
   });
-
+  console.log()
   const [editingId, setEditingId] = useState(null);
   const debouncedSearch = useDebounce(search, 500);
 
@@ -227,9 +227,17 @@ const Rooms = () => {
                   { value: "3", label: "3 Sharing" },
                   { value: "4", label: "4 Sharing" },
                   { value: "5", label: "5 Sharing" },
+                  { value: "6", label: "6 Sharing" },
+
                 ]}
-                value={String(form.sharingType)}
-                onChange={(val) => setForm({ ...form, sharingType: val })}
+                value={form.sharingType}
+                onChange={(val) =>
+                  setForm({
+                    ...form,
+                    sharingType: val,
+                    totalBeds: val, // auto set beds same as sharing
+                  })
+                }
                 required
               />
             </div>
@@ -251,7 +259,6 @@ const Rooms = () => {
                 type="number"
                 placeholder="Number of beds"
                 value={form.totalBeds}
-                onChange={(e) => setForm({ ...form, totalBeds: e.target.value })}
                 required
               />
             </div>

@@ -15,11 +15,12 @@ const Locations = () => {
   const [opened, { open, close }] = useDisclosure(false);
 
   const [form, setForm] = useState({
+    country: "India",
+    state: "",
+    city: "",
     locationName: "",
     locationNumber: "",
     address: "",
-    city: "",
-    state: "",
   });
 
   const debouncedSearch = useDebounce(search, 500);
@@ -27,24 +28,27 @@ const Locations = () => {
   const states = Object.keys(indiaLocations);
   const cities = form.state ? indiaLocations[form.state] : [];
 
-  // ================== LOAD LOCATIONS ==================
+  // ================= LOAD LOCATIONS =================
   const load = async () => {
     try {
       setLoading(true);
+
       const res = await api.get("/admin/locations/get-all");
 
-      // FIXED: Handle SuccessResponse structure properly
-      const responseData = res.data.response || res.data.data || res.data;
+      const responseData =
+        res.data.response || res.data.data || res.data || [];
+
       setItems(Array.isArray(responseData) ? responseData : []);
-      
     } catch (error) {
       console.error("Error loading locations:", error);
+
       notify({
         title: "Error!",
         message: "Failed to load locations.",
         success: false,
         error: true,
       });
+
       setItems([]);
     } finally {
       setLoading(false);
@@ -55,18 +59,20 @@ const Locations = () => {
     load();
   }, []);
 
-  // ================== CREATE LOCATION ==================
+  // ================= SAVE LOCATION =================
   const save = async (e) => {
     e.preventDefault();
 
     const payload = {
       locationName: form.locationName,
+      locationNumber: form.locationNumber,
       address: form.address,
       city: form.city,
+      state: form.state,
     };
 
     try {
-      const res = await api.post("/admin/locations", payload);
+      await api.post("/admin/locations", payload);
 
       notify({
         title: "Success!",
@@ -87,16 +93,18 @@ const Locations = () => {
       load();
     } catch (error) {
       console.error(error);
+
       notify({
         title: "Error!",
-        message: error.response?.data?.message || "Failed to save location.",
+        message:
+          error.response?.data?.message || "Failed to save location.",
         success: false,
         error: true,
       });
     }
   };
 
-  // ================== DELETE LOCATION ==================
+  // ================= DELETE LOCATION =================
   const openDeleteModal = (location) => {
     setSelectedLocation(location);
     open();
@@ -132,11 +140,12 @@ const Locations = () => {
     }
   };
 
-  // Client-side filter with debounce
+  // ================= FILTER =================
   const filteredItems = items.filter((l) => {
     if (!debouncedSearch.trim()) return true;
 
     const text = debouncedSearch.toLowerCase();
+
     return (
       l.locationName?.toLowerCase().includes(text) ||
       l.locationId?.toLowerCase().includes(text) ||
@@ -167,11 +176,20 @@ const Locations = () => {
               <label>State</label>
               <select
                 value={form.state}
-                onChange={(e) => setForm({ ...form, state: e.target.value, city: "" })}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    state: e.target.value,
+                    city: "",
+                  })
+                }
               >
                 <option value="">Select State</option>
+
                 {states.map((state, i) => (
-                  <option key={i} value={state}>{state}</option>
+                  <option key={i} value={state}>
+                    {state}
+                  </option>
                 ))}
               </select>
             </div>
@@ -180,11 +198,19 @@ const Locations = () => {
               <label>District / City</label>
               <select
                 value={form.city}
-                onChange={(e) => setForm({ ...form, city: e.target.value })}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    city: e.target.value,
+                  })
+                }
               >
                 <option value="">Select City</option>
+
                 {cities.map((city, i) => (
-                  <option key={i} value={city}>{city}</option>
+                  <option key={i} value={city}>
+                    {city}
+                  </option>
                 ))}
               </select>
             </div>
@@ -206,6 +232,7 @@ const Locations = () => {
             <div className="form-group">
               <label>Location Number</label>
               <input
+                placeholder="Enter Location Number"
                 value={form.locationNumber}
                 onChange={(e) =>
                   setForm({
@@ -221,7 +248,12 @@ const Locations = () => {
               <input
                 placeholder="Full Address"
                 value={form.address}
-                onChange={(e) => setForm({ ...form, address: e.target.value })}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    address: e.target.value,
+                  })
+                }
               />
             </div>
           </div>
@@ -229,7 +261,12 @@ const Locations = () => {
           <button
             type="submit"
             className="btn btn-primary"
-            disabled={!form.state || !form.city || !form.locationName || !form.address}
+            disabled={
+              !form.state ||
+              !form.city ||
+              !form.locationName ||
+              !form.address
+            }
           >
             Save Location
           </button>
@@ -243,10 +280,14 @@ const Locations = () => {
 
           <input
             type="text"
-            placeholder="Search by Location ID, Name, City or Address..."
+            placeholder="Search by ID, Name, City or Address..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            style={{ width: "340px", padding: "10px 12px", borderRadius: "6px" }}
+            style={{
+              width: "340px",
+              padding: "10px 12px",
+              borderRadius: "6px",
+            }}
           />
         </div>
 
@@ -261,10 +302,13 @@ const Locations = () => {
               <th>Actions</th>
             </tr>
           </thead>
+
           <tbody>
             {filteredItems.map((l) => (
               <tr key={l.id || l.locationId}>
-                <td><strong>{l.locationId || "-"}</strong></td>
+                <td>
+                  <strong>{l.locationId || "-"}</strong>
+                </td>
                 <td>{l.locationName}</td>
                 <td>{l.city || "-"}</td>
                 <td>{l.address || "-"}</td>
@@ -282,8 +326,17 @@ const Locations = () => {
 
             {filteredItems.length === 0 && (
               <tr>
-                <td colSpan="6" style={{ textAlign: "center", padding: "40px", color: "#64748b" }}>
-                  {loading ? "Loading locations..." : "No locations found"}
+                <td
+                  colSpan="6"
+                  style={{
+                    textAlign: "center",
+                    padding: "40px",
+                    color: "#64748b",
+                  }}
+                >
+                  {loading
+                    ? "Loading locations..."
+                    : "No locations found"}
                 </td>
               </tr>
             )}
@@ -302,9 +355,22 @@ const Locations = () => {
           Are you sure you want to delete{" "}
           <strong>{selectedLocation?.locationName}</strong>?
         </p>
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "25px" }}>
-          <Button color="gray" onClick={closeDeleteModal}>Cancel</Button>
-          <Button color="red" onClick={confirmDelete}>Yes, Delete</Button>
+
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: "10px",
+            marginTop: "25px",
+          }}
+        >
+          <Button color="gray" onClick={closeDeleteModal}>
+            Cancel
+          </Button>
+
+          <Button color="red" onClick={confirmDelete}>
+            Yes, Delete
+          </Button>
         </div>
       </Modal>
     </div>
