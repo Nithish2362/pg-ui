@@ -105,7 +105,7 @@ export default function Layout() {
 
         <AppShell.Main>
           {stateData.childTabs?.length > 0 && (
-            <Tabs value={stateData.childParentId ? String(stateData.childParentId) : null} onChange={handleTabClick} variant="pills" mb="md">
+            <Tabs value={stateData.childParentId ? String(stateData.childParentId) : null} onChange={handleTabClick}  mb="md">
               <Tabs.List>
                 {stateData.childTabs.map(tab => (
                   <Tabs.Tab key={tab.id} value={String(tab.id)}>{tab.name}</Tabs.Tab>

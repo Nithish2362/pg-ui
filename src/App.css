@@ -25,7 +25,7 @@ body {
   color: var(--text);
 }
 
-#root { display: flex; min-height: 100vh; }
+#root { display: flex;}
 
 .login-page {
   display: flex; align-items: center; justify-content: center;
@@ -76,7 +76,7 @@ body {
   display: flex; justify-content: space-between; align-items: center;
   margin-bottom: 1.5rem;
 }
-.page-header h2 { font-size: 1.5rem; font-weight: 700; }
+.page-header h2 { font-size: 1.5rem;color: #6390d7 !important;  font-weight: 700; }
 
 .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
 .stat-card {
@@ -103,7 +103,7 @@ th { padding: 0.75rem 1.5rem; text-align: left; font-size: 0.75rem; font-weight:
 td { padding: 0.75rem 1.5rem; border-bottom: 1px solid var(--border); font-size: 0.875rem; }
 tr:hover { background: #f8fafc; }
 
-.form-card { background: var(--card); padding: 2rem; border-radius: 0.75rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 1.5rem; }
+.form-card { background: var(--card); border-radius: 0.75rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 1.5rem; }
 .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; }
 .form-group { margin-bottom: 1rem; }
 .form-group label { display: block; margin-bottom: 0.4rem; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.03em; }
