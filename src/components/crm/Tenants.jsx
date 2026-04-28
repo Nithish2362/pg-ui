@@ -215,14 +215,13 @@ const Tenants = () => {
 
       {/* Form Card */}
       <div className="form-card">
-        <h3 style={{ marginBottom: "15px" }}>
+        <h3 style={{ marginBottom: "25px" }}>
           {editingId ? "Edit Tenant" : "Register New Tenant"}
         </h3>
 
         <form onSubmit={save}>
           <Grid gutter="md">
             {/* Student Details */}
-            <Grid.Col span={12}><Text weight={600} size="sm" color="blue">Student Details</Text></Grid.Col>
             <Grid.Col span={4}>
               <TextInput label="Student Name" placeholder="Full Name" value={form.studentName} onChange={(e) => setForm({ ...form, studentName: e.target.value })} required />
             </Grid.Col>
@@ -320,16 +319,17 @@ const Tenants = () => {
           </thead>
           <tbody>
             {filteredItems.map((t) => (
+              console.log(t,"huhhu"),
               <tr key={t.id || t.pgNumber}>
                 <td><strong>{t.pgNumber}</strong></td>
-                <td>{t.studentName}</td>
+                <td><strong>{t.studentName}</strong></td>
                 <td>
                   <Text size="xs">{t.mobileNumber}</Text>
                   <Text size="xs" color="dimmed">{t.email}</Text>
                 </td>
                 <td>
-                   <Badge variant="outline">{t.bed?.room?.roomNumber || "N/A"}</Badge>
-                   <Text size="xs" span ml={5}>Bed: {t.bed?.bedNumber || "N/A"}</Text>
+                   <Badge variant="outline">{t.roomName || "N/A"}</Badge>
+                   <Text size="xs" span ml={5}>Bed: {t.bedNumber || "N/A"}</Text>
                 </td>
                 <td>
                   <Badge color={t.status === "ACTIVE" ? "green" : "red"} variant="light">

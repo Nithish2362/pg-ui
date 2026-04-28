@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Modal, Button } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import api from "../../../api/Interceptor";
 import indiaLocations from "./StatesAndDistricts.json";
 import notify from "../../utils/Notification";
-
 import useDebounce from "../../../common/useDebounce";
 
 const Locations = () => {
@@ -29,27 +28,23 @@ const Locations = () => {
   const states = Object.keys(indiaLocations);
   const cities = form.state ? indiaLocations[form.state] : [];
 
-  // ================= LOAD LOCATIONS =================
+  // ================= LOAD =================
   const load = async () => {
     try {
       setLoading(true);
 
       const res = await api.get("/admin/locations/get-all");
 
-      const responseData =
-        res.data.response || res.data.data || res.data || [];
+      const data = res.data.response || res.data.data || res.data || [];
 
-      setItems(Array.isArray(responseData) ? responseData : []);
+      setItems(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error("Error loading locations:", error);
-
       notify({
         title: "Error!",
         message: "Failed to load locations.",
         success: false,
         error: true,
       });
-
       setItems([]);
     } finally {
       setLoading(false);
@@ -60,20 +55,20 @@ const Locations = () => {
     load();
   }, []);
 
-  // ================= SAVE LOCATION =================
+  // ================= INPUT CHANGE =================
+  const handleChange = (key, value) => {
+    setForm((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+  };
+
+  // ================= SAVE =================
   const save = async (e) => {
     e.preventDefault();
 
-    const payload = {
-      locationName: form.locationName,
-      locationNumber: form.locationNumber,
-      address: form.address,
-      city: form.city,
-      state: form.state,
-    };
-
     try {
-      await api.post("/admin/locations", payload);
+      await api.post("/admin/locations", form);
 
       notify({
         title: "Success!",
@@ -93,8 +88,6 @@ const Locations = () => {
 
       load();
     } catch (error) {
-      console.error(error);
-
       notify({
         title: "Error!",
         message:
@@ -105,7 +98,7 @@ const Locations = () => {
     }
   };
 
-  // ================= DELETE LOCATION =================
+  // ================= DELETE =================
   const openDeleteModal = (location) => {
     setSelectedLocation(location);
     open();
@@ -142,27 +135,28 @@ const Locations = () => {
   };
 
   // ================= FILTER =================
-  const filteredItems = items.filter((l) => {
+  const filteredItems = items.filter((item) => {
     if (!debouncedSearch.trim()) return true;
 
     const text = debouncedSearch.toLowerCase();
 
     return (
-      l.locationName?.toLowerCase().includes(text) ||
-      l.locationId?.toLowerCase().includes(text) ||
-      l.locationNumber?.toLowerCase().includes(text) ||
-      l.city?.toLowerCase().includes(text) ||
-      l.address?.toLowerCase().includes(text)
+      item.locationId?.toLowerCase().includes(text) ||
+      item.locationName?.toLowerCase().includes(text) ||
+      item.locationNumber?.toLowerCase().includes(text) ||
+      item.city?.toLowerCase().includes(text) ||
+      item.address?.toLowerCase().includes(text)
     );
   });
 
   return (
     <div>
+      {/* Header */}
       <div className="page-header">
         <h2>Location Management</h2>
       </div>
 
-      {/* Add Form */}
+      {/* Form */}
       <div className="form-card">
         <h3 style={{ marginBottom: "15px" }}>Add New Location</h3>
 
@@ -177,18 +171,15 @@ const Locations = () => {
               <label>State</label>
               <select
                 value={form.state}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    state: e.target.value,
-                    city: "",
-                  })
-                }
+                onChange={(e) => {
+                  handleChange("state", e.target.value);
+                  handleChange("city", "");
+                }}
               >
                 <option value="">Select State</option>
 
-                {states.map((state, i) => (
-                  <option key={i} value={state}>
+                {states.map((state, index) => (
+                  <option key={index} value={state}>
                     {state}
                   </option>
                 ))}
@@ -199,17 +190,12 @@ const Locations = () => {
               <label>District / City</label>
               <select
                 value={form.city}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    city: e.target.value,
-                  })
-                }
+                onChange={(e) => handleChange("city", e.target.value)}
               >
                 <option value="">Select City</option>
 
-                {cities.map((city, i) => (
-                  <option key={i} value={city}>
+                {cities.map((city, index) => (
+                  <option key={index} value={city}>
                     {city}
                   </option>
                 ))}
@@ -222,10 +208,7 @@ const Locations = () => {
                 placeholder="Enter Location Name"
                 value={form.locationName}
                 onChange={(e) =>
-                  setForm({
-                    ...form,
-                    locationName: e.target.value,
-                  })
+                  handleChange("locationName", e.target.value)
                 }
               />
             </div>
@@ -236,10 +219,7 @@ const Locations = () => {
                 placeholder="Enter Location Number"
                 value={form.locationNumber}
                 onChange={(e) =>
-                  setForm({
-                    ...form,
-                    locationNumber: e.target.value,
-                  })
+                  handleChange("locationNumber", e.target.value)
                 }
               />
             </div>
@@ -250,10 +230,7 @@ const Locations = () => {
                 placeholder="Full Address"
                 value={form.address}
                 onChange={(e) =>
-                  setForm({
-                    ...form,
-                    address: e.target.value,
-                  })
+                  handleChange("address", e.target.value)
                 }
               />
             </div>
@@ -305,19 +282,19 @@ const Locations = () => {
           </thead>
 
           <tbody>
-            {filteredItems.map((l) => (
-              <tr key={l.id || l.locationId}>
+            {filteredItems.map((item) => (
+              <tr key={item.id || item.locationId}>
                 <td>
-                  <strong>{l.locationId || "-"}</strong>
+                  <strong>{item.locationId || "-"}</strong>
                 </td>
-                <td>{l.locationName}</td>
-                <td>{l.city || "-"}</td>
-                <td>{l.address || "-"}</td>
-                <td>{l.buildings?.length || 0}</td>
+                <td>{item.locationName || "-"}</td>
+                <td>{item.city || "-"}</td>
+                <td>{item.address || "-"}</td>
+                <td>{item.buildings?.length || 0}</td>
                 <td>
                   <button
                     className="btn btn-danger btn-sm"
-                    onClick={() => openDeleteModal(l)}
+                    onClick={() => openDeleteModal(item)}
                   >
                     Delete
                   </button>
