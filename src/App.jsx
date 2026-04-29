@@ -1,6 +1,7 @@
 import React, { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import './App.css';
+import { ModuleJson } from './moduleData/ModuleJson';
 
 // Lazy loading components
 const Login = lazy(() => import('./components/login/AdminLogin'));
@@ -28,9 +29,20 @@ const ProtectedRoute = ({ element: Component }) => {
     return <Navigate to="/login" />;
   }
 
-  if (user?.views?.length > 0) {
-    const isAllowed = user.views.some(view => location.pathname.includes(view.path));
-    if (!isAllowed && location.pathname !== '/dashboard') {
+  // Use ModuleJson to check permissions instead of raw user.views
+  const allViews = ModuleJson(null);
+  const flattenedViews = [];
+  const flatten = (views) => {
+    views.forEach(v => {
+      flattenedViews.push(v);
+      if (v.children) flatten(v.children);
+    });
+  };
+  flatten(allViews);
+
+  if (flattenedViews.length > 0) {
+    const isAllowed = flattenedViews.some(view => location.pathname.includes(view.path));
+    if (!isAllowed && location.pathname !== '/dashboard' && location.pathname !== '/') {
       return <Navigate to="/dashboard" />;
     }
   }
@@ -57,6 +69,10 @@ function App() {
           <Route path="/notices" element={<ProtectedRoute element={Notices} />} />
           <Route path="/logs" element={<ProtectedRoute element={TenantLogs} />} />
           <Route path="/visitors" element={<ProtectedRoute element={Visitors} />} />
+          
+          {/* Root Redirects */}
+          <Route path="/property" element={<Navigate to="/tenants" />} />
+          <Route path="/community" element={<Navigate to="/complaints" />} />
           <Route path="/" element={<Navigate to="/dashboard" />} />
         </Route>
 
