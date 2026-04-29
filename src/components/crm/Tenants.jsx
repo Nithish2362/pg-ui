@@ -99,7 +99,6 @@ const Tenants = () => {
         });
         const created = res.data?.response || res.data?.data || {};
         notify({
-          title: "✅ Tenant Registered!",
           message: `PG No: ${created.pgNumber} — Status: ACTIVE. Initial payment recorded successfully.`,
           success: true,
         });
