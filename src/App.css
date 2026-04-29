@@ -4,14 +4,15 @@
   --sidebar-bg: #1e1b4b;
   --sidebar-hover: #312e81;
   --sidebar-active: #4338ca;
-  --primary: #6366f1;
-  --primary-hover: #4f46e5;
-  --bg: #f1f5f9;
+  --primary: #022d46;
+  --primary-hover: #034163;
+  --accent: #8BC53F;
+  --bg: #f8fafc;
   --card: #ffffff;
-  --text: #1e293b;
+  --text: #0f172a;
   --text-muted: #64748b;
   --border: #e2e8f0;
-  --success: #22c55e;
+  --success: #10b981;
   --warning: #f59e0b;
   --danger: #ef4444;
   --info: #3b82f6;
@@ -76,7 +77,12 @@ body {
   display: flex; justify-content: space-between; align-items: center;
   margin-bottom: 1.5rem;
 }
-.page-header h2 { font-size: 1.5rem;color: #6390d7 !important;  font-weight: 700; }
+.page-header h2 { 
+  font-size: 1.6rem; 
+  color: #022d46 !important; 
+  font-weight: 800; 
+  letter-spacing: -0.5px;
+}
 
 .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
 .stat-card {
@@ -90,8 +96,9 @@ body {
 .stat-card .stat-value { font-size: 2rem; font-weight: 700; margin-top: 0.25rem; }
 
 .data-card {
-  background: var(--card); border-radius: 0.75rem;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow: hidden; margin-bottom: 1.5rem;
+  background: var(--card); border-radius: 1rem;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.05); overflow: hidden; margin-bottom: 1.5rem;
+  border: 1px solid var(--border);
 }
 .data-card-header {
   padding: 1rem 1.5rem; border-bottom: 1px solid var(--border);
@@ -103,7 +110,11 @@ th { padding: 0.75rem 1.5rem; text-align: left; font-size: 0.75rem; font-weight:
 td { padding: 0.75rem 1.5rem; border-bottom: 1px solid var(--border); font-size: 0.875rem; }
 tr:hover { background: #f8fafc; }
 
-.form-card { background: var(--card); border-radius: 0.75rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 1.5rem; }
+.form-card { 
+  background: var(--card); border-radius: 1rem; 
+  box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 1.5rem; padding: 2rem; 
+  border: 1px solid var(--border);
+}
 .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; }
 .form-group { margin-bottom: 1rem; }
 .form-group label { display: block; margin-bottom: 0.4rem; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.03em; }
@@ -140,3 +151,64 @@ tr:hover { background: #f8fafc; }
 .alert { padding: 0.75rem 1rem; border-radius: 0.5rem; margin-bottom: 1rem; font-size: 0.875rem; }
 .alert-error { background: #fee2e2; color: #991b1b; }
 .alert-success { background: #dcfce7; color: #166534; }
+
+/* Mantine Tabs Overrides */
+.mantine-Tabs-list {
+  border-bottom: 2px solid var(--border) !important;
+  gap: 1.5rem;
+  margin-bottom: 2rem !important;
+}
+
+.mantine-Tabs-tab {
+  padding: 0.75rem 0 !important;
+  font-weight: 600 !important;
+  color: var(--text-muted) !important;
+  border-bottom: 3px solid transparent !important;
+  transition: all 0.2s ease !important;
+}
+
+.mantine-Tabs-tab:hover {
+  color: var(--primary) !important;
+  background: transparent !important;
+}
+
+.mantine-Tabs-tab[data-active] {
+  color: var(--accent) !important;
+  border-color: var(--accent) !important;
+  background: transparent !important;
+}
+
+.mantine-Tabs-tabLabel {
+  font-size: 0.95rem;
+}
+
+/* Enhanced Tabs UI */
+.mantine-Tabs-list {
+  border-bottom: 2px solid var(--border) !important;
+  gap: 2rem !important; /* Increased gap */
+  margin-bottom: 2.5rem !important;
+  padding: 0 0.5rem !important;
+}
+
+.mantine-Tabs-tab {
+  padding: 1rem 0 !important;
+  font-size: 1rem !important;
+  letter-spacing: 0.3px !important;
+  opacity: 0.7;
+}
+
+.mantine-Tabs-tab:hover {
+  opacity: 1;
+}
+
+.mantine-Tabs-tab[data-active] {
+  opacity: 1;
+  font-weight: 700 !important;
+}
+
+.mantine-Tabs-list {
+  background: rgba(2, 45, 70, 0.02);
+  padding: 0 1.5rem !important;
+  border-radius: 12px;
+  border-bottom: 1px solid var(--border) !important;
+}

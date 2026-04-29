@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { SimpleGrid, Paper, Text, Group, ThemeIcon, Skeleton } from '@mantine/core';
+import { IconUsers, IconCurrencyRupee, IconBed, IconAlertCircle, IconHistory } from '@tabler/icons-react';
 import api from '../../api/Interceptor';
 
 const Dashboard = () => {
@@ -14,36 +16,62 @@ const Dashboard = () => {
        .finally(() => setLoading(false));
   }, []);
 
+  const data = [
+    { title: 'Total / Active Tenants', icon: IconUsers, color: 'blue', value: `${stats.totalTenants || 0} / ${stats.activeTenants || 0}`, path: '/tenants' },
+    { title: 'Total Revenue', icon: IconCurrencyRupee, color: 'teal', value: `₹${stats.totalRevenue || 0}`, path: '/payments' },
+    { title: 'Available Beds', icon: IconBed, color: 'cyan', value: stats.availableBeds || 0, path: '/beds' },
+    { title: 'Open Complaints', icon: IconAlertCircle, color: 'red', value: stats.openComplaints || 0, path: '/complaints' },
+    { title: 'Today Activity', icon: IconHistory, color: 'grape', value: `${stats.todayCheckIns || 0} In/Outs`, path: '/logs' },
+  ];
+
   return (
     <div>
-      <div className="page-header"><h2>📊 DASHBOARD</h2></div>
+      <div className="page-header">
+        <h2>📊 DASHBOARD</h2>
+      </div>
       
-      {loading ? (
-        <div style={{ textAlign: "center", padding: "50px" }}>Loading stats...</div>
-      ) : (
-        <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
-          <div className="stat-card" style={{ background: '#f8f9fa', padding: '20px', borderRadius: '10px', cursor: 'pointer' }} onClick={() => navigate('/tenants')}>
-            <div className="stat-label">Total / Active Tenants</div>
-            <div className="stat-value">{stats.totalTenants || 0} / {stats.activeTenants || 0}</div>
-          </div>
-          <div className="stat-card success" style={{ background: '#e6fcf5', padding: '20px', borderRadius: '10px', cursor: 'pointer' }} onClick={() => navigate('/payments')}>
-            <div className="stat-label">Total Revenue</div>
-            <div className="stat-value">₹{stats.totalRevenue || 0}</div>
-          </div>
-          <div className="stat-card info" style={{ background: '#e7f5ff', padding: '20px', borderRadius: '10px', cursor: 'pointer' }} onClick={() => navigate('/beds')}>
-            <div className="stat-label">Available Beds</div>
-            <div className="stat-value">{stats.availableBeds || 0}</div>
-          </div>
-          <div className="stat-card warning" style={{ background: '#fff9db', padding: '20px', borderRadius: '10px', cursor: 'pointer' }} onClick={() => navigate('/complaints')}>
-            <div className="stat-label">Open Complaints</div>
-            <div className="stat-value">{stats.openComplaints || 0}</div>
-          </div>
-          <div className="stat-card" style={{ background: '#f3f0ff', padding: '20px', borderRadius: '10px', cursor: 'pointer' }} onClick={() => navigate('/logs')}>
-            <div className="stat-label">Total Log Activity</div>
-            <div className="stat-value">{stats.todayCheckIns || 0} In/Outs</div>
-          </div>
-        </div>
-      )}
+      <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="xl">
+        {loading ? (
+          Array(5).fill(0).map((_, i) => <Skeleton key={i} height={120} radius="md" />)
+        ) : (
+          data.map((stat) => (
+            <Paper 
+              key={stat.title} 
+              p="xl" 
+              radius="md" 
+              withBorder 
+              onClick={() => navigate(stat.path)}
+              style={{ 
+                cursor: 'pointer',
+                transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-5px)';
+                e.currentTarget.style.boxShadow = '0 10px 20px rgba(0,0,0,0.05)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
+            >
+              <Group justify="space-between">
+                <Text size="xs" c="dimmed" fw={700} tt="uppercase">
+                  {stat.title}
+                </Text>
+                <ThemeIcon color={stat.color} variant="light" size={38} radius="md">
+                  <stat.icon size={24} stroke={1.5} />
+                </ThemeIcon>
+              </Group>
+
+              <Group align="flex-end" gap="xs" mt={25}>
+                <Text size="xl" fw={800} style={{ fontSize: '1.8rem', lineHeight: 1 }}>
+                  {stat.value}
+                </Text>
+              </Group>
+            </Paper>
+          ))
+        )}
+      </SimpleGrid>
     </div>
   );
 };

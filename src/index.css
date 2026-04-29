@@ -66,17 +66,6 @@ h1, h2, h3, h4 {
   padding: 0 40px;
 }
 
-.logo-text {
-  font-family: 'Outfit', sans-serif;
-  font-weight: 800;
-  font-size: 1.4rem;
-  letter-spacing: -0.02em;
-  margin-right: 60px;
-  background: linear-gradient(135deg, #000, #444);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
 .nav-item {
   padding: 0 20px;
   height: 100%;
@@ -106,7 +95,7 @@ h1, h2, h3, h4 {
 }
 
 .active-indicator.visible {
-  width: 60%;
+  width: 100%;
 }
 
 /* Ultimate Premium Button */

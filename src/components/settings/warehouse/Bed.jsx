@@ -190,7 +190,7 @@ const Beds = () => {
 
           <Group mt="md">
             <Button type="submit" className="btn btn-primary">
-              {editingId ? "Update Bed" : "Save Bed"}
+              {editingId ? "Update Bed" : "Add Bed"}
             </Button>
             {editingId && (
               <Button variant="outline" color="gray" onClick={cancelEdit}>

@@ -1,6 +1,6 @@
-import { AppShell, Avatar, Button, Container, Group, Tabs } from '@mantine/core';
+import { AppShell, Avatar, Button, Group, Tabs } from '@mantine/core';
 import { IconLogout } from '@tabler/icons-react';
-import { createContext, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import { createContext, Suspense, useCallback, useMemo } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { ModuleJson } from '../moduleData/ModuleJson';
 import '../css/Header.css';
@@ -8,84 +8,74 @@ import '../css/Header.css';
 export const ActiveTabContext = createContext();
 
 export default function Layout() {
-  const [stateData, setStateData] = useState({
-    parentId: null,
-    activeIndex: 0,
-    childTabs: [],
-    childParentId: null,
-    buttonGroup: []
-  });
-  const [user] = useState(JSON.parse(localStorage.getItem('user')));
+  const [user] = [JSON.parse(localStorage.getItem('user'))];
 
   const navigate = useNavigate();
-  const { state, pathname } = useLocation();
-  
+  const { pathname } = useLocation();
+
+  // ── All top-level nav items (Dashboard, Property, Residents, Community)
   const headerData = useMemo(() => ModuleJson(null), []);
-  useEffect(() => {
-    if (state) {
-      setStateData((prevState) => ({
-        ...prevState,
-        parentId: state.parentId,
-        activeIndex: state.activeIndex,
-        childTabs: state.tabs,
-        childParentId: state.childParentId,
-        buttonGroup: state.childParentId ? ModuleJson(state.childParentId) : [],
-      }));
-      return;
-    }
 
-    if (headerData.length > 0) {
-      const firstHeader = headerData[0];
-      const childParentId = firstHeader.defaultChildId || null;
-      setStateData((prevState) => ({
-        ...prevState,
-        parentId: firstHeader.id,
-        activeIndex: 0,
-        childTabs: firstHeader.children || [],
-        childParentId,
-        buttonGroup: childParentId ? ModuleJson(childParentId) : [],
-      }));
+  // ── Determine which top-level item is active based on current pathname
+  const activeHeader = useMemo(() => {
+    // Find exact path match first (e.g. /dashboard)
+    let match = headerData.find(h => h.path === pathname);
+    if (match) return match;
+    // Then check children for path match
+    for (const header of headerData) {
+      if (header.children?.some(c => c.path === pathname)) {
+        return header;
+      }
     }
-  }, [state, headerData]);
+    return headerData[0] || null;
+  }, [headerData, pathname]);
 
-  const handleLinkClick = useCallback((index, tab) => {
-    navigate(tab.path, { state: { parentId: tab.id, tabs: tab.children, childParentId: tab.defaultChildId, activeIndex: index } });
+  // ── Child tabs for current active header
+  const childTabs = useMemo(() => activeHeader?.children || [], [activeHeader]);
+
+  // ── Active tab: the child whose path matches current pathname
+  const activeTab = useMemo(() => {
+    return childTabs.find(t => t.path === pathname) || childTabs[0] || null;
+  }, [childTabs, pathname]);
+
+  // ── Navigate to header item (go to its default child or own path)
+  const handleHeaderClick = useCallback((header) => {
+    if (header.children?.length > 0) {
+      const defaultChild = header.children.find(c => c.id === header.defaultChildId) || header.children[0];
+      navigate(defaultChild.path);
+    } else {
+      navigate(header.path);
+    }
   }, [navigate]);
 
+  // ── Navigate to a sub-tab
   const handleTabClick = useCallback((tabId) => {
-    const tab = stateData.childTabs.find(t => String(t.id) === String(tabId));
-    if(tab) {
-        navigate(tab.path, { state: { parentId: stateData.parentId, tabs: stateData.childTabs, buttonGroup: tab.children, childParentId: tab.id, activeIndex: stateData.activeIndex } });
-    }
-  }, [navigate, stateData]);
-
-  const handleButtonClick = useCallback((tab) => {
-    const parentId = tab.parent_id ?? tab.parentId;
-    navigate(tab.path, { state: { parentId: stateData.parentId, tabs: stateData.childTabs, buttonGroup: stateData.buttonGroup, childParentId: parentId, activeIndex: stateData.activeIndex } });
-  }, [navigate, stateData]);
-
-  const checkCurrentPathMatch = (button) => {
-    return button.path === pathname;
-  }
+    const tab = childTabs.find(t => String(t.id) === String(tabId));
+    if (tab) navigate(tab.path);
+  }, [navigate, childTabs]);
 
   const handleLogout = () => {
     localStorage.clear();
     navigate('/login');
   };
 
-  const contextValue = { stateData, setStateData, user };
+  const contextValue = { user, activeHeader, activeTab, childTabs };
 
   return (
     <ActiveTabContext.Provider value={contextValue}>
       <AppShell header={{ height: 50 }} padding="md">
         <AppShell.Header className="nav-header-shell">
           <nav className='nav-bar'>
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              <div className="logo-text">PG MANAGER</div>
-              {headerData.map((headernav, index) => (
-                <div key={headernav.id} className="nav-item" onClick={() => handleLinkClick(index, headernav)}>
-                  <span style={{ fontWeight: index === stateData.activeIndex ? '900' : '500' }}>{headernav.name}</span>
-                  <span className={`active-indicator ${index === stateData.activeIndex ? 'visible' : ''}`}></span>
+            <div style={{ display: 'flex', alignItems: 'center', height: '100%', gap: '1.5rem' }}>
+              <div className="logo-text">PG ADMIN</div>
+              {headerData.map((headernav) => (
+                <div
+                  key={headernav.id}
+                  className={`nav-item ${activeHeader?.id === headernav.id ? 'nav-item-active' : ''}`}
+                  onClick={() => handleHeaderClick(headernav)}
+                >
+                  <span>{headernav.name}</span>
+                  <span className={`active-indicator ${activeHeader?.id === headernav.id ? 'visible' : ''}`}></span>
                 </div>
               ))}
             </div>
@@ -104,36 +94,21 @@ export default function Layout() {
         </AppShell.Header>
 
         <AppShell.Main>
-          {stateData.childTabs?.length > 0 && (
-            <Tabs value={stateData.childParentId ? String(stateData.childParentId) : null} onChange={handleTabClick}  mb="md">
-              <Tabs.List>
-                {stateData.childTabs.map(tab => (
-                  <Tabs.Tab key={tab.id} value={String(tab.id)}>{tab.name}</Tabs.Tab>
-                ))}
-              </Tabs.List>
-            </Tabs>
-          )}
+          <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 1rem' }}>
+            {childTabs.length > 0 && (
+              <Tabs value={activeTab ? String(activeTab.id) : null} onChange={handleTabClick} mb="md">
+                <Tabs.List>
+                  {childTabs.map(tab => (
+                    <Tabs.Tab key={tab.id} value={String(tab.id)}>{tab.name}</Tabs.Tab>
+                  ))}
+                </Tabs.List>
+              </Tabs>
+            )}
 
-          {stateData.buttonGroup?.length > 0 && (
-            <Group >
-              {stateData.buttonGroup.map((button) => (
-                <Button
-                  key={button.id}
-                  variant={checkCurrentPathMatch(button) ? 'filled' : 'default'}
-                  color={checkCurrentPathMatch(button) ? 'blue' : 'gray'}
-                  onClick={() => handleButtonClick(button)}
-                >
-                  + {button.name}
-                </Button>
-              ))}
-            </Group>
-          )}
-
-          <Container size="xl">
-            <Suspense fallback={<div>Loading...</div>}>
+            <Suspense fallback={<div style={{ padding: '2rem', textAlign: 'center' }}>Loading...</div>}>
               <Outlet />
             </Suspense>
-          </Container>
+          </div>
         </AppShell.Main>
       </AppShell>
     </ActiveTabContext.Provider>

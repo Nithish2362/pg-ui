@@ -42,14 +42,15 @@ const Visitors = () => {
     }
   };
 
+  const formatDate = (dateStr) => {
+    if (!dateStr) return "—";
+    return new Date(dateStr).toLocaleString();
+  };
+
   const statusColors = {
     PENDING: "yellow",
     APPROVED: "green",
     REJECTED: "red"
-  };
-
-    if (!dateStr) return "—";
-    return new Date(dateStr).toLocaleString();
   };
 
   const columns = [
