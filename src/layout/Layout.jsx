@@ -67,7 +67,7 @@ export default function Layout() {
         <AppShell.Header className="nav-header-shell">
           <nav className='nav-bar'>
             <div style={{ display: 'flex', alignItems: 'center', height: '100%', gap: '1.5rem' }}>
-              <div className="logo-text">PG ADMIN</div>
+              <div className="logo-text">🏠 PG ADMIN</div>
               {headerData.map((headernav) => (
                 <div
                   key={headernav.id}
@@ -94,7 +94,7 @@ export default function Layout() {
         </AppShell.Header>
 
         <AppShell.Main>
-          <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 1rem' }}>
+          <div >
             {childTabs.length > 0 && (
               <Tabs value={activeTab ? String(activeTab.id) : null} onChange={handleTabClick} mb="md">
                 <Tabs.List>
