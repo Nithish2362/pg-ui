@@ -106,3 +106,17 @@ code {
   padding: 4px 8px;
   background: var(--code-bg);
 }
+
+/* Global Table Center Alignment */
+table {
+  width: 100%;
+}
+
+th, td {
+  text-align: center !important;
+  vertical-align: middle !important;
+}
+
+.mantine-Table-th, .mantine-Table-td {
+  text-align: center !important;
+}

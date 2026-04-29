@@ -252,7 +252,13 @@ const Buildings = () => {
       </div>
 
       {/* Delete Confirmation Modal */}
-      <Modal opened={opened} onClose={close} title="Delete Building" centered>
+      <Modal opened={opened} onClose={close} title="Delete Building"   styles={{
+    title: {
+      fontSize: "18px",
+      fontWeight: 600,
+      color: "#e03131", // red color
+    },
+  }}centered>
         <Text size="sm">
           Are you sure you want to delete building <strong>{selectedItem?.buildingName}</strong>? This action cannot be undone.
         </Text>

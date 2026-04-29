@@ -328,6 +328,13 @@ const Locations = () => {
         onClose={closeDeleteModal}
         centered
         title="Delete Location"
+          styles={{
+    title: {
+      fontSize: "18px",
+      fontWeight: 600,
+      color: "#e03131", // red color
+    },
+  }}
       >
         <p>
           Are you sure you want to delete{" "}

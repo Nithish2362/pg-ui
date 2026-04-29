@@ -266,7 +266,13 @@ const Floors = () => {
         </table>
       </div>
 
-      <Modal opened={opened} onClose={close} title="Delete Floor" centered>
+      <Modal opened={opened} onClose={close} title="Delete Floor"  styles={{
+    title: {
+      fontSize: "18px",
+      fontWeight: 600,
+      color: "#e03131", // red color
+    },
+  }} centered>
         <Text size="sm">
           Are you sure you want to delete floor <strong>{selectedItem?.floorName}</strong>? This action cannot be undone.
         </Text>

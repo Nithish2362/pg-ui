@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#93c5fd">
+  <!-- Building -->
+  <path d="M4 2h16v20H4V2zm2 2v16h12V4H6z"></path>
+
+  <!-- Windows -->
+  <path d="M8 6h2v2H8V6zm4 0h2v2h-2V6zm4 0h2v2h-2V6z"></path>
+  <path d="M8 10h2v2H8v-2zm4 0h2v2h-2v-2zm4 0h2v2h-2v-2z"></path>
+
+  <!-- Door -->
+  <path d="M10 22v-6h4v6h-4z"></path>
+</svg>

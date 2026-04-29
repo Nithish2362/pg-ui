@@ -256,7 +256,13 @@ const Beds = () => {
         </table>
       </div>
 
-      <Modal opened={opened} onClose={close} title="Delete Bed" centered>
+      <Modal opened={opened} onClose={close} title="Delete Bed"   styles={{
+    title: {
+      fontSize: "18px",
+      fontWeight: 600,
+      color: "#e03131", // red color
+    },
+  }}centered>
         <Text size="sm">
           Are you sure you want to delete bed <strong>{selectedItem?.bedNumber}</strong>? This action cannot be undone.
         </Text>
