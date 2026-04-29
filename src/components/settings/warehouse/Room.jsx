@@ -1,12 +1,19 @@
 import React, { useState, useEffect } from "react";
-import { Modal, Button, TextInput, Select, Text, Group, Badge, NumberInput } from "@mantine/core";
+import { Modal, Button, TextInput, Select, Text, Group, Badge, NumberInput, ActionIcon, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
+import { useNavigate, useLocation } from "react-router-dom";
+import { IconArrowRight } from "@tabler/icons-react";
 import api from "../../../api/Interceptor";
 import notify from "../../utils/Notification";
 
 import useDebounce from "../../../common/useDebounce";
 
 const Rooms = () => {
+  const navigate = useNavigate();
+  const locationState = useLocation();
+  const queryParams = new URLSearchParams(locationState.search);
+  const preSelectedFloorId = queryParams.get("floorId");
+
   const [rooms, setRooms] = useState([]);
   const [floors, setFloors] = useState([]);
   const [search, setSearch] = useState("");
@@ -21,11 +28,18 @@ const Rooms = () => {
     sharingType: 2,
     monthlyRent: "",
     totalBeds: 2,
-    floorId: "",
+    roomId: "",
+    floorId: preSelectedFloorId || "",
   });
-  console.log()
+
   const [editingId, setEditingId] = useState(null);
   const debouncedSearch = useDebounce(search, 500);
+
+  useEffect(() => {
+    if (preSelectedFloorId) {
+      setForm((f) => ({ ...f, floorId: preSelectedFloorId }));
+    }
+  }, [preSelectedFloorId]);
 
   // ================== LOAD DATA ==================
   const load = async () => {
@@ -87,6 +101,7 @@ const Rooms = () => {
         sharingType: 2,
         monthlyRent: "",
         totalBeds: "",
+        roomId: "",
         floorId: "",
       });
       setEditingId(null);
@@ -110,6 +125,7 @@ const Rooms = () => {
       sharingType: item.sharingType || 2,
       monthlyRent: item.monthlyRent || "",
       totalBeds: item.totalBeds || "",
+      roomId: item.roomId || "",
       floorId: item.floorId || "",
     });
     setEditingId(item.roomId);
@@ -150,6 +166,7 @@ const Rooms = () => {
       sharingType: 2,
       monthlyRent: "",
       totalBeds: "",
+      roomId: "",
       floorId: "",
     });
   };
@@ -318,6 +335,15 @@ const Rooms = () => {
                 <td>{r.beds?.length || r.totalBeds}</td>
                 <td>
                   <Group gap="xs">
+                    <Tooltip label="Manage Beds">
+                      <ActionIcon 
+                        variant="light" 
+                        color="blue" 
+                        onClick={() => navigate(`/beds?roomId=${r.roomId}`)}
+                      >
+                        <IconArrowRight size={16} />
+                      </ActionIcon>
+                    </Tooltip>
                     <Button variant="light" color="yellow" size="compact-xs" onClick={() => handleEdit(r)}>
                       Edit
                     </Button>

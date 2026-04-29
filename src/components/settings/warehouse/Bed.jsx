@@ -1,12 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { Modal, Button, TextInput, Select, Text, Group, Badge, Switch } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
+import { useLocation } from "react-router-dom";
 import api from "../../../api/Interceptor";
 import notify from "../../utils/Notification";
 
 import useDebounce from "../../../common/useDebounce";
 
 const Beds = () => {
+  const locationState = useLocation();
+  const queryParams = new URLSearchParams(locationState.search);
+  const preSelectedRoomId = queryParams.get("roomId");
+
   const [beds, setBeds] = useState([]);
   const [rooms, setRooms] = useState([]);
   const [search, setSearch] = useState("");
@@ -18,11 +23,18 @@ const Beds = () => {
   const [form, setForm] = useState({
     bedNumber: "",
     isOccupied: false,
-    roomId: "",
+    bedId: "",
+    roomId: preSelectedRoomId || "",
   });
 
   const [editingId, setEditingId] = useState(null);
   const debouncedSearch = useDebounce(search, 500);
+
+  useEffect(() => {
+    if (preSelectedRoomId) {
+      setForm((f) => ({ ...f, roomId: preSelectedRoomId }));
+    }
+  }, [preSelectedRoomId]);
 
   // ================== LOAD DATA ==================
   const load = async () => {
@@ -71,7 +83,7 @@ const Beds = () => {
         });
       }
 
-      setForm({ bedNumber: "", isOccupied: false, roomId: "" });
+      setForm({ bedNumber: "", isOccupied: false, bedId: "", roomId: "" });
       setEditingId(null);
       load();
     } catch (error) {
@@ -90,6 +102,7 @@ const Beds = () => {
     setForm({
       bedNumber: item.bedNumber || "",
       isOccupied: item.isOccupied || false,
+      bedId: item.bedId || "",
       roomId: item.roomId || "",
     });
     setEditingId(item.bedId);
@@ -124,7 +137,7 @@ const Beds = () => {
 
   const cancelEdit = () => {
     setEditingId(null);
-    setForm({ bedNumber: "", isOccupied: false, roomId: "" });
+    setForm({ bedNumber: "", isOccupied: false, bedId: "", roomId: "" });
   };
 
   // ================== UTILS ==================

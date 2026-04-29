@@ -132,6 +132,7 @@ const Tenants = () => {
 
   // ================== EDIT ==================
   const handleEdit = async (item) => {
+    // 1. First set basic form fields
     setForm({
       studentName: item.studentName || "",
       mobileNumber: item.mobileNumber || "",
@@ -149,10 +150,32 @@ const Tenants = () => {
       paymentAmount: "",
       paymentMode: "CASH",
     });
+
+    // 2. Load beds for the room
     if (item.roomId) {
-      await loadBeds(item.roomId);
-      setForm(f => ({ ...f, bedId: item.bedId }));
+      const room = rooms.find(r => r.roomId === item.roomId);
+      setSelectedRoom(room || null);
+      
+      try {
+        const res = await api.get(`/admin/beds/room/${item.roomId}/available`);
+        let availableBeds = res.data?.response || res.data?.data || [];
+        
+        // 3. IMPORTANT: Add the tenant's current bed to the available list 
+        // so it shows up in the dropdown during edit.
+        if (item.bedId && !availableBeds.find(b => b.bedId === item.bedId)) {
+          availableBeds.push({
+            bedId: item.bedId,
+            bedNumber: item.bedNumber || "Current"
+          });
+        }
+        
+        setBeds(availableBeds);
+        setForm(f => ({ ...f, bedId: item.bedId }));
+      } catch {
+        setBeds([]);
+      }
     }
+    
     setEditingId(item.pgNumber);
   };
 

@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from "react";
-import { Modal, Button } from "@mantine/core";
+import { Modal, Button, ActionIcon, Tooltip, Group } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
+import { useNavigate } from "react-router-dom";
+import { IconArrowRight } from "@tabler/icons-react";
 import api from "../../../api/Interceptor";
 import indiaLocations from "./StatesAndDistricts.json";
 import notify from "../../utils/Notification";
 import useDebounce from "../../../common/useDebounce";
 
 const Locations = () => {
+  const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
@@ -14,6 +17,7 @@ const Locations = () => {
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [opened, { open, close }] = useDisclosure(false);
 
+  const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState({
     country: "India",
     state: "",
@@ -68,14 +72,21 @@ const Locations = () => {
     e.preventDefault();
 
     try {
-      await api.post("/admin/locations", form);
-
-      notify({
-        title: "Success!",
-        message: "Location created successfully.",
-        success: true,
-        error: false,
-      });
+      if (editingId) {
+        await api.put(`/admin/locations/${editingId}`, form);
+        notify({
+          title: "Updated!",
+          message: "Location updated successfully.",
+          success: true,
+        });
+      } else {
+        await api.post("/admin/locations", form);
+        notify({
+          title: "Success!",
+          message: "Location created successfully.",
+          success: true,
+        });
+      }
 
       setForm({
         country: "India",
@@ -85,17 +96,41 @@ const Locations = () => {
         locationNumber: "",
         address: "",
       });
-
+      setEditingId(null);
       load();
     } catch (error) {
       notify({
         title: "Error!",
-        message:
-          error.response?.data?.message || "Failed to save location.",
+        message: error.response?.data?.message || "Failed to save location.",
         success: false,
         error: true,
       });
     }
+  };
+
+  // ================= EDIT =================
+  const handleEdit = (item) => {
+    setForm({
+      country: item.country || "India",
+      state: item.state || "",
+      city: item.city || "",
+      locationName: item.locationName || "",
+      locationNumber: item.locationNumber || "",
+      address: item.address || "",
+    });
+    setEditingId(item.locationId);
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setForm({
+      country: "India",
+      state: "",
+      city: "",
+      locationName: "",
+      locationNumber: "",
+      address: "",
+    });
   };
 
   // ================= DELETE =================
@@ -110,10 +145,10 @@ const Locations = () => {
   };
 
   const confirmDelete = async () => {
-    if (!selectedLocation?.id) return;
+    if (!selectedLocation?.locationId) return;
 
     try {
-      await api.delete(`/admin/locations/${selectedLocation.id}`);
+      await api.delete(`/admin/locations/${selectedLocation.locationId}`);
 
       notify({
         title: "Deleted!",
@@ -158,7 +193,9 @@ const Locations = () => {
 
       {/* Form */}
       <div className="form-card">
-        <h3 style={{ marginBottom: "15px" }}>Add New Location</h3>
+        <h3 style={{ marginBottom: "15px" }}>
+          {editingId ? "Edit Location" : "Add New Location"}
+        </h3>
 
         <form onSubmit={save}>
           <div className="form-grid">
@@ -246,8 +283,13 @@ const Locations = () => {
               !form.address
             }
           >
-            Save Location
+            {editingId ? "Update Location" : "Save Location"}
           </button>
+          {editingId && (
+            <Button variant="outline" color="gray" ml="sm" onClick={cancelEdit}>
+              Cancel
+            </Button>
+          )}
         </form>
       </div>
 
@@ -292,12 +334,29 @@ const Locations = () => {
                 <td>{item.address || "-"}</td>
                 <td>{item.buildings?.length || 0}</td>
                 <td>
-                  <button
-                    className="btn btn-danger btn-sm"
-                    onClick={() => openDeleteModal(item)}
-                  >
-                    Delete
-                  </button>
+                  <Group gap="xs">
+                    <Tooltip label="Manage Buildings">
+                      <ActionIcon 
+                        variant="light" 
+                        color="blue" 
+                        onClick={() => navigate(`/buildings?locationId=${item.locationId}`)}
+                      >
+                        <IconArrowRight size={16} />
+                      </ActionIcon>
+                    </Tooltip>
+                    <button
+                      className="btn btn-warning btn-sm"
+                      onClick={() => handleEdit(item)}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      className="btn btn-danger btn-sm"
+                      onClick={() => openDeleteModal(item)}
+                    >
+                      Delete
+                    </button>
+                  </Group>
                 </td>
               </tr>
             ))}

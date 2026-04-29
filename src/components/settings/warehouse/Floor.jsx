@@ -1,12 +1,19 @@
 import React, { useState, useEffect } from "react";
-import { Modal, Button, TextInput, Select, Text, Group } from "@mantine/core";
+import { Modal, Button, TextInput, Select, Text, Group, ActionIcon, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
+import { useNavigate, useLocation } from "react-router-dom";
+import { IconArrowRight } from "@tabler/icons-react";
 import api from "../../../api/Interceptor";
 import notify from "../../utils/Notification";
 
 import useDebounce from "../../../common/useDebounce";
 
 const Floors = () => {
+  const navigate = useNavigate();
+  const locationState = useLocation();
+  const queryParams = new URLSearchParams(locationState.search);
+  const preSelectedBuildingId = queryParams.get("buildingId");
+
   const [floors, setFloors] = useState([]);
   const [buildings, setBuildings] = useState([]);
   const [search, setSearch] = useState("");
@@ -18,11 +25,18 @@ const Floors = () => {
   const [form, setForm] = useState({
     floorNumber: "",
     floorName: "",
-    buildingId: "",
+    floorId: "",
+    buildingId: preSelectedBuildingId || "",
   });
 
   const [editingId, setEditingId] = useState(null);
   const debouncedSearch = useDebounce(search, 500);
+
+  useEffect(() => {
+    if (preSelectedBuildingId) {
+      setForm((f) => ({ ...f, buildingId: preSelectedBuildingId }));
+    }
+  }, [preSelectedBuildingId]);
 
   // ================== LOAD DATA ==================
   const load = async () => {
@@ -59,6 +73,7 @@ const Floors = () => {
         await api.put(`/admin/floors/${editingId}`, {
           floorNumber: form.floorNumber,
           floorName: form.floorName,
+          floorId: form.floorId,
           buildingId: form.buildingId,
         });
 
@@ -80,7 +95,7 @@ const Floors = () => {
         });
       }
 
-      setForm({ floorNumber: "", floorName: "", buildingId: "" });
+      setForm({ floorNumber: "", floorName: "", floorId: "", buildingId: "" });
       setEditingId(null);
       load();
     } catch (error) {
@@ -99,6 +114,7 @@ const Floors = () => {
     setForm({
       floorNumber: item.floorNumber || "",
       floorName: item.floorName || "",
+      floorId: item.floorId || "",
       buildingId: item.buildingId || "",
     });
     setEditingId(item.floorId);
@@ -133,7 +149,7 @@ const Floors = () => {
 
   const cancelEdit = () => {
     setEditingId(null);
-    setForm({ floorNumber: "", floorName: "", buildingId: "" });
+    setForm({ floorNumber: "", floorName: "", floorId: "", buildingId: "" });
   };
 
   // ================== UTILS ==================
@@ -245,6 +261,15 @@ const Floors = () => {
                 <td>{f.rooms?.length || 0}</td>
                 <td>
                   <Group gap="xs">
+                    <Tooltip label="Manage Rooms">
+                      <ActionIcon 
+                        variant="light" 
+                        color="blue" 
+                        onClick={() => navigate(`/rooms?floorId=${f.floorId}`)}
+                      >
+                        <IconArrowRight size={16} />
+                      </ActionIcon>
+                    </Tooltip>
                     <Button variant="light" color="yellow" size="compact-xs" onClick={() => handleEdit(f)}>
                       Edit
                     </Button>

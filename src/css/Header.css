@@ -25,11 +25,8 @@
   display: inline-block;
   cursor: pointer;
   background: linear-gradient(135deg,
-      #00c6ff,
-      #0072ff,
-      #7b2ff7,
-      #f107a3,
-      #ff9800);
+      #00c8ff,
+      #000000);
   background-size: 300% 300%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -77,11 +74,10 @@
   width: 40px;
   /* Fixed width for better centering look */
   height: 4px;
-  background: #8BC53F;
+  background: #3f92c5;
   border-radius: 4px 4px 0 0;
   opacity: 0;
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  box-shadow: 0 -2px 12px #8bc53f99;
 }
 
 .active-indicator.visible {
@@ -91,12 +87,12 @@
 }
 
 .nav-item-active {
-  color: #8BC53F !important;
+  color: #3f92c5 !important;
 }
 
 .nav-item-active span {
   font-weight: 800;
-  color: #8BC53F !important;
+  color: #3f92c5 !important;
 }
 
 .user-section {

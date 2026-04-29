@@ -18,9 +18,10 @@ export function ModuleJson(parentId) {
 
         // ── Property sub-tabs ──────────────────────────────────────────────
         { id: 'LOCATION',  name: 'Location',  parent_id: 'PROPERTY',  orderBy: 1, path: '/locations' },
-        { id: 'ROOMS',     name: 'Rooms',     parent_id: 'PROPERTY',  orderBy: 2, path: '/rooms' },
+        { id: 'BUILDINGS', name: 'Buildings', parent_id: 'PROPERTY',  orderBy: 2, path: '/buildings' },
         { id: 'FLOORS',    name: 'Floors',    parent_id: 'PROPERTY',  orderBy: 3, path: '/floors' },
-        { id: 'BEDS',      name: 'Beds',      parent_id: 'PROPERTY',  orderBy: 4, path: '/beds' },
+        { id: 'ROOMS',     name: 'Rooms',     parent_id: 'PROPERTY',  orderBy: 4, path: '/rooms' },
+        { id: 'BEDS',      name: 'Beds',      parent_id: 'PROPERTY',  orderBy: 5, path: '/beds' },
 
         // ── Residents sub-tabs ─────────────────────────────────────────────
         { id: 'TENANTS',   name: 'Tenants',   parent_id: 'RESIDENTS', orderBy: 1, path: '/tenants' },

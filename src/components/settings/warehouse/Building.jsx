@@ -1,12 +1,19 @@
 import React, { useState, useEffect } from "react";
-import { Modal, Button, TextInput, Select, Text, Group } from "@mantine/core";
+import { Modal, Button, TextInput, Select, Text, Group, ActionIcon, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
+import { useNavigate, useLocation } from "react-router-dom";
+import { IconArrowRight } from "@tabler/icons-react";
 import api from "../../../api/Interceptor";
 import notify from "../../utils/Notification";
 
 import useDebounce from "../../../common/useDebounce";
 
 const Buildings = () => {
+  const navigate = useNavigate();
+  const locationState = useLocation();
+  const queryParams = new URLSearchParams(locationState.search);
+  const preSelectedLocationId = queryParams.get("locationId");
+
   const [items, setItems] = useState([]);
   const [locations, setLocations] = useState([]);
   const [search, setSearch] = useState("");
@@ -17,11 +24,18 @@ const Buildings = () => {
 
   const [form, setForm] = useState({
     buildingName: "",
-    locationId: "",
+    buildingNumber: "",
+    locationId: preSelectedLocationId || "",
   });
 
   const [editingId, setEditingId] = useState(null);
   const debouncedSearch = useDebounce(search, 500);
+
+  useEffect(() => {
+    if (preSelectedLocationId) {
+      setForm((f) => ({ ...f, locationId: preSelectedLocationId }));
+    }
+  }, [preSelectedLocationId]);
 
   // ================== LOAD DATA ==================
   const load = async () => {
@@ -57,6 +71,7 @@ const Buildings = () => {
       if (editingId) {
         await api.put(`/admin/buildings/${editingId}`, {
           buildingName: form.buildingName,
+          buildingNumber: form.buildingNumber,
           locationId: form.locationId,
         });
 
@@ -77,7 +92,7 @@ const Buildings = () => {
         });
       }
 
-      setForm({ buildingName: "", locationId: "" });
+      setForm({ buildingName: "", buildingNumber: "", locationId: "" });
       setEditingId(null);
       load();
     } catch (error) {
@@ -95,6 +110,7 @@ const Buildings = () => {
   const handleEdit = (item) => {
     setForm({
       buildingName: item.buildingName || "",
+      buildingNumber: item.buildingNumber || "",
       locationId: item.locationId || "",
     });
     setEditingId(item.buildingId); // Using business ID for the URL path
@@ -129,7 +145,7 @@ const Buildings = () => {
 
   const cancelEdit = () => {
     setEditingId(null);
-    setForm({ buildingName: "", locationId: "" });
+    setForm({ buildingName: "", buildingNumber: "", locationId: "" });
   };
 
   // ================== UTILS ==================
@@ -230,6 +246,15 @@ const Buildings = () => {
                 <td>{b.floors?.length || 0}</td>
                 <td>
                   <Group gap="xs">
+                    <Tooltip label="Manage Floors">
+                      <ActionIcon 
+                        variant="light" 
+                        color="blue" 
+                        onClick={() => navigate(`/floors?buildingId=${b.buildingId}`)}
+                      >
+                        <IconArrowRight size={16} />
+                      </ActionIcon>
+                    </Tooltip>
                     <Button variant="light" color="yellow" size="compact-xs" onClick={() => handleEdit(b)}>
                       Edit
                     </Button>
