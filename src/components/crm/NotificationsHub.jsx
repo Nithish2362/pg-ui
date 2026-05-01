@@ -18,7 +18,9 @@ const NotificationsHub = () => {
     // Individual Notification State
     const [tenants, setTenants] = useState([]);
     const [loadingTenants, setLoadingTenants] = useState(false);
-    const [search, setSearch] = useState('');
+    const [totalCount, setTotalCount] = useState(0);
+    const [page, setPage] = useState(1);
+    const [pageSize, setPageSize] = useState(5);
     const debouncedSearch = useDebounce(search, 400);
 
     // Modal State
@@ -44,13 +46,14 @@ const NotificationsHub = () => {
         if (activeTab === 'individual') {
             loadTenants();
         }
-    }, [activeTab]);
+    }, [activeTab, page, debouncedSearch, pageSize]);
 
     const loadTenants = async () => {
         try {
             setLoadingTenants(true);
-            const res = await api.get('/admin/tenants');
-            setTenants(res.data?.response || res.data?.data || res.data || []);
+            const res = await api.get(`/admin/tenants/view?page=${page - 1}&pageSize=${pageSize}&searchTerm=${debouncedSearch}&status=ACTIVE`);
+            setTenants(res.data?.response || []);
+            setTotalCount(res.data?.count || 0);
         } catch (error) {
             notify({ title: 'Error', message: 'Failed to load tenants', error: true });
         } finally {
@@ -110,11 +113,8 @@ const NotificationsHub = () => {
         }
     };
 
-    const filteredTenants = tenants.filter(t =>
-        t.studentName?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-        t.pgNumber?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-        t.roomName?.toLowerCase().includes(debouncedSearch.toLowerCase())
-    );
+    // No client-side filtering needed with backend pagination
+    const filteredTenants = tenants;
 
     const columns = [
         { header: 'PG Number', key: 'pgNumber' },
@@ -218,6 +218,12 @@ const NotificationsHub = () => {
                     loading={loadingTenants}
                     search={search}
                     onSearch={setSearch}
+                    totalCount={totalCount}
+                    page={page}
+                    totalPages={Math.ceil(totalCount / pageSize)}
+                    onPageChange={setPage}
+                    pageSize={pageSize}
+                    onPageSizeChange={setPageSize}
                 />
             )}
 

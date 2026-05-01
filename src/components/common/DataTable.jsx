@@ -1,5 +1,5 @@
 import React from 'react';
-import { Table, Loader, Text, TextInput, Group, Pagination } from '@mantine/core';
+import { Table, Loader, Text, TextInput, Group, Pagination, Select } from '@mantine/core';
 import { IconSearch } from '@tabler/icons-react';
 
 /**
@@ -13,6 +13,8 @@ import { IconSearch } from '@tabler/icons-react';
  * @param {number} page - Current page (optional)
  * @param {number} totalPages - Total pages (optional)
  * @param {function} onPageChange - Page change handler (optional)
+ * @param {number} pageSize - Rows per page (optional)
+ * @param {function} onPageSizeChange - Rows per page change handler (optional)
  */
 const DataTable = ({ 
   columns, 
@@ -22,23 +24,40 @@ const DataTable = ({
   onSearch, 
   title, 
   totalCount, 
-  page, 
-  totalPages, 
-  onPageChange 
+  page = 1, 
+  totalPages = 0, 
+  onPageChange,
+  pageSize = 10,
+  onPageSizeChange
 }) => {
+  const start = (page - 1) * pageSize + 1;
+  const end = Math.min(page * pageSize, totalCount || data.length);
+
   return (
     <div className="data-card">
       <div className="data-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <h3 style={{ margin: 0 }}>{title} {totalCount !== undefined ? `(${totalCount})` : data.length > 0 ? `(${data.length})` : ''}</h3>
-        {onSearch && (
-          <TextInput
-            placeholder="Search..."
-            leftSection={<IconSearch size={16} />}
-            value={search}
-            onChange={(e) => onSearch(e.target.value)}
-            style={{ width: '320px' }}
-          />
-        )}
+        
+        <Group>
+          {onSearch && (
+            <TextInput
+              placeholder="Search..."
+              leftSection={<IconSearch size={16} />}
+              value={search}
+              onChange={(e) => onSearch(e.target.value)}
+              style={{ width: '280px' }}
+            />
+          )}
+          {onPageSizeChange && (
+            <Select
+              size="xs"
+              data={['5', '10', '20', '50']}
+              value={pageSize.toString()}
+              onChange={(val) => onPageSizeChange(parseInt(val))}
+              style={{ width: '70px' }}
+            />
+          )}
+        </Group>
       </div>
 
       <div style={{ overflowX: 'auto' }}>
@@ -78,8 +97,16 @@ const DataTable = ({
         </Table>
       </div>
 
-      {totalPages > 1 && (
-        <Group justify="center" mt="xl">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px', padding: '0 10px' }}>
+        <Text size="sm" c="dimmed">
+          {data.length > 0 ? (
+            <>Showing <b>{start}</b> to <b>{end}</b> of <b>{totalCount || data.length}</b> entries</>
+          ) : (
+            'Showing 0 entries'
+          )}
+        </Text>
+
+        {totalPages > 0 && (
           <Pagination 
             total={totalPages} 
             value={page} 
@@ -89,8 +116,8 @@ const DataTable = ({
             withEdges
             color="#3f92c5"
           />
-        </Group>
-      )}
+        )}
+      </div>
     </div>
   );
 };

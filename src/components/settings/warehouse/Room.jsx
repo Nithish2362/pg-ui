@@ -24,7 +24,7 @@ const Rooms = () => {
   const [loading, setLoading] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
   const [page, setPage] = useState(1);
-  const pageSize = 10;
+  const [pageSize, setPageSize] = useState(5);
 
   const [selectedLocation, setSelectedLocation] = useState("");
   const [selectedBuilding, setSelectedBuilding] = useState("");
@@ -82,7 +82,7 @@ const Rooms = () => {
 
   useEffect(() => {
     load();
-  }, [page, debouncedSearch]);
+  }, [page, debouncedSearch, pageSize]);
 
   // ================== SAVE / UPDATE ==================
   const save = async (e) => {
@@ -212,33 +212,37 @@ const Rooms = () => {
     { header: "Room ID", key: "roomId", render: (val) => <strong>{val}</strong> },
     { header: "Room #", key: "roomNumber" },
     { header: "Floor", key: "floorId", render: (val) => getFloorName(val) },
-    { header: "Type", key: "roomType", render: (val) => (
-      <Badge color={val === "AC" ? "blue" : "orange"} variant="light">
-        {val}
-      </Badge>
-    )},
+    {
+      header: "Type", key: "roomType", render: (val) => (
+        <Badge color={val === "AC" ? "blue" : "orange"} variant="light">
+          {val}
+        </Badge>
+      )
+    },
     { header: "Sharing", key: "sharingType", render: (val) => `${val} Sharing` },
     { header: "Rent", key: "monthlyRent", render: (val) => `₹${val}` },
     { header: "Beds", key: "totalBeds", render: (val, r) => r.beds?.length || val },
-    { header: "Actions", key: "actions", render: (_, r) => (
-      <Group gap="xs" justify="center" wrap="nowrap">
-        <Tooltip label="Edit Room">
-          <ActionIcon variant="light" color="yellow" size="sm" onClick={() => handleEdit(r)}>
-            <IconEdit size={16} />
-          </ActionIcon>
-        </Tooltip>
-        <Tooltip label="Delete Room">
-          <ActionIcon variant="light" color="red" size="sm" onClick={() => openDeleteModal(r)}>
-            <IconTrash size={16} />
-          </ActionIcon>
-        </Tooltip>
-        <Tooltip label="Go To Beds">
-          <ActionIcon variant="light" color="blue" size="sm" onClick={() => navigate(`/beds?roomId=${r.roomId}`)}>
-            <IconArrowRight size={16} />
-          </ActionIcon>
-        </Tooltip>
-      </Group>
-    )}
+    {
+      header: "Actions", key: "actions", render: (_, r) => (
+        <Group gap="xs" justify="center" wrap="nowrap">
+          <Tooltip label="Edit Room">
+            <ActionIcon variant="light" color="yellow" size="sm" onClick={() => handleEdit(r)}>
+              <IconEdit size={16} />
+            </ActionIcon>
+          </Tooltip>
+          <Tooltip label="Delete Room">
+            <ActionIcon variant="light" color="red" size="sm" onClick={() => openDeleteModal(r)}>
+              <IconTrash size={16} />
+            </ActionIcon>
+          </Tooltip>
+          <Tooltip label="Go To Beds">
+            <ActionIcon variant="light" color="blue" size="sm" onClick={() => navigate(`/beds?roomId=${r.roomId}`)}>
+              <IconArrowRight size={16} />
+            </ActionIcon>
+          </Tooltip>
+        </Group>
+      )
+    }
   ];
 
   return (
@@ -403,6 +407,8 @@ const Rooms = () => {
           page={page}
           totalPages={Math.ceil(totalCount / pageSize)}
           onPageChange={setPage}
+          pageSize={pageSize}
+          onPageSizeChange={setPageSize}
         />
       )}
 

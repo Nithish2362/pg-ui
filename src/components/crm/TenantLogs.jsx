@@ -12,7 +12,7 @@ const TenantLogs = () => {
   const [search, setSearch] = useState("");
   const [totalCount, setTotalCount] = useState(0);
   const [page, setPage] = useState(1);
-  const pageSize = 10;
+  const [pageSize, setPageSize] = useState(5);
   const debouncedSearch = useDebounce(search, 500);
 
   const load = async () => {
@@ -28,7 +28,7 @@ const TenantLogs = () => {
     }
   };
 
-  useEffect(() => { load(); }, [page, debouncedSearch]);
+  useEffect(() => { load(); }, [page, debouncedSearch, pageSize]);
 
   const formatDate = (dateStr) => {
     if (!dateStr) return "—";
@@ -40,11 +40,13 @@ const TenantLogs = () => {
     { header: "PG Number", key: "pgNumber", render: (val) => <strong>{val}</strong> },
     { header: "Out Time", key: "outTime", render: (val) => formatDate(val) },
     { header: "In Time", key: "inTime", render: (val) => formatDate(val) },
-    { header: "Current Status", key: "status", render: (val) => (
-      <Badge color={val === "IN" ? "green" : "red"}>
-        {val}
-      </Badge>
-    )}
+    {
+      header: "Current Status", key: "status", render: (val) => (
+        <Badge color={val === "IN" ? "green" : "red"}>
+          {val}
+        </Badge>
+      )
+    }
   ];
 
   return (
@@ -67,6 +69,8 @@ const TenantLogs = () => {
         page={page}
         totalPages={Math.ceil(totalCount / pageSize)}
         onPageChange={setPage}
+        pageSize={pageSize}
+        onPageSizeChange={setPageSize}
       />
     </div>
   );

@@ -24,8 +24,8 @@ const Tenants = () => {
   const [editingId, setEditingId] = useState(null);
   const [totalCount, setTotalCount] = useState(0);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
   const [counts, setCounts] = useState({ awaiting: 0, active: 0, notifications: 0 });
-  const pageSize = 10;
   const debouncedSearch = useDebounce(search, 500);
 
   // Approve modal state
@@ -60,7 +60,7 @@ const Tenants = () => {
   const load = async () => {
     try {
       setLoading(true);
-      
+
       const statusMap = {
         awaiting: "NOT_APPROVED",
         active: "ACTIVE",
@@ -86,7 +86,7 @@ const Tenants = () => {
     }
   };
 
-  useEffect(() => { load(); }, [page, activeTab, debouncedSearch]);
+  useEffect(() => { load(); }, [page, activeTab, debouncedSearch, pageSize]);
 
   const loadBeds = async (roomId) => {
     const room = rooms.find(r => r.roomId === roomId);
@@ -550,6 +550,8 @@ const Tenants = () => {
             page={page}
             totalPages={Math.ceil(totalCount / pageSize)}
             onPageChange={setPage}
+            pageSize={pageSize}
+            onPageSizeChange={setPageSize}
           />
         </div>
       )}

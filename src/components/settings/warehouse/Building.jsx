@@ -22,7 +22,7 @@ const Buildings = () => {
   const [loading, setLoading] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
   const [page, setPage] = useState(1);
-  const pageSize = 10;
+  const [pageSize, setPageSize] = useState(5);
 
   const [selectedItem, setSelectedItem] = useState(null);
   const [opened, { open, close }] = useDisclosure(false);
@@ -69,7 +69,7 @@ const Buildings = () => {
 
   useEffect(() => {
     load();
-  }, [page, debouncedSearch]);
+  }, [page, debouncedSearch, pageSize]);
 
   // ================== SAVE / UPDATE ==================
   const save = async (e) => {
@@ -169,25 +169,27 @@ const Buildings = () => {
     { header: "Building Name", key: "buildingName" },
     { header: "Location", key: "locationId", render: (val) => getLocationName(val) },
     { header: "Floors", key: "floors", render: (val) => val?.length || 0 },
-    { header: "Actions", key: "actions", render: (_, b) => (
-      <Group gap="xs" justify="center" wrap="nowrap">
-        <Tooltip label="Edit Building">
-          <ActionIcon variant="light" color="yellow" size="sm" onClick={() => handleEdit(b)}>
-            <IconEdit size={16} />
-          </ActionIcon>
-        </Tooltip>
-        <Tooltip label="Delete Building">
-          <ActionIcon variant="light" color="red" size="sm" onClick={() => openDeleteModal(b)}>
-            <IconTrash size={16} />
-          </ActionIcon>
-        </Tooltip>
-        <Tooltip label="Go To Floors">
-          <ActionIcon variant="light" color="blue" size="sm" onClick={() => navigate(`/floors?buildingId=${b.buildingId}`)}>
-            <IconArrowRight size={16} />
-          </ActionIcon>
-        </Tooltip>
-      </Group>
-    )}
+    {
+      header: "Actions", key: "actions", render: (_, b) => (
+        <Group gap="xs" justify="center" wrap="nowrap">
+          <Tooltip label="Edit Building">
+            <ActionIcon variant="light" color="yellow" size="sm" onClick={() => handleEdit(b)}>
+              <IconEdit size={16} />
+            </ActionIcon>
+          </Tooltip>
+          <Tooltip label="Delete Building">
+            <ActionIcon variant="light" color="red" size="sm" onClick={() => openDeleteModal(b)}>
+              <IconTrash size={16} />
+            </ActionIcon>
+          </Tooltip>
+          <Tooltip label="Go To Floors">
+            <ActionIcon variant="light" color="blue" size="sm" onClick={() => navigate(`/floors?buildingId=${b.buildingId}`)}>
+              <IconArrowRight size={16} />
+            </ActionIcon>
+          </Tooltip>
+        </Group>
+      )
+    }
   ];
 
   return (
@@ -261,6 +263,8 @@ const Buildings = () => {
           page={page}
           totalPages={Math.ceil(totalCount / pageSize)}
           onPageChange={setPage}
+          pageSize={pageSize}
+          onPageSizeChange={setPageSize}
         />
       )}
 

@@ -15,7 +15,7 @@ const Notices = () => {
   const [search, setSearch] = useState("");
   const [totalCount, setTotalCount] = useState(0);
   const [page, setPage] = useState(1);
-  const pageSize = 10;
+  const [pageSize, setPageSize] = useState(5);
   const debouncedSearch = useDebounce(search, 500);
 
   const load = async () => {
@@ -31,7 +31,7 @@ const Notices = () => {
     }
   };
 
-  useEffect(() => { load(); }, [page, debouncedSearch]);
+  useEffect(() => { load(); }, [page, debouncedSearch, pageSize]);
 
   const save = async () => {
     if (!form.title || !form.content) {
@@ -75,14 +75,14 @@ const Notices = () => {
     { header: "Title", key: "title", render: (val) => <strong>{val}</strong> },
     { header: "Message", key: "content", render: (val) => <div style={{ maxWidth: "300px", margin: "0 auto" }}>{val}</div> },
     { header: "Date", key: "createdAt", render: (val) => <Text size="xs">{new Date(val).toLocaleDateString()}</Text> },
-    { 
-      header: "Status", 
-      key: "active", 
-      render: (val) => <Badge color={val ? "green" : "gray"}>{val ? "ACTIVE" : "INACTIVE"}</Badge> 
+    {
+      header: "Status",
+      key: "active",
+      render: (val) => <Badge color={val ? "green" : "gray"}>{val ? "ACTIVE" : "INACTIVE"}</Badge>
     },
-    { 
-      header: "Actions", 
-      key: "actions", 
+    {
+      header: "Actions",
+      key: "actions",
       render: (_, n) => (
         <Group gap="xs" justify="center">
           <Button size="xs" variant="light" color={n.active ? "red" : "green"} onClick={() => toggle(n.id)}>
@@ -106,7 +106,7 @@ const Notices = () => {
         </Button>
       </div>
 
-      <DataTable 
+      <DataTable
         title="All Notices"
         columns={columns}
         data={items}
@@ -117,6 +117,8 @@ const Notices = () => {
         page={page}
         totalPages={Math.ceil(totalCount / pageSize)}
         onPageChange={setPage}
+        pageSize={pageSize}
+        onPageSizeChange={setPageSize}
       />
 
       <Modal opened={modalOpen} onClose={() => setModalOpen(false)} title="Broadcast Notice">

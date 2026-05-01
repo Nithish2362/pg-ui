@@ -13,7 +13,7 @@ const Visitors = () => {
   const [search, setSearch] = useState("");
   const [totalCount, setTotalCount] = useState(0);
   const [page, setPage] = useState(1);
-  const pageSize = 10;
+  const [pageSize, setPageSize] = useState(5);
   const debouncedSearch = useDebounce(search, 500);
 
   const load = async () => {
@@ -29,7 +29,7 @@ const Visitors = () => {
     }
   };
 
-  useEffect(() => { load(); }, [page, debouncedSearch]);
+  useEffect(() => { load(); }, [page, debouncedSearch, pageSize]);
 
   const updateStatus = async (id, status) => {
     try {
@@ -125,6 +125,8 @@ const Visitors = () => {
         page={page}
         totalPages={Math.ceil(totalCount / pageSize)}
         onPageChange={setPage}
+        pageSize={pageSize}
+        onPageSizeChange={setPageSize}
       />
     </div>
   );

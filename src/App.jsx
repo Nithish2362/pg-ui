@@ -15,6 +15,10 @@ const Rooms = lazy(() => import('./components/settings/warehouse/Room'));
 const Beds = lazy(() => import('./components/settings/warehouse/Bed'));
 const Tenants = lazy(() => import('./components/crm/Tenants'));
 const Payments = lazy(() => import('./components/settings/payment/Payments'));
+const Complaints = lazy(() => import('./components/crm/Complaints'));
+const Visitors = lazy(() => import('./components/crm/Visitors'));
+const Notices = lazy(() => import('./components/crm/Notices'));
+const TenantLogs = lazy(() => import('./components/crm/TenantLogs'));
 const NotificationsHub = lazy(() => import('./components/crm/NotificationsHub'));
 const TenantDashboard = lazy(() => import('./components/tenant/TenantDashboard'));
 const NotFound = lazy(() => import('./common/NotFound'));
@@ -81,6 +85,12 @@ function App() {
           <Route path="/payments" element={<ProtectedRoute element={Payments} />} />
           <Route path="/payments/create" element={<ProtectedRoute element={Payments} />} />
 
+          {/* Community */}
+          <Route path="/complaints" element={<ProtectedRoute element={Complaints} />} />
+          <Route path="/visitors" element={<ProtectedRoute element={Visitors} />} />
+          <Route path="/notices" element={<ProtectedRoute element={Notices} />} />
+          <Route path="/logs" element={<ProtectedRoute element={TenantLogs} />} />
+
           {/* Notifications */}
           <Route path="/notifications" element={<ProtectedRoute element={NotificationsHub} />} />
 
@@ -92,6 +102,7 @@ function App() {
           {/* Root redirects */}
           <Route path="/property" element={<Navigate to="/locations" />} />
           <Route path="/residents" element={<Navigate to="/tenants" />} />
+          <Route path="/community" element={<Navigate to="/complaints" />} />
           <Route path="/notifications" element={<Navigate to="/notifications" />} />
           <Route path="/" element={<Navigate to="/dashboard" />} />
         </Route>

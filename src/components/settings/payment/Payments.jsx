@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useReactToPrint } from "react-to-print";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Modal, Button, TextInput, Select, Text, Group, Badge, Textarea, Tabs, SegmentedControl, ThemeIcon } from "@mantine/core";
+import { Modal, Button, TextInput, Select, Text, Group, Badge, Textarea, Tabs, ThemeIcon, Stack, Paper, Divider, Center } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconArrowLeft, IconPlus, IconHome, IconHeart, IconPrinter, IconCheck, IconQrcode, IconDeviceMobile, IconCash } from "@tabler/icons-react";
+import { IconArrowLeft, IconPlus, IconHome, IconHeart, IconPrinter, IconCheck, IconQrcode, IconDeviceMobile, IconCash, IconUser, IconCurrencyRupee, IconNote } from "@tabler/icons-react";
 import api from "../../../api/Interceptor";
 import notify from "../../utils/Notification";
 import DataTable from "../../common/DataTable";
@@ -19,14 +19,12 @@ const PaymentReceipt = React.forwardRef(({ receipt }, ref) => {
       ref={ref}
       style={{
         fontFamily: "'Segoe UI', sans-serif",
-        padding: "40px",
-        width: "700px",
         color: "#1e293b",
         background: "#fff",
       }}
     >
       {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "30px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
         <div>
           <h1 style={{ margin: 0, fontSize: "28px", color: "#6366f1", display: 'flex', alignItems: 'center', gap: '10px' }}>
             <IconHome size={32} /> PG Hostel
@@ -44,7 +42,7 @@ const PaymentReceipt = React.forwardRef(({ receipt }, ref) => {
         </div>
       </div>
 
-      <hr style={{ border: "none", borderTop: "2px solid #e2e8f0", marginBottom: "24px" }} />
+      <hr style={{ border: "none", borderTop: "2px solid #e2e8f0", margin: "24px 0" }} />
 
       {/* Tenant Details */}
       <div style={{ marginBottom: "24px" }}>
@@ -66,7 +64,7 @@ const PaymentReceipt = React.forwardRef(({ receipt }, ref) => {
       </div>
 
       {/* Payment Details */}
-      <div style={{ background: "#f8fafc", borderRadius: "12px", padding: "20px", marginBottom: "24px" }}>
+      <div style={{ background: "#f8fafc", borderRadius: "12px", marginBottom: "24px" }}>
         <h3 style={{ fontSize: "14px", color: "#94a3b8", fontWeight: 600, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "12px" }}>Payment Details</h3>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <tbody>
@@ -85,7 +83,6 @@ const PaymentReceipt = React.forwardRef(({ receipt }, ref) => {
         </table>
       </div>
 
-      <hr style={{ border: "none", borderTop: "1px dashed #e2e8f0", margin: "24px 0" }} />
       <p style={{ textAlign: "center", color: "#94a3b8", fontSize: "13px", margin: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}>
         Thank you for your payment! <IconHeart size={14} color="#f43f5e" fill="#f43f5e" />
       </p>
@@ -138,7 +135,7 @@ const Payments = () => {
 
   const [totalCount, setTotalCount] = useState(0);
   const [page, setPage] = useState(1);
-  const pageSize = 10;
+  const [pageSize, setPageSize] = useState(5);
   const [search, setSearch] = useState("");
   const [counts, setCounts] = useState({ PENDING: 0, UNAPPROVED: 0, APPROVED: 0, ADVANCE_PENDING: 0, RENT_PENDING: 0 });
   const debouncedSearch = useDebounce(search, 500);
@@ -151,20 +148,12 @@ const Payments = () => {
   const load = async () => {
     try {
       setLoading(true);
-      // Construct filter status based on activeSection (ADVANCE/RENT) is not directly in the API status param
-      // but the API findByStatusAndSearch handles status string.
-      // In Payments.jsx, status is PENDING, UNAPPROVED, APPROVED.
-      
       const [paymentRes, tenantRes, countsRes] = await Promise.all([
         api.get(`/admin/payments/view?page=${page - 1}&pageSize=${pageSize}&status=${activeTab}&searchTerm=${debouncedSearch}`),
         api.get("/admin/tenants"),
         api.get("/admin/payments/counts")
       ]);
-      
-      // Filter by section (ADVANCE/RENT) client-side or we could add a type param to API.
-      // For now, let's keep the section filter client-side since the API doesn't have 'type' param yet.
-      // Actually, I should probably add 'type' param to the API for full server-side pagination.
-      // But let's start with this.
+
       setPayments(paymentRes.data?.response || []);
       setTotalCount(paymentRes.data?.count || 0);
       setTenants(tenantRes.data?.response || tenantRes.data?.data || tenantRes.data || []);
@@ -176,7 +165,7 @@ const Payments = () => {
     }
   };
 
-  useEffect(() => { load(); }, [page, activeTab, debouncedSearch]);
+  useEffect(() => { load(); }, [page, activeTab, debouncedSearch, pageSize]);
 
   // Handle auto-fill when navigating from "Pay Balance" or "Unpaid"
   useEffect(() => {
@@ -188,24 +177,23 @@ const Payments = () => {
           paymentId: paymentId || null,
           tenantId: String(tenantId),
           amount: amount || "",
-          paymentType: paymentType === "ADVANCE" ? "ADVANCE_PAYMENT" : "MONTHLY_RENT"
+          paymentType: paymentType === "ADVANCE" ? "SECURITY_ADVANCE" : "MONTHLY_RENT"
         }));
         setSelectedTenantRent(rent || null);
       }
     }
   }, [isCreateMode, locationState.state]);
 
-
-
-  // When tenant is selected, auto-fill the rent info
-  const handleTenantChange = (e) => {
-    const id = e.target.value;
-    setForm({ ...form, tenantId: id });
-    const tenant = tenants.find(t => String(t.id) === String(id));
-    setSelectedTenantRent(tenant?.monthlyRent || null);
+  const handleCloseCreateModal = () => {
+    setForm(emptyForm);
+    setSelectedTenantRent(null);
+    setUpiId("");
+    setUtr("");
+    setShowQr(false);
+    setIsVerifying(false);
+    setIsPaid(false);
+    navigate("/payments");
   };
-
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const save = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
@@ -228,25 +216,17 @@ const Payments = () => {
         receiptNo: receiptNo
       };
 
-      const res = form.paymentId
-        ? await api.put(`/admin/payments/${form.paymentId}`, payload)
-        : await api.post(`/admin/payments?tenantId=${form.tenantId}`, payload);
+      await (form.paymentId
+        ? api.put(`/admin/payments/${form.paymentId}`, payload)
+        : api.post(`/admin/payments?tenantId=${form.tenantId}`, payload));
+
       notify({ title: "Success", message: "Payment recorded successfully", success: true });
-      setForm(emptyForm);
-      setSelectedTenantRent(null);
-      setUpiId("");
-      setUtr("");
-      setShowQr(false);
-      setIsVerifying(false);
       setIsPaid(true); // Show success screen
+      load(); // Refresh background data
     } catch (err) {
       notify({ title: "Error", message: err?.response?.data?.message || "Unable to save payment", error: true });
+      setIsVerifying(false);
     }
-  };
-
-  const openDeleteModal = (p) => {
-    setSelectedItem(p);
-    open();
   };
 
   const confirmDelete = async () => {
@@ -291,117 +271,199 @@ const Payments = () => {
     });
   };
 
-  // Filter Payments based on Active Tab (Server-side handled status, but we still filter Section client-side for now)
-  const filteredPayments = payments.filter(p => {
-    return p.paymentType === activeSection;
-  });
+  const filteredPayments = payments.filter(p => p.paymentType === activeSection);
 
   const columns = [
-    { header: "Tenant", key: "tenantName", render: (val, p) => (
-      <div>
-        <div style={{ fontWeight: 600 }}>{val}</div>
-        <div style={{ fontSize: "12px", color: "#94a3b8" }}>{p.tenantPgNumber}</div>
-      </div>
-    )},
+    {
+      header: "Tenant", key: "tenantName", render: (val, p) => (
+        <div>
+          <div style={{ fontWeight: 600 }}>{val}</div>
+          <div style={{ fontSize: "12px", color: "#94a3b8" }}>{p.tenantPgNumber}</div>
+        </div>
+      )
+    },
     { header: "Amount", key: "amount", render: (val) => <strong style={{ color: "#6366f1", fontSize: "16px" }}>₹{val}</strong> },
     { header: "Month / Year", key: "paymentMonth", render: (val, p) => `${val} ${p.paymentYear}` },
     { header: "Date", key: "paymentDate", render: (val) => <span style={{ fontSize: "13px" }}>{val}</span> },
-    { header: "Mode", key: "paymentMode", render: (val) => (
-      <span style={{ background: "#f1f5f9", padding: "4px 10px", borderRadius: "20px", fontSize: "12px", fontWeight: 600 }}>
-        {val}
-      </span>
-    )},
-    { header: "Status", key: "status", render: (val) => {
-      const cfg = STATUS_CONFIG[val] || { bg: "#f1f5f9", color: "#64748b", label: val };
-      return (
-        <span style={{ background: cfg.bg, color: cfg.color, padding: "4px 12px", borderRadius: "20px", fontSize: "12px", fontWeight: 700 }}>
-          {cfg.label}
+    {
+      header: "Mode", key: "paymentMode", render: (val) => (
+        <span style={{ background: "#f1f5f9", padding: "4px 10px", borderRadius: "20px", fontSize: "12px", fontWeight: 600 }}>
+          {val}
         </span>
-      );
-    }},
-    { header: "Actions", key: "actions", render: (_, p) => (
-      <Group gap="xs" justify="center">
-        {activeTab === "UNAPPROVED" && (
-          <Button variant="filled" color="green" size="compact-xs" onClick={() => approvePayment(p)}>
-            Approve
-          </Button>
-        )}
-        {activeTab === "PENDING" && (
-          <Button variant="filled" color="yellow" size="compact-xs" onClick={() => handlePayBalance(p)}>
-            Pay Now
-          </Button>
-        )}
-        {activeTab === "APPROVED" && (
-          <Button variant="light" color="indigo" size="compact-xs" leftSection={<IconPrinter size={14} />} onClick={() => openReceipt(p)}>
-            Receipt
-          </Button>
-        )}
-      </Group>
-    )}
+      )
+    },
+    {
+      header: "Status", key: "status", render: (val) => {
+        const cfg = STATUS_CONFIG[val] || { bg: "#f1f5f9", color: "#64748b", label: val };
+        return (
+          <span style={{ background: cfg.bg, color: cfg.color, padding: "4px 12px", borderRadius: "20px", fontSize: "12px", fontWeight: 700 }}>
+            {cfg.label}
+          </span>
+        );
+      }
+    },
+    {
+      header: "Actions", key: "actions", render: (_, p) => (
+        <Group gap="xs" justify="center">
+          {activeTab === "UNAPPROVED" && (
+            <Button variant="filled" color="green" size="compact-xs" onClick={() => approvePayment(p)}>
+              Approve
+            </Button>
+          )}
+          {activeTab === "PENDING" && (
+            <Button variant="filled" color="yellow" size="compact-xs" onClick={() => handlePayBalance(p)}>
+              Pay Now
+            </Button>
+          )}
+          {activeTab === "APPROVED" && (
+            <Button variant="light" color="indigo" size="compact-xs" leftSection={<IconPrinter size={14} />} onClick={() => openReceipt(p)}>
+              Receipt
+            </Button>
+          )}
+        </Group>
+      )
+    }
   ];
 
   return (
     <div>
       {/* HEADER */}
       <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h2> Payment Management</h2>
-        {!isCreateMode ? (
-          <Button onClick={() => navigate("/payments/create")}>
-            <IconPlus size={18} style={{ marginRight: "5px" }} /> Record Payment
-          </Button>
-        ) : (
-          <Button onClick={() => navigate("/payments")} variant="outline" leftSection={<IconArrowLeft size={18} />}>
-            Back
-          </Button>
-        )}
+        <h2>Payment Management</h2>
+        <Button onClick={() => navigate("/payments/create")}>
+          <IconPlus size={18} style={{ marginRight: "5px" }} /> Record Payment
+        </Button>
       </div>
 
+      {/* TABS & TABLE */}
+      <Tabs
+        value={activeTab}
+        onChange={setActiveTab}
+        mb={0}
+        styles={{
+          tab: { padding: '12px 20px', fontWeight: 600 },
+          list: { borderBottom: 'none' }
+        }}
+      >
+        <Tabs.List>
+          <Tabs.Tab value="PENDING" color="yellow">
+            <Group gap={8}>
+              <span>Pending</span>
+              <Badge variant="filled" color="yellow" size="sm">{counts.PENDING || 0}</Badge>
+            </Group>
+          </Tabs.Tab>
+          <Tabs.Tab value="UNAPPROVED" color="blue">
+            <Group gap={8}>
+              <span>Unapproved</span>
+              <Badge variant="filled" color="blue" size="sm">{counts.UNAPPROVED || 0}</Badge>
+            </Group>
+          </Tabs.Tab>
+          <Tabs.Tab value="APPROVED" color="teal">
+            <Group gap={8}>
+              <span>Approved</span>
+              <Badge variant="filled" color="teal" size="sm">{counts.APPROVED || 0}</Badge>
+            </Group>
+          </Tabs.Tab>
+        </Tabs.List>
+      </Tabs>
 
+      <Tabs
+        value={activeSection}
+        onChange={setActiveSection}
+        variant="default"
+        mb="xl"
+      >
+        <Tabs.List>
+          <Tabs.Tab value="ADVANCE">
+            <Group gap={8}>
+              <span>Advance Payments</span>
+              <Badge variant="light" color="violet" size="sm">{counts[`ADVANCE_${activeTab}`] || 0}</Badge>
+            </Group>
+          </Tabs.Tab>
+          <Tabs.Tab value="RENT">
+            <Group gap={8}>
+              <span>Rent Payments</span>
+              <Badge variant="light" color="cyan" size="sm">{counts[`RENT_${activeTab}`] || 0}</Badge>
+            </Group>
+          </Tabs.Tab>
+        </Tabs.List>
+      </Tabs>
 
-      {/* FORM */}
-      {isCreateMode ? (
-        <div className="form-card">
-          <h3 style={{ marginBottom: "1rem" }}>{form.paymentMode === 'UPI' ? "Scan & Pay (UPI)" : "Record Cash Payment"}</h3>
-          {selectedTenantRent && (
-            <div style={{ background: "rgba(99,102,241,0.1)", border: "1px solid rgba(99,102,241,0.3)", borderRadius: "8px", padding: "10px 16px", marginBottom: "16px", display: "flex", alignItems: "center", gap: "10px" }}>
-              <IconHome size={20} color="#6366f1" />
-              <span>Room Monthly Rent: <strong style={{ color: "#6366f1", fontSize: "18px" }}>₹{selectedTenantRent}</strong></span>
-            </div>
-          )}
+      <DataTable
+        title={`${activeTab.toLowerCase()} ${activeSection.toLowerCase()} Payments`}
+        columns={columns}
+        data={filteredPayments}
+        loading={loading}
+        search={search}
+        onSearch={setSearch}
+        totalCount={totalCount}
+        page={page}
+        totalPages={Math.ceil(totalCount / pageSize)}
+        onPageChange={setPage}
+        pageSize={pageSize}
+        onPageSizeChange={setPageSize}
+      />
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', alignItems: 'center', maxWidth: '500px', margin: '0 auto', background: '#fff', padding: '2rem', borderRadius: '12px', border: '1px solid #eee' }}>
-            {!showQr && !isPaid ? (
-              <>
+      {/* RECORD PAYMENT MODAL */}
+      <Modal
+        opened={isCreateMode}
+        onClose={handleCloseCreateModal}
+        title={<Text fw={700} size="lg">Record New Payment</Text>}
+        size="lg"
+        centered
+        padding="xl"
+        radius="md"
+        overlayProps={{ backgroundOpacity: 0.55, blur: 3 }}
+      >
+        <div style={{ minHeight: '400px' }}>
+          {!showQr && !isPaid ? (
+            <Stack gap="lg">
+              {selectedTenantRent && (
+                <Paper p="md" radius="md" withBorder bg="indigo.0">
+                  <Group justify="space-between">
+                    <Group gap="sm">
+                      <ThemeIcon variant="light" color="indigo" radius="md">
+                        <IconHome size={18} />
+                      </ThemeIcon>
+                      <Text size="sm" fw={600}>Monthly Rent Information</Text>
+                    </Group>
+                    <Text fw={700} color="indigo" size="lg">₹{selectedTenantRent}</Text>
+                  </Group>
+                </Paper>
+              )}
+
+              <Select
+                label="Select Tenant"
+                placeholder="Search by name or PG ID"
+                leftSection={<IconUser size={18} />}
+                data={tenants.map(t => ({ value: String(t.id), label: `${t.pgNumber} – ${t.studentName}` }))}
+                value={form.tenantId}
+                onChange={(val) => {
+                  setForm({ ...form, tenantId: val });
+                  const tenant = tenants.find(t => String(t.id) === val);
+                  setSelectedTenantRent(tenant?.monthlyRent || null);
+                }}
+                searchable
+                required
+              />
+
+              <Group grow>
                 <Select
-                  label="Select Tenant *"
-                  placeholder="Select Tenant"
-                  data={tenants.map(t => ({ value: String(t.id), label: `${t.pgNumber} – ${t.studentName} ${t.monthlyRent ? `(₹${t.monthlyRent}/mo)` : ""}` }))}
-                  value={form.tenantId}
-                  onChange={(val) => {
-                    setForm({ ...form, tenantId: val });
-                    const tenant = tenants.find(t => String(t.id) === val);
-                    setSelectedTenantRent(tenant?.monthlyRent || null);
-                  }}
-                  searchable
-                  style={{ width: '100%' }}
-                />
-
-                <Select
-                  label="Payment Mode *"
+                  label="Payment Mode"
+                  leftSection={form.paymentMode === 'CASH' ? <IconCash size={18} /> : <IconQrcode size={18} />}
                   data={[
-                    { value: 'CASH', label: 'Cash' },
-                    { value: 'UPI', label: 'UPI' }
+                    { value: 'CASH', label: 'Cash Payment' },
+                    { value: 'UPI', label: 'UPI / Online' }
                   ]}
                   value={form.paymentMode}
                   onChange={(val) => setForm({ ...form, paymentMode: val })}
-                  style={{ width: '100%' }}
+                  required
                 />
-
                 <Select
-                  label="Payment Type *"
+                  label="Payment Type"
                   data={[
                     { value: 'MONTHLY_RENT', label: 'Monthly Rent' },
-                    { value: 'SECURITY_ADVANCE', label: 'Security Advance / Deposit' }
+                    { value: 'SECURITY_ADVANCE', label: 'Security Advance' }
                   ]}
                   value={form.paymentType}
                   onChange={(val) => {
@@ -411,192 +473,117 @@ const Payments = () => {
                     }
                     setForm(newForm);
                   }}
-                  style={{ width: '100%' }}
-                />
-
-                <TextInput
-                  label="Enter Amount (₹) *"
-                  placeholder={selectedTenantRent ? `E.g. ${selectedTenantRent}` : "E.g. 5000"}
-                  style={{ width: '100%' }}
-                  type="number"
-                  value={form.amount}
-                  onChange={(e) => setForm({ ...form, amount: e.target.value })}
                   required
-                  disabled={!!form.paymentId || (form.paymentType === 'MONTHLY_RENT' && !!selectedTenantRent)}
                 />
+              </Group>
 
-                {form.paymentMode === 'UPI' && (
+              <TextInput
+                label="Amount (₹)"
+                placeholder="Enter amount"
+                leftSection={<IconCurrencyRupee size={18} />}
+                type="number"
+                value={form.amount}
+                onChange={(e) => setForm({ ...form, amount: e.target.value })}
+                required
+                disabled={!!form.paymentId || (form.paymentType === 'MONTHLY_RENT' && !!selectedTenantRent)}
+              />
+
+              {form.paymentMode === 'UPI' && (
+                <TextInput
+                  label="Receiver UPI ID"
+                  placeholder="e.g. merchant@upi"
+                  leftSection={<IconDeviceMobile size={18} />}
+                  value={upiId}
+                  onChange={(e) => setUpiId(e.target.value)}
+                  required
+                />
+              )}
+
+              <Textarea
+                label="Remarks (Optional)"
+                placeholder="Add any notes..."
+                leftSection={<IconNote size={18} />}
+                value={form.remarks}
+                onChange={(e) => setForm({ ...form, remarks: e.target.value })}
+              />
+
+              <Divider mt="md" />
+
+              <Group justify="flex-end">
+                <Button variant="outline" color="gray" onClick={handleCloseCreateModal}>Cancel</Button>
+                {form.paymentMode === 'UPI' ? (
+                  <Button size="md" onClick={() => setShowQr(true)} disabled={!form.amount || !upiId || !form.tenantId} leftSection={<IconQrcode size={18} />}>
+                    Generate QR
+                  </Button>
+                ) : (
+                  <Button size="md" onClick={() => save()} disabled={!form.amount || !form.tenantId} leftSection={<IconCheck size={18} />}>
+                    Confirm Cash Payment
+                  </Button>
+                )}
+              </Group>
+            </Stack>
+          ) : isPaid ? (
+            <Center style={{ flexDirection: 'column', height: '400px' }}>
+              <ThemeIcon size={80} radius="xl" color="green" variant="light" mb="xl">
+                <IconCheck size={40} />
+              </ThemeIcon>
+              <Text fw={800} size="xl">Payment Successful!</Text>
+              <Text c="dimmed" size="sm" mt="sm" ta="center" maw={300}>
+                The payment of ₹{form.amount} has been recorded and is now awaiting approval.
+              </Text>
+              <Button mt="xl" size="lg" onClick={handleCloseCreateModal}>Close & Refresh</Button>
+            </Center>
+          ) : (
+            <Stack align="center" gap="xl" py="xl">
+              <Paper p="xl" radius="xl" withBorder shadow="md" style={{ background: '#fff' }}>
+                {isVerifying ? (
+                  <Stack align="center" py="xl">
+                    <div className="loading-dots">Verifying...</div>
+                  </Stack>
+                ) : (
+                  <Stack align="center">
+                    <img
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(`upi://pay?pa=${upiId}&pn=PG_ADMIN&am=${form.amount}&cu=INR`)}`}
+                      alt="UPI QR Code"
+                      style={{ width: '220px', height: '220px' }}
+                    />
+                    <Badge size="xl" variant="dot" color="indigo">₹{form.amount}</Badge>
+                  </Stack>
+                )}
+              </Paper>
+
+              {!isVerifying && (
+                <Stack w="100%" gap="md">
                   <TextInput
-                    label="Receiver UPI ID *"
-                    placeholder="Enter valid UPI ID (e.g. name@okicici)"
-                    style={{ width: '100%' }}
-                    value={upiId}
-                    onChange={(e) => setUpiId(e.target.value)}
+                    label="Transaction ID / UTR"
+                    placeholder="Enter 12-digit Ref No"
+                    description="Enter the reference number from your UPI app"
+                    value={utr}
+                    onChange={(e) => setUtr(e.target.value)}
                     required
                   />
-                )}
-
-                <Group justify="flex-end" style={{ width: '100%', marginTop: '1rem' }}>
-                  {form.paymentMode === 'UPI' ? (
-                    <Button onClick={() => setShowQr(true)} disabled={!form.amount || !upiId || !form.tenantId}>Generate QR</Button>
-                  ) : (
-                    <Button onClick={() => save()} disabled={!form.amount || !form.tenantId}>Confirm Cash</Button>
-                  )}
-                </Group>
-              </>
-            ) : isPaid ? (
-              <div style={{ textAlign: 'center', padding: '20px' }}>
-                <ThemeIcon size={60} radius="xl" color="green" variant="light" style={{ margin: '0 auto 1rem' }}>
-                  <IconCheck size={32} />
-                </ThemeIcon>
-                <Text fw={700} size="lg">Payment Confirmed!</Text>
-                <Text size="sm" c="dimmed" mt="xs">The payment has been successfully recorded.</Text>
-                <Button fullWidth mt="xl" onClick={() => {
-                  setIsPaid(false);
-                  load();
-                  navigate("/payments");
-                }}>Go to Payments</Button>
-              </div>
-            ) : (
-              <>
-                <div style={{ padding: '1rem', background: '#fff', borderRadius: '12px', border: '1px solid #eee', textAlign: 'center', width: '100%' }}>
-                  {isVerifying ? (
-                    <div style={{ padding: '20px' }}>
-                      <Text size="sm" mb="md">Verifying Transaction...</Text>
-                      <div className="loading-dots">...</div>
-                    </div>
-                  ) : (
-                    <>
-                      <img
-                        src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`upi://pay?pa=${upiId}&pn=PG_ADMIN&am=${form.amount}&cu=INR`)}`}
-                        alt="UPI QR Code"
-                        style={{ width: '200px', height: '200px' }}
-                      />
-                      <Text fw={700} size="xl" mt="md">₹{form.amount}</Text>
-                      <Text size="xs" c="dimmed" mt="xs">Scan with any UPI App</Text>
-                    </>
-                  )}
-                </div>
-
-                {!isVerifying && (
-                  <>
-                    <TextInput
-                      label="Transaction ID / UTR *"
-                      placeholder="Enter 12-digit Ref No"
-                      style={{ width: '100%' }}
-                      value={utr}
-                      onChange={(e) => setUtr(e.target.value)}
-                    />
-                    <Group justify="space-between" style={{ width: '100%', marginTop: '1rem' }}>
-                      <Button variant="subtle" color="gray" onClick={() => setShowQr(false)}>Edit Details</Button>
-                      <Button
-                        onClick={() => {
-                          setIsVerifying(true);
-                          setTimeout(() => {
-                            save();
-                          }, 2000);
-                        }}
-                        disabled={utr.length < 6}
-                      >
-                        Verify & Confirm
-                      </Button>
-                    </Group>
-                  </>
-                )}
-              </>
-            )}
-          </div>
+                  <Group grow>
+                    <Button variant="light" color="gray" onClick={() => setShowQr(false)}>Edit Details</Button>
+                    <Button
+                      onClick={() => {
+                        setIsVerifying(true);
+                        setTimeout(() => save(), 2000);
+                      }}
+                      disabled={utr.length < 6}
+                    >
+                      Verify & Confirm
+                    </Button>
+                  </Group>
+                </Stack>
+              )}
+            </Stack>
+          )}
         </div>
-      ) : (
-        <div>
-          {/* TABS & TABLE */}
-          <Tabs
-            value={activeTab}
-            onChange={setActiveTab}
-            mb={0}
-            styles={{
-              tab: { padding: '8px 16px' },
-              list: { borderBottom: 'none' }
-            }}
-          >
-            <Tabs.List>
-              <Tabs.Tab value="PENDING" color="yellow">
-                <Group gap={6}>
-                  <span>Pending</span>
-                  <span style={{ background: '#f59e0b', color: '#fff', borderRadius: '20px', fontSize: '11px', fontWeight: 700, padding: '1px 8px', minWidth: 20, textAlign: 'center' }}>
-                    {counts.PENDING || 0}
-                  </span>
-                </Group>
-              </Tabs.Tab>
-              <Tabs.Tab value="UNAPPROVED" color="blue">
-                <Group gap={6}>
-                  <span>Unapproved</span>
-                  <span style={{ background: '#3f92c5', color: '#fff', borderRadius: '20px', fontSize: '11px', fontWeight: 700, padding: '1px 8px', minWidth: 20, textAlign: 'center' }}>
-                    {counts.UNAPPROVED || 0}
-                  </span>
-                </Group>
-              </Tabs.Tab>
-              <Tabs.Tab value="APPROVED" color="teal">
-                <Group gap={6}>
-                  <span>Approved</span>
-                  <span style={{ background: '#10b981', color: '#fff', borderRadius: '20px', fontSize: '11px', fontWeight: 700, padding: '1px 8px', minWidth: 20, textAlign: 'center' }}>
-                    {counts.APPROVED || 0}
-                  </span>
-                </Group>
-              </Tabs.Tab>
-            </Tabs.List>
-          </Tabs>
+      </Modal>
 
-          <Tabs
-            value={activeSection}
-            onChange={setActiveSection}
-            variant="default"
-            mb={0}
-            styles={{
-              tab: { padding: '8px 16px' }
-            }}
-          >
-            <Tabs.List>
-              <Tabs.Tab value="ADVANCE">
-                <Group gap={6}>
-                  <span>Advance Payments</span>
-                  <span style={{ background: '#8b5cf6', color: '#fff', borderRadius: '20px', fontSize: '11px', fontWeight: 700, padding: '1px 8px', minWidth: 20, textAlign: 'center' }}>
-                    {counts[`ADVANCE_${activeTab}`] || 0}
-                  </span>
-                </Group>
-              </Tabs.Tab>
-              <Tabs.Tab value="RENT">
-                <Group gap={6}>
-                  <span>Rent Payments</span>
-                  <span style={{ background: '#06b6d4', color: '#fff', borderRadius: '20px', fontSize: '11px', fontWeight: 700, padding: '1px 8px', minWidth: 20, textAlign: 'center' }}>
-                    {counts[`RENT_${activeTab}`] || 0}
-                  </span>
-                </Group>
-              </Tabs.Tab>
-            </Tabs.List>
-          </Tabs>
-
-          <DataTable
-            title={`${activeTab.toLowerCase()} ${activeSection.toLowerCase()} Payments`}
-            columns={columns}
-            data={filteredPayments}
-            loading={loading}
-            search={search}
-            onSearch={setSearch}
-            totalCount={totalCount}
-            page={page}
-            totalPages={Math.ceil(totalCount / pageSize)}
-            onPageChange={setPage}
-          />
-        </div>
-      )}
       {/* Delete Confirmation Modal */}
       <Modal opened={opened} onClose={close} title="Delete Payment" styles={{
-        title: {
-          fontSize: "18px",
-          fontWeight: 600,
-          color: "#fa5252",
-        },
+        title: { fontSize: "18px", fontWeight: 600, color: "#fa5252" },
       }} centered>
         <Text size="sm">
           Are you sure you want to delete the payment of <strong>₹{selectedItem?.amount}</strong> for <strong>{selectedItem?.tenantName}</strong>? This action cannot be undone.
@@ -608,11 +595,13 @@ const Payments = () => {
       </Modal>
 
       {/* Receipt Modal */}
-      <Modal opened={showReceipt} onClose={() => setShowReceipt(false)} size="lg" padding={0}>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px' }}>
-          <PaymentReceipt receipt={selectedReceipt} ref={receiptRef} />
-          <Button onClick={printReceipt} mt="md">Print Receipt</Button>
-        </div>
+      <Modal opened={showReceipt} onClose={() => setShowReceipt(false)}>
+        <Stack>
+          <Paper>
+            <PaymentReceipt receipt={selectedReceipt} ref={receiptRef} />
+          </Paper>
+          <Button size="sm" styles={{ width: "150px", display: "flex", justifyContent: "center", alignItems: "center", margin: "0 auto" }} leftSection={<IconPrinter size={20} />} onClick={printReceipt}>Print Receipt</Button>
+        </Stack>
       </Modal>
     </div>
   );

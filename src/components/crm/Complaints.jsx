@@ -15,7 +15,7 @@ const Complaints = () => {
   const [search, setSearch] = useState("");
   const [totalCount, setTotalCount] = useState(0);
   const [page, setPage] = useState(1);
-  const pageSize = 10;
+  const [pageSize, setPageSize] = useState(5);
   const debouncedSearch = useDebounce(search, 500);
   
   const [form, setForm] = useState({ status: "OPEN", adminRemark: "" });
@@ -33,7 +33,7 @@ const Complaints = () => {
     }
   };
 
-  useEffect(() => { load(); }, [page, debouncedSearch]);
+  useEffect(() => { load(); }, [page, debouncedSearch, pageSize]);
 
   const openModal = (c) => {
     setSelected(c);
@@ -99,6 +99,8 @@ const Complaints = () => {
         page={page}
         totalPages={Math.ceil(totalCount / pageSize)}
         onPageChange={setPage}
+        pageSize={pageSize}
+        onPageSizeChange={setPageSize}
       />
 
       <Modal opened={modalOpen} onClose={() => setModalOpen(false)} title="Update Complaint">

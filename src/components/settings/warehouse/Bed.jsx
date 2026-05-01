@@ -25,7 +25,7 @@ const Beds = () => {
   const [loading, setLoading] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
   const [page, setPage] = useState(1);
-  const pageSize = 10;
+  const [pageSize, setPageSize] = useState(5);
 
   const [selectedLocation, setSelectedLocation] = useState("");
   const [selectedBuilding, setSelectedBuilding] = useState("");
@@ -83,7 +83,7 @@ const Beds = () => {
 
   useEffect(() => {
     load();
-  }, [page, debouncedSearch]);
+  }, [page, debouncedSearch, pageSize]);
 
   // ================== SAVE / UPDATE ==================
   const save = async (e) => {
@@ -192,25 +192,29 @@ const Beds = () => {
     { header: "Bed ID", key: "bedId", render: (val) => <strong>{val}</strong> },
     { header: "Bed Number", key: "bedNumber" },
     { header: "Room", key: "roomId", render: (val) => getRoomNumber(val) },
-    { header: "Occupied", key: "isOccupied", render: (val) => (
-      <Badge color={val ? "red" : "green"} variant="light">
-        {val ? "Yes" : "No"}
-      </Badge>
-    )},
-    { header: "Actions", key: "actions", render: (_, b) => (
-      <Group gap="xs" justify="center" wrap="nowrap">
-        <Tooltip label="Edit Bed">
-          <ActionIcon variant="light" color="yellow" size="sm" onClick={() => handleEdit(b)}>
-            <IconEdit size={16} />
-          </ActionIcon>
-        </Tooltip>
-        <Tooltip label="Delete Bed">
-          <ActionIcon variant="light" color="red" size="sm" onClick={() => openDeleteModal(b)}>
-            <IconTrash size={16} />
-          </ActionIcon>
-        </Tooltip>
-      </Group>
-    )}
+    {
+      header: "Occupied", key: "isOccupied", render: (val) => (
+        <Badge color={val ? "red" : "green"} variant="light">
+          {val ? "Yes" : "No"}
+        </Badge>
+      )
+    },
+    {
+      header: "Actions", key: "actions", render: (_, b) => (
+        <Group gap="xs" justify="center" wrap="nowrap">
+          <Tooltip label="Edit Bed">
+            <ActionIcon variant="light" color="yellow" size="sm" onClick={() => handleEdit(b)}>
+              <IconEdit size={16} />
+            </ActionIcon>
+          </Tooltip>
+          <Tooltip label="Delete Bed">
+            <ActionIcon variant="light" color="red" size="sm" onClick={() => openDeleteModal(b)}>
+              <IconTrash size={16} />
+            </ActionIcon>
+          </Tooltip>
+        </Group>
+      )
+    }
   ];
 
   return (
@@ -343,6 +347,8 @@ const Beds = () => {
           page={page}
           totalPages={Math.ceil(totalCount / pageSize)}
           onPageChange={setPage}
+          pageSize={pageSize}
+          onPageSizeChange={setPageSize}
         />
       )}
 

@@ -23,7 +23,7 @@ const Floors = () => {
   const [loading, setLoading] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
   const [page, setPage] = useState(1);
-  const pageSize = 10;
+  const [pageSize, setPageSize] = useState(5);
 
   const [selectedLocation, setSelectedLocation] = useState("");
 
@@ -75,7 +75,7 @@ const Floors = () => {
 
   useEffect(() => {
     load();
-  }, [page, debouncedSearch]);
+  }, [page, debouncedSearch, pageSize]);
 
   // ================== SAVE / UPDATE ==================
   const save = async (e) => {
@@ -182,29 +182,31 @@ const Floors = () => {
 
   const columns = [
     { header: "Floor ID", key: "floorId", render: (val) => <strong>{val}</strong> },
-    { header: "Floor #", key: "floorNumber" },
+    { header: "Floor NO", key: "floorNumber" },
     { header: "Name", key: "floorName" },
     { header: "Building", key: "buildingId", render: (val) => getBuildingName(val) },
     { header: "Rooms", key: "rooms", render: (val) => val?.length || 0 },
-    { header: "Actions", key: "actions", render: (_, f) => (
-      <Group gap="xs" justify="center" wrap="nowrap">
-        <Tooltip label="Edit Floor">
-          <ActionIcon variant="light" color="yellow" size="sm" onClick={() => handleEdit(f)}>
-            <IconEdit size={16} />
-          </ActionIcon>
-        </Tooltip>
-        <Tooltip label="Delete Floor">
-          <ActionIcon variant="light" color="red" size="sm" onClick={() => openDeleteModal(f)}>
-            <IconTrash size={16} />
-          </ActionIcon>
-        </Tooltip>
-        <Tooltip label="Go To Rooms">
-          <ActionIcon variant="light" color="blue" size="sm" onClick={() => navigate(`/rooms?floorId=${f.floorId}`)}>
-            <IconArrowRight size={16} />
-          </ActionIcon>
-        </Tooltip>
-      </Group>
-    )}
+    {
+      header: "Actions", key: "actions", render: (_, f) => (
+        <Group gap="xs" justify="center" wrap="nowrap">
+          <Tooltip label="Edit Floor">
+            <ActionIcon variant="light" color="yellow" size="sm" onClick={() => handleEdit(f)}>
+              <IconEdit size={16} />
+            </ActionIcon>
+          </Tooltip>
+          <Tooltip label="Delete Floor">
+            <ActionIcon variant="light" color="red" size="sm" onClick={() => openDeleteModal(f)}>
+              <IconTrash size={16} />
+            </ActionIcon>
+          </Tooltip>
+          <Tooltip label="Go To Rooms">
+            <ActionIcon variant="light" color="blue" size="sm" onClick={() => navigate(`/rooms?floorId=${f.floorId}`)}>
+              <IconArrowRight size={16} />
+            </ActionIcon>
+          </Tooltip>
+        </Group>
+      )
+    }
   ];
 
   return (
@@ -305,6 +307,8 @@ const Floors = () => {
           page={page}
           totalPages={Math.ceil(totalCount / pageSize)}
           onPageChange={setPage}
+          pageSize={pageSize}
+          onPageSizeChange={setPageSize}
         />
       )}
 

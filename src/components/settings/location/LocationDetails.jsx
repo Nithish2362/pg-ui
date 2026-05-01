@@ -21,7 +21,7 @@ const Locations = () => {
   const [opened, { open, close }] = useDisclosure(false);
   const [totalCount, setTotalCount] = useState(0);
   const [page, setPage] = useState(1);
-  const pageSize = 10;
+  const [pageSize, setPageSize] = useState(5);
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState({
     country: "India",
@@ -61,7 +61,7 @@ const Locations = () => {
 
   useEffect(() => {
     load();
-  }, [page, debouncedSearch]);
+  }, [page, debouncedSearch, pageSize]);
 
   // ================= INPUT CHANGE =================
   const handleChange = (key, value) => {
@@ -182,25 +182,27 @@ const Locations = () => {
     { header: "City", key: "city" },
     { header: "Address", key: "address" },
     { header: "Buildings", key: "buildings", render: (val) => val?.length || 0 },
-    { header: "Actions", key: "actions", render: (_, item) => (
-      <Group gap="xs" justify="center" wrap="nowrap">
-        <Tooltip label="Edit Location">
-          <ActionIcon variant="light" color="yellow" size="sm" onClick={() => handleEdit(item)}>
-            <IconEdit size={16} />
-          </ActionIcon>
-        </Tooltip>
-        <Tooltip label="Delete Location">
-          <ActionIcon variant="light" color="red" size="sm" onClick={() => openDeleteModal(item)}>
-            <IconTrash size={16} />
-          </ActionIcon>
-        </Tooltip>
-        <Tooltip label="Go To Buildings">
-          <ActionIcon variant="light" color="blue" size="sm" onClick={() => navigate(`/buildings?locationId=${item.locationId}`)}>
-            <IconArrowRight size={16} />
-          </ActionIcon>
-        </Tooltip>
-      </Group>
-    )}
+    {
+      header: "Actions", key: "actions", render: (_, item) => (
+        <Group gap="xs" justify="center" wrap="nowrap">
+          <Tooltip label="Edit Location">
+            <ActionIcon variant="light" color="yellow" size="sm" onClick={() => handleEdit(item)}>
+              <IconEdit size={16} />
+            </ActionIcon>
+          </Tooltip>
+          <Tooltip label="Delete Location">
+            <ActionIcon variant="light" color="red" size="sm" onClick={() => openDeleteModal(item)}>
+              <IconTrash size={16} />
+            </ActionIcon>
+          </Tooltip>
+          <Tooltip label="Go To Buildings">
+            <ActionIcon variant="light" color="blue" size="sm" onClick={() => navigate(`/buildings?locationId=${item.locationId}`)}>
+              <IconArrowRight size={16} />
+            </ActionIcon>
+          </Tooltip>
+        </Group>
+      )
+    }
   ];
 
   return (
@@ -322,6 +324,8 @@ const Locations = () => {
           page={page}
           totalPages={Math.ceil(totalCount / pageSize)}
           onPageChange={setPage}
+          pageSize={pageSize}
+          onPageSizeChange={setPageSize}
         />
       )}
 

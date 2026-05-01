@@ -18,7 +18,7 @@ const TenantDashboard = () => {
 
     const handleGoHome = async () => {
         if (!window.confirm("This will send a notification to your parents. Are you sure?")) return;
-        
+
         setSending(true);
         try {
             await api.post('/tenant/leave-request', { reason: "Visiting home" });
@@ -58,11 +58,11 @@ const TenantDashboard = () => {
                     <Text size="sm" color="dimmed" mb="xl">
                         Instantly notify your parents (Father, Mother, & Guardian) that you are going home for a holiday or leave.
                     </Text>
-                    <Button 
-                        fullWidth 
-                        size="lg" 
-                        color="red" 
-                        variant="filled" 
+                    <Button
+                        fullWidth
+                        size="lg"
+                        color="red"
+                        variant="filled"
                         leftSection={<IconHome size={20} />}
                         onClick={handleGoHome}
                         loading={sending}
@@ -101,7 +101,7 @@ const TenantDashboard = () => {
                     <Text fw={700} size="lg">Recent Payments</Text>
                     <Button variant="light" component="a" href="/tenant/payments">View All</Button>
                 </Group>
-                
+
                 {data?.recentPayments?.length > 0 ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                         {data.recentPayments.map((p, i) => (
