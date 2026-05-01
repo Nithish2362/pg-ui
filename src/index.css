@@ -8,19 +8,19 @@
   --accent-dark: #1a1a1a;
   --primary: #000000;
   --primary-soft: #333333;
-  
+
   --text-main: #1a1a1a;
   --text-muted: #666666;
   --text-dim: #999999;
-  
-  --shadow-sm: 0 2px 4px rgba(0,0,0,0.02);
-  --shadow-md: 0 20px 40px rgba(0,0,0,0.04);
-  --shadow-lg: 0 40px 80px rgba(0,0,0,0.08);
-  
+
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.02);
+  --shadow-md: 0 20px 40px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 40px 80px rgba(0, 0, 0, 0.08);
+
   --radius-sm: 8px;
   --radius-md: 16px;
   --radius-lg: 32px;
-  
+
   --transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
@@ -41,7 +41,10 @@ body {
   box-sizing: border-box;
 }
 
-h1, h2, h3, h4 {
+h1,
+h2,
+h3,
+h4 {
   font-family: 'Outfit', sans-serif;
   font-weight: 700;
   letter-spacing: -0.04em;
@@ -54,6 +57,7 @@ h1, h2, h3, h4 {
   backdrop-filter: blur(20px);
   border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
 }
+
 .nav-item {
   padding: 0 20px;
   height: 100%;
@@ -125,14 +129,11 @@ h1, h2, h3, h4 {
   left: 100%;
 }
 
-/* Luxury Data Card */
 .data-card {
   background: #ffffff;
   border-radius: 20px;
-  padding: 30px;
   border: 1px solid #f0f0f0;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
-  margin-top: 20px;
 }
 
 .data-card-header {
@@ -177,7 +178,8 @@ tr:hover td {
   background: #fdfdfd;
 }
 
-.mantine-Table-th, .mantine-Table-td {
+.mantine-Table-th,
+.mantine-Table-td {
   text-align: center !important;
 }
 

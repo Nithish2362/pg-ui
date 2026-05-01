@@ -1,5 +1,5 @@
 import { AppShell, Avatar, Button, Group, Tabs } from '@mantine/core';
-import { IconLogout } from '@tabler/icons-react';
+import { IconLogout, IconHome } from '@tabler/icons-react';
 import { createContext, Suspense, useCallback, useMemo } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { ModuleJson } from '../moduleData/ModuleJson';
@@ -21,12 +21,18 @@ export default function Layout() {
     // Find exact path match first (e.g. /dashboard)
     let match = headerData.find(h => h.path === pathname);
     if (match) return match;
-    // Then check children for path match
+
+    // Then check if pathname starts with any child path
     for (const header of headerData) {
-      if (header.children?.some(c => c.path === pathname)) {
+      if (header.children?.some(c => pathname.startsWith(c.path))) {
         return header;
       }
     }
+
+    // Fallback for direct top-level prefix match (e.g. /property/something)
+    let prefixMatch = headerData.find(h => h.path !== '/' && pathname.startsWith(h.path));
+    if (prefixMatch) return prefixMatch;
+
     return headerData[0] || null;
   }, [headerData, pathname]);
 
@@ -34,8 +40,14 @@ export default function Layout() {
   const childTabs = useMemo(() => activeHeader?.children || [], [activeHeader]);
 
   // ── Active tab: the child whose path matches current pathname
+  // ── Active tab: the child whose path matches current pathname or is a prefix
   const activeTab = useMemo(() => {
-    return childTabs.find(t => t.path === pathname) || childTabs[0] || null;
+    // Exact match first
+    const exact = childTabs.find(t => t.path === pathname);
+    if (exact) return exact;
+
+    // Prefix match (e.g. /buildings/create matches /buildings)
+    return childTabs.find(t => t.path !== '/' && pathname.startsWith(t.path)) || childTabs[0] || null;
   }, [childTabs, pathname]);
 
   // ── Navigate to header item (go to its default child or own path)
@@ -67,7 +79,15 @@ export default function Layout() {
         <AppShell.Header className="nav-header-shell">
           <nav className='nav-bar'>
             <div style={{ display: 'flex', alignItems: 'center', height: '100%', gap: '1.5rem' }}>
-              <div className="logo-text">🏠 PG ADMIN</div>
+              <svg width="0" height="0" style={{ position: 'absolute' }}>
+                <linearGradient id="logo-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#00c8ff" />
+                  <stop offset="100%" stopColor="#000000" />
+                </linearGradient>
+              </svg>
+              <div className="logo-text" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <IconHome size={32} color="url(#logo-gradient)" /> PG ADMIN
+              </div>
               {headerData.map((headernav) => (
                 <div
                   key={headernav.id}

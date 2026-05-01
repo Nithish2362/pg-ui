@@ -1,5 +1,5 @@
 import React from 'react';
-import { Table, Loader, Text, TextInput, Group } from '@mantine/core';
+import { Table, Loader, Text, TextInput, Group, Pagination } from '@mantine/core';
 import { IconSearch } from '@tabler/icons-react';
 
 /**
@@ -9,12 +9,27 @@ import { IconSearch } from '@tabler/icons-react';
  * @param {boolean} loading - Loading state
  * @param {string} search - Search value
  * @param {function} onSearch - Search change handler
+ * @param {number} totalCount - Total number of records (optional)
+ * @param {number} page - Current page (optional)
+ * @param {number} totalPages - Total pages (optional)
+ * @param {function} onPageChange - Page change handler (optional)
  */
-const DataTable = ({ columns, data, loading, search, onSearch, title }) => {
+const DataTable = ({ 
+  columns, 
+  data, 
+  loading, 
+  search, 
+  onSearch, 
+  title, 
+  totalCount, 
+  page, 
+  totalPages, 
+  onPageChange 
+}) => {
   return (
     <div className="data-card">
       <div className="data-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h3 style={{ margin: 0 }}>{title} ({data.length})</h3>
+        <h3 style={{ margin: 0 }}>{title} {totalCount !== undefined ? `(${totalCount})` : data.length > 0 ? `(${data.length})` : ''}</h3>
         {onSearch && (
           <TextInput
             placeholder="Search..."
@@ -62,6 +77,20 @@ const DataTable = ({ columns, data, loading, search, onSearch, title }) => {
           </Table.Tbody>
         </Table>
       </div>
+
+      {totalPages > 1 && (
+        <Group justify="center" mt="xl">
+          <Pagination 
+            total={totalPages} 
+            value={page} 
+            onChange={onPageChange} 
+            size="sm"
+            radius="xl"
+            withEdges
+            color="#3f92c5"
+          />
+        </Group>
+      )}
     </div>
   );
 };

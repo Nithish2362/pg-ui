@@ -2,22 +2,32 @@ import React, { useState, useEffect } from "react";
 import { Modal, Button, TextInput, Select, Text, Group, Badge, NumberInput, ActionIcon, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useNavigate, useLocation } from "react-router-dom";
-import { IconArrowRight } from "@tabler/icons-react";
+import { IconArrowRight, IconArrowLeft, IconEdit, IconTrash, IconPlus } from "@tabler/icons-react";
 import api from "../../../api/Interceptor";
 import notify from "../../utils/Notification";
 
 import useDebounce from "../../../common/useDebounce";
+import DataTable from "../../common/DataTable";
 
 const Rooms = () => {
   const navigate = useNavigate();
   const locationState = useLocation();
+  const isCreateMode = locationState.pathname === "/rooms/create";
   const queryParams = new URLSearchParams(locationState.search);
   const preSelectedFloorId = queryParams.get("floorId");
 
+  const [locations, setLocations] = useState([]);
+  const [buildings, setBuildings] = useState([]);
   const [rooms, setRooms] = useState([]);
   const [floors, setFloors] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
+
+  const [selectedLocation, setSelectedLocation] = useState("");
+  const [selectedBuilding, setSelectedBuilding] = useState("");
 
   const [selectedItem, setSelectedItem] = useState(null);
   const [opened, { open, close }] = useDisclosure(false);
@@ -45,11 +55,18 @@ const Rooms = () => {
   const load = async () => {
     try {
       setLoading(true);
-      const roomRes = await api.get("/admin/rooms");
-      const floorRes = await api.get("/admin/floors");
+      const [roomRes, floorRes, buildingRes, locationRes] = await Promise.all([
+        api.get(`/admin/rooms/view?page=${page - 1}&pageSize=${pageSize}&searchTerm=${debouncedSearch}`),
+        api.get("/admin/floors"),
+        api.get("/admin/buildings"),
+        api.get("/admin/locations/get-all"),
+      ]);
 
-      setRooms(roomRes.data.response || roomRes.data.data || roomRes.data || []);
-      setFloors(floorRes.data.response || floorRes.data.data || floorRes.data || []);
+      setRooms(roomRes.data?.response || []);
+      setTotalCount(roomRes.data?.count || 0);
+      setFloors(floorRes.data?.response || floorRes.data?.data || floorRes.data || []);
+      setBuildings(buildingRes.data?.response || buildingRes.data?.data || buildingRes.data || []);
+      setLocations(locationRes.data?.response || locationRes.data?.data || locationRes.data || []);
     } catch (error) {
       console.error("Error loading data:", error);
       notify({
@@ -65,7 +82,7 @@ const Rooms = () => {
 
   useEffect(() => {
     load();
-  }, []);
+  }, [page, debouncedSearch]);
 
   // ================== SAVE / UPDATE ==================
   const save = async (e) => {
@@ -106,6 +123,7 @@ const Rooms = () => {
       });
       setEditingId(null);
       load();
+      navigate("/rooms");
     } catch (error) {
       console.error(error);
       notify({
@@ -119,6 +137,16 @@ const Rooms = () => {
 
   // ================== EDIT / DELETE ==================
   const handleEdit = (item) => {
+    // Find building from floor, and location from building
+    const floor = floors.find(f => f.floorId === item.floorId);
+    if (floor) {
+      setSelectedBuilding(floor.buildingId);
+      const building = buildings.find(b => b.buildingId === floor.buildingId);
+      if (building) {
+        setSelectedLocation(building.locationId);
+      }
+    }
+
     setForm({
       roomNumber: item.roomNumber || "",
       roomType: item.roomType || "AC",
@@ -129,6 +157,7 @@ const Rooms = () => {
       floorId: item.floorId || "",
     });
     setEditingId(item.roomId);
+    navigate("/rooms/create");
   };
 
   const openDeleteModal = (item) => {
@@ -169,214 +198,226 @@ const Rooms = () => {
       roomId: "",
       floorId: "",
     });
+    setSelectedLocation("");
+    setSelectedBuilding("");
+    navigate("/rooms");
   };
 
-  // ================== UTILS ==================
   const getFloorName = (id) => {
     const floor = floors.find((x) => x.floorId === id);
     return floor ? floor.floorName : id;
   };
 
-  const filteredItems = rooms.filter((r) => {
-    if (!debouncedSearch.trim()) return true;
-    const text = debouncedSearch.toLowerCase();
-    return (
-      r.roomNumber?.toLowerCase().includes(text) ||
-      r.roomId?.toLowerCase().includes(text) ||
-      getFloorName(r.floorId)?.toLowerCase().includes(text)
-    );
-  });
+  const columns = [
+    { header: "Room ID", key: "roomId", render: (val) => <strong>{val}</strong> },
+    { header: "Room #", key: "roomNumber" },
+    { header: "Floor", key: "floorId", render: (val) => getFloorName(val) },
+    { header: "Type", key: "roomType", render: (val) => (
+      <Badge color={val === "AC" ? "blue" : "orange"} variant="light">
+        {val}
+      </Badge>
+    )},
+    { header: "Sharing", key: "sharingType", render: (val) => `${val} Sharing` },
+    { header: "Rent", key: "monthlyRent", render: (val) => `₹${val}` },
+    { header: "Beds", key: "totalBeds", render: (val, r) => r.beds?.length || val },
+    { header: "Actions", key: "actions", render: (_, r) => (
+      <Group gap="xs" justify="center" wrap="nowrap">
+        <Tooltip label="Edit Room">
+          <ActionIcon variant="light" color="yellow" size="sm" onClick={() => handleEdit(r)}>
+            <IconEdit size={16} />
+          </ActionIcon>
+        </Tooltip>
+        <Tooltip label="Delete Room">
+          <ActionIcon variant="light" color="red" size="sm" onClick={() => openDeleteModal(r)}>
+            <IconTrash size={16} />
+          </ActionIcon>
+        </Tooltip>
+        <Tooltip label="Go To Beds">
+          <ActionIcon variant="light" color="blue" size="sm" onClick={() => navigate(`/beds?roomId=${r.roomId}`)}>
+            <IconArrowRight size={16} />
+          </ActionIcon>
+        </Tooltip>
+      </Group>
+    )}
+  ];
 
   return (
     <div>
-      <div className="page-header">
+      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h2>Room Management</h2>
+        {!isCreateMode ? (
+          <Button onClick={() => navigate("/rooms/create")}>
+            <IconPlus size={18} style={{ marginRight: "5px" }} /> Create Room
+          </Button>
+        ) : (
+          <Button onClick={() => navigate("/rooms")} variant="outline" leftSection={<IconArrowLeft size={18} />}>
+            Back
+          </Button>
+        )}
       </div>
 
-      <div className="form-card">
-        <h3 style={{ marginBottom: "15px" }}>
-          {editingId ? "Edit Room" : "Add New Room"}
-        </h3>
+      {isCreateMode ? (
+        <div className="form-card">
+          <h3 style={{ marginBottom: "15px" }}>
+            {editingId ? "Edit Room" : "Add New Room"}
+          </h3>
 
-        <form onSubmit={save}>
-          <div className="form-grid">
-            <div className="form-group">
-              <label>Floor</label>
-              <Select
-                placeholder="Select Floor"
-                data={floors.map((f) => ({ value: f.floorId, label: f.floorName }))}
-                value={form.floorId}
-                onChange={(val) => setForm({ ...form, floorId: val })}
-                disabled={!!editingId}
-                searchable
-                required
-              />
+          <form onSubmit={save}>
+            <div className="form-grid">
+              <div className="form-group">
+                <label>Location</label>
+                <Select
+                  placeholder="Select Location"
+                  data={locations.map((l) => ({ value: l.locationId, label: l.locationName }))}
+                  value={selectedLocation}
+                  onChange={(val) => {
+                    setSelectedLocation(val);
+                    setSelectedBuilding("");
+                    setForm({ ...form, floorId: "" });
+                  }}
+                  disabled={!!editingId}
+                  searchable
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Building</label>
+                <Select
+                  placeholder={selectedLocation ? "Select Building" : "Select Location First"}
+                  data={buildings.filter(b => b.locationId === selectedLocation).map((b) => ({ value: b.buildingId, label: b.buildingName }))}
+                  value={selectedBuilding}
+                  onChange={(val) => {
+                    setSelectedBuilding(val);
+                    setForm({ ...form, floorId: "" });
+                  }}
+                  disabled={!selectedLocation || !!editingId}
+                  searchable
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Floor</label>
+                <Select
+                  placeholder={selectedBuilding ? "Select Floor" : "Select Building First"}
+                  data={floors.filter(f => f.buildingId === selectedBuilding).map((f) => ({ value: f.floorId, label: f.floorName }))}
+                  value={form.floorId}
+                  onChange={(val) => setForm({ ...form, floorId: val })}
+                  disabled={!selectedBuilding || !!editingId}
+                  searchable
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Room Number</label>
+                <TextInput
+                  placeholder="e.g. 101"
+                  value={form.roomNumber}
+                  onChange={(e) => setForm({ ...form, roomNumber: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Room Type</label>
+                <Select
+                  data={[
+                    { value: "AC", label: "AC" },
+                    { value: "NON_AC", label: "Non-AC" },
+                  ]}
+                  value={form.roomType}
+                  onChange={(val) => setForm({ ...form, roomType: val })}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Sharing Type</label>
+                <Select
+                  data={[
+                    { value: "1", label: "1 Sharing" },
+                    { value: "2", label: "2 Sharing" },
+                    { value: "3", label: "3 Sharing" },
+                    { value: "4", label: "4 Sharing" },
+                    { value: "5", label: "5 Sharing" },
+                    { value: "6", label: "6 Sharing" },
+
+                  ]}
+                  value={form.sharingType}
+                  onChange={(val) =>
+                    setForm({
+                      ...form,
+                      sharingType: val,
+                      totalBeds: val, // auto set beds same as sharing
+                    })
+                  }
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Monthly Rent (₹)</label>
+                <TextInput
+                  type="number"
+                  placeholder="Rent amount"
+                  value={form.monthlyRent}
+                  onChange={(e) => setForm({ ...form, monthlyRent: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Total Beds</label>
+                <TextInput
+                  type="number"
+                  placeholder="Number of beds"
+                  value={form.totalBeds}
+                  required
+                />
+              </div>
             </div>
 
-            <div className="form-group">
-              <label>Room Number</label>
-              <TextInput
-                placeholder="e.g. 101"
-                value={form.roomNumber}
-                onChange={(e) => setForm({ ...form, roomNumber: e.target.value })}
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Room Type</label>
-              <Select
-                data={[
-                  { value: "AC", label: "AC" },
-                  { value: "NON_AC", label: "Non-AC" },
-                ]}
-                value={form.roomType}
-                onChange={(val) => setForm({ ...form, roomType: val })}
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Sharing Type</label>
-              <Select
-                data={[
-                  { value: "1", label: "1 Sharing" },
-                  { value: "2", label: "2 Sharing" },
-                  { value: "3", label: "3 Sharing" },
-                  { value: "4", label: "4 Sharing" },
-                  { value: "5", label: "5 Sharing" },
-                  { value: "6", label: "6 Sharing" },
-
-                ]}
-                value={form.sharingType}
-                onChange={(val) =>
-                  setForm({
-                    ...form,
-                    sharingType: val,
-                    totalBeds: val, // auto set beds same as sharing
-                  })
-                }
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Monthly Rent (₹)</label>
-              <TextInput
-                type="number"
-                placeholder="Rent amount"
-                value={form.monthlyRent}
-                onChange={(e) => setForm({ ...form, monthlyRent: e.target.value })}
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Total Beds</label>
-              <TextInput
-                type="number"
-                placeholder="Number of beds"
-                value={form.totalBeds}
-                required
-              />
-            </div>
-          </div>
-
-          <Group mt="md">
-            <Button type="submit" className="btn btn-primary">
-              {editingId ? "Update Room" : "Save Room"}
-            </Button>
-            {editingId && (
-              <Button variant="outline" color="gray" onClick={cancelEdit}>
-                Cancel
+            <Group justify="center" mt="xl">
+              <Button type="submit">
+                {editingId ? "Update Room" : "Save Room"}
               </Button>
-            )}
-          </Group>
-        </form>
-      </div>
-
-      <div className="data-card">
-        <div className="data-card-header">
-          <h3>All Rooms ({filteredItems.length})</h3>
-          <TextInput
-            placeholder="Search rooms..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            style={{ width: "300px" }}
-          />
+              {editingId && (
+                <Button variant="outline" color="gray" onClick={cancelEdit}>
+                  Cancel
+                </Button>
+              )}
+            </Group>
+          </form>
         </div>
+      ) : (
+        <DataTable
+          title="All Rooms"
+          columns={columns}
+          data={rooms}
+          loading={loading}
+          search={search}
+          onSearch={setSearch}
+          totalCount={totalCount}
+          page={page}
+          totalPages={Math.ceil(totalCount / pageSize)}
+          onPageChange={setPage}
+        />
+      )}
 
-        <table>
-          <thead>
-            <tr>
-              <th>Room ID</th>
-              <th>Room #</th>
-              <th>Floor</th>
-              <th>Type</th>
-              <th>Sharing</th>
-              <th>Rent</th>
-              <th>Beds</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredItems.map((r) => (
-              <tr key={r.id || r.roomId}>
-                <td><strong>{r.roomId}</strong></td>
-                <td>{r.roomNumber}</td>
-                <td>{getFloorName(r.floorId)}</td>
-                <td>
-                  <Badge color={r.roomType === "AC" ? "blue" : "orange"} variant="light">
-                    {r.roomType}
-                  </Badge>
-                </td>
-                <td>{r.sharingType} Sharing</td>
-                <td>₹{r.monthlyRent}</td>
-                <td>{r.beds?.length || r.totalBeds}</td>
-                <td>
-                  <Group gap="xs">
-                    <Tooltip label="Manage Beds">
-                      <ActionIcon 
-                        variant="light" 
-                        color="blue" 
-                        onClick={() => navigate(`/beds?roomId=${r.roomId}`)}
-                      >
-                        <IconArrowRight size={16} />
-                      </ActionIcon>
-                    </Tooltip>
-                    <Button variant="light" color="yellow" size="compact-xs" onClick={() => handleEdit(r)}>
-                      Edit
-                    </Button>
-                    <Button variant="light" color="red" size="compact-xs" onClick={() => openDeleteModal(r)}>
-                      Delete
-                    </Button>
-                  </Group>
-                </td>
-              </tr>
-            ))}
-            {filteredItems.length === 0 && (
-              <tr>
-                <td colSpan="8" style={{ textAlign: "center", padding: "40px", color: "#64748b" }}>
-                  {loading ? "Loading rooms..." : "No rooms found"}
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      <Modal opened={opened} onClose={close} title="Delete Room"  styles={{
-    title: {
-      fontSize: "18px",
-      fontWeight: 600,
-      color: "#e03131", // red color
-    },
-  }} centered>
+      <Modal opened={opened} onClose={close} title="Delete Room" styles={{
+        title: {
+          fontSize: "18px",
+          fontWeight: 600,
+          color: "#e03131", // red color
+        },
+      }} centered>
         <Text size="sm">
           Are you sure you want to delete room <strong>{selectedItem?.roomNumber}</strong>? This action cannot be undone.
         </Text>
         <Group justify="flex-end" mt="xl">
-          <Button variant="default" onClick={close}>Cancel</Button>
+          <Button variant="outline" color="gray" onClick={close}>Cancel</Button>
           <Button color="red" onClick={confirmDelete}>Delete</Button>
         </Group>
       </Modal>

@@ -3,20 +3,29 @@ import { Modal, Button, Textarea, Select, Group, Badge, Text } from "@mantine/co
 import api from "../../api/Interceptor";
 import notify from "../utils/Notification";
 import DataTable from "../common/DataTable";
+import useDebounce from "../../common/useDebounce";
+
+import { IconAlertTriangle } from "@tabler/icons-react";
 
 const Complaints = () => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [selected, setSelected] = useState(null);
+  const [search, setSearch] = useState("");
+  const [totalCount, setTotalCount] = useState(0);
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
+  const debouncedSearch = useDebounce(search, 500);
   
   const [form, setForm] = useState({ status: "OPEN", adminRemark: "" });
 
   const load = async () => {
     try {
       setLoading(true);
-      const res = await api.get("/complaints");
-      setItems(res.data?.response || res.data?.data || []);
+      const res = await api.get(`/complaints/view?page=${page - 1}&pageSize=${pageSize}&searchTerm=${debouncedSearch}`);
+      setItems(res.data?.response || []);
+      setTotalCount(res.data?.count || 0);
     } catch (err) {
       notify({ title: "Error", message: "Failed to load complaints.", error: true });
     } finally {
@@ -24,7 +33,7 @@ const Complaints = () => {
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [page, debouncedSearch]);
 
   const openModal = (c) => {
     setSelected(c);
@@ -44,7 +53,9 @@ const Complaints = () => {
   };
 
   const statusColors = {
-    RESOLVED: "green"
+    RESOLVED: "green",
+    OPEN: "red",
+    IN_PROGRESS: "yellow"
   };
 
   const columns = [
@@ -71,7 +82,10 @@ const Complaints = () => {
   return (
     <div>
       <div className="page-header">
-        <h2>⚠️ Complaints Management</h2>
+        <Group gap="xs">
+          <IconAlertTriangle size={24} color="#fa5252" />
+          <h2 style={{ margin: 0 }}>Complaints Management</h2>
+        </Group>
       </div>
 
       <DataTable 
@@ -79,6 +93,12 @@ const Complaints = () => {
         columns={columns}
         data={items}
         loading={loading}
+        search={search}
+        onSearch={setSearch}
+        totalCount={totalCount}
+        page={page}
+        totalPages={Math.ceil(totalCount / pageSize)}
+        onPageChange={setPage}
       />
 
       <Modal opened={modalOpen} onClose={() => setModalOpen(false)} title="Update Complaint">

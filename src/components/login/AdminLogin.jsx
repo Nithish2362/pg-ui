@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/Interceptor';
 import { END_POINTS } from '../../api/EndPoints';
+import notify from '../utils/Notification';
 import './AdminLogin.css';
 import {
   IconLogin,
@@ -62,12 +63,6 @@ const AdminLogin = () => {
       });
       const loginData = res.data.response;
 
-      if (loginData.role !== 'ROLE_ADMIN' && loginData.role !== 'ADMIN') {
-        setError('Access denied. Admin only.');
-        setLoading(false);
-        return;
-      }
-
       localStorage.setItem('token', loginData.token);
       localStorage.setItem('user', JSON.stringify(loginData));
 
@@ -75,7 +70,11 @@ const AdminLogin = () => {
         setTempUsername(loginData.username);
         setShowChangePassword(true);
       } else {
-        navigate('/dashboard');
+        if (loginData.role === 'ROLE_TENANT' || loginData.role === 'TENANT') {
+          navigate('/tenant/dashboard');
+        } else {
+          navigate('/dashboard');
+        }
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Invalid credentials');
@@ -93,7 +92,11 @@ const AdminLogin = () => {
         ...formData,
         role: 'ADMIN'
       });
-      alert('Admin registered! Credentials sent to your email.');
+      notify({
+        title: 'Registration Successful',
+        message: 'Admin registered! Credentials sent to your email.',
+        success: true
+      });
       setMode('login');
       setFormData({ ...formData, password: '' });
     } catch (err) {
@@ -110,7 +113,11 @@ const AdminLogin = () => {
     try {
       await api.post('/auth/forgot-password', { loginId: formData.loginId });
       setStep(2);
-      alert('OTP sent to your registered email.');
+      notify({
+        title: 'OTP Sent',
+        message: 'OTP sent to your registered email.',
+        success: true
+      });
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to send OTP.');
     } finally {
@@ -132,7 +139,11 @@ const AdminLogin = () => {
         otp: formData.otp,
         newPassword: passwords.newPassword
       });
-      alert('Password reset successful!');
+      notify({
+        title: 'Success',
+        message: 'Password reset successful!',
+        success: true
+      });
       setMode('login');
       setStep(1);
     } catch (err) {
@@ -376,7 +387,7 @@ const AdminLogin = () => {
             {mode === 'login' && (
               <>
                 <div className="admin-form-group">
-                  <label>Security Key</label>
+                  <label>PASSWORD</label>
                   <div className="admin-input-wrapper">
                     <IconLock className="admin-input-icon" size={20} />
                     <input type={showPassword ? "text" : "password"} className="admin-input" name="password" value={formData.password} onChange={handleInputChange} required placeholder="••••••••" />
@@ -386,12 +397,12 @@ const AdminLogin = () => {
                   </div>
                 </div>
                 <div style={{ textAlign: 'right', marginTop: '-10px', marginBottom: '20px' }}>
-                  <span style={{ color: '#2563eb', fontSize: '0.85rem', cursor: 'pointer', fontWeight: 600 }} onClick={() => setMode('forgot')}>Forgot Key?</span>
+                  <span style={{ color: '#2563eb', fontSize: '0.85rem', cursor: 'pointer', fontWeight: 600 }} onClick={() => setMode('forgot')}>Forgot Password?</span>
                 </div>
               </>
             )}
             <button type="submit" className="admin-btn" disabled={loading}>
-              {loading ? 'Authorizing...' : (mode === 'login' ? <><IconLogin size={20} /> Sign In</> : <><IconUserPlus size={20} /> Create Admin</>)}
+              {loading ? 'Creating...' : (mode === 'login' ? <><IconLogin size={20} /> Sign In</> : <><IconUserPlus size={20} /> Create Admin</>)}
             </button>
           </form>
         </div>

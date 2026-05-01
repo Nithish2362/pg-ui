@@ -3,18 +3,27 @@ import { Modal, Button, TextInput, Textarea, Group, Badge, Text } from "@mantine
 import api from "../../api/Interceptor";
 import notify from "../utils/Notification";
 import DataTable from "../common/DataTable";
+import useDebounce from "../../common/useDebounce";
+
+import { IconSpeakerphone, IconPlus } from "@tabler/icons-react";
 
 const Notices = () => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState({ title: "", content: "" });
+  const [search, setSearch] = useState("");
+  const [totalCount, setTotalCount] = useState(0);
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
+  const debouncedSearch = useDebounce(search, 500);
 
   const load = async () => {
     try {
       setLoading(true);
-      const res = await api.get("/notices");
-      setItems(res.data?.response || res.data?.data || []);
+      const res = await api.get(`/notices/view?page=${page - 1}&pageSize=${pageSize}&searchTerm=${debouncedSearch}`);
+      setItems(res.data?.response || []);
+      setTotalCount(res.data?.count || 0);
     } catch (err) {
       notify({ title: "Error", message: "Failed to load notices.", error: true });
     } finally {
@@ -22,7 +31,7 @@ const Notices = () => {
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [page, debouncedSearch]);
 
   const save = async () => {
     if (!form.title || !form.content) {
@@ -88,8 +97,13 @@ const Notices = () => {
   return (
     <div>
       <div className="page-header">
-        <h2>📢 Notice Board</h2>
-        <Button onClick={() => setModalOpen(true)}>+ Create Notice</Button>
+        <Group gap="xs">
+          <IconSpeakerphone size={24} color="#3f92c5" />
+          <h2 style={{ margin: 0 }}>Notice Board</h2>
+        </Group>
+        <Button onClick={() => setModalOpen(true)} leftSection={<IconPlus size={16} />}>
+          Create Notice
+        </Button>
       </div>
 
       <DataTable 
@@ -97,6 +111,12 @@ const Notices = () => {
         columns={columns}
         data={items}
         loading={loading}
+        search={search}
+        onSearch={setSearch}
+        totalCount={totalCount}
+        page={page}
+        totalPages={Math.ceil(totalCount / pageSize)}
+        onPageChange={setPage}
       />
 
       <Modal opened={modalOpen} onClose={() => setModalOpen(false)} title="Broadcast Notice">

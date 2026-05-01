@@ -2,22 +2,30 @@ import React, { useState, useEffect } from "react";
 import { Modal, Button, TextInput, Select, Text, Group, ActionIcon, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useNavigate, useLocation } from "react-router-dom";
-import { IconArrowRight } from "@tabler/icons-react";
+import { IconArrowRight, IconArrowLeft, IconEdit, IconTrash, IconPlus } from "@tabler/icons-react";
 import api from "../../../api/Interceptor";
 import notify from "../../utils/Notification";
 
 import useDebounce from "../../../common/useDebounce";
+import DataTable from "../../common/DataTable";
 
 const Floors = () => {
   const navigate = useNavigate();
   const locationState = useLocation();
+  const isCreateMode = locationState.pathname === "/floors/create";
   const queryParams = new URLSearchParams(locationState.search);
   const preSelectedBuildingId = queryParams.get("buildingId");
 
+  const [locations, setLocations] = useState([]);
   const [floors, setFloors] = useState([]);
   const [buildings, setBuildings] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
+
+  const [selectedLocation, setSelectedLocation] = useState("");
 
   const [selectedItem, setSelectedItem] = useState(null);
   const [opened, { open, close }] = useDisclosure(false);
@@ -42,11 +50,16 @@ const Floors = () => {
   const load = async () => {
     try {
       setLoading(true);
-      const floorRes = await api.get("/admin/floors");
-      const buildingRes = await api.get("/admin/buildings");
+      const [floorRes, buildingRes, locationRes] = await Promise.all([
+        api.get(`/admin/floors/view?page=${page - 1}&pageSize=${pageSize}&searchTerm=${debouncedSearch}`),
+        api.get("/admin/buildings"),
+        api.get("/admin/locations/get-all"),
+      ]);
 
-      setFloors(floorRes.data.response || floorRes.data.data || floorRes.data || []);
-      setBuildings(buildingRes.data.response || buildingRes.data.data || buildingRes.data || []);
+      setFloors(floorRes.data?.response || []);
+      setTotalCount(floorRes.data?.count || 0);
+      setBuildings(buildingRes.data?.response || buildingRes.data?.data || buildingRes.data || []);
+      setLocations(locationRes.data?.response || locationRes.data?.data || locationRes.data || []);
     } catch (error) {
       console.error("Error loading data:", error);
       notify({
@@ -62,7 +75,7 @@ const Floors = () => {
 
   useEffect(() => {
     load();
-  }, []);
+  }, [page, debouncedSearch]);
 
   // ================== SAVE / UPDATE ==================
   const save = async (e) => {
@@ -98,6 +111,7 @@ const Floors = () => {
       setForm({ floorNumber: "", floorName: "", floorId: "", buildingId: "" });
       setEditingId(null);
       load();
+      navigate("/floors");
     } catch (error) {
       console.error(error);
       notify({
@@ -111,6 +125,12 @@ const Floors = () => {
 
   // ================== EDIT / DELETE ==================
   const handleEdit = (item) => {
+    // Find the building to get the locationId
+    const building = buildings.find(b => b.buildingId === item.buildingId);
+    if (building) {
+      setSelectedLocation(building.locationId);
+    }
+
     setForm({
       floorNumber: item.floorNumber || "",
       floorName: item.floorName || "",
@@ -118,6 +138,7 @@ const Floors = () => {
       buildingId: item.buildingId || "",
     });
     setEditingId(item.floorId);
+    navigate("/floors/create");
   };
 
   const openDeleteModal = (item) => {
@@ -150,159 +171,155 @@ const Floors = () => {
   const cancelEdit = () => {
     setEditingId(null);
     setForm({ floorNumber: "", floorName: "", floorId: "", buildingId: "" });
+    setSelectedLocation("");
+    navigate("/floors");
   };
 
-  // ================== UTILS ==================
   const getBuildingName = (id) => {
     const bld = buildings.find((x) => x.buildingId === id);
     return bld ? bld.buildingName : id;
   };
 
-  const filteredItems = floors.filter((f) => {
-    if (!debouncedSearch.trim()) return true;
-    const text = debouncedSearch.toLowerCase();
-    return (
-      f.floorName?.toLowerCase().includes(text) ||
-      f.floorId?.toLowerCase().includes(text) ||
-      getBuildingName(f.buildingId)?.toLowerCase().includes(text)
-    );
-  });
+  const columns = [
+    { header: "Floor ID", key: "floorId", render: (val) => <strong>{val}</strong> },
+    { header: "Floor #", key: "floorNumber" },
+    { header: "Name", key: "floorName" },
+    { header: "Building", key: "buildingId", render: (val) => getBuildingName(val) },
+    { header: "Rooms", key: "rooms", render: (val) => val?.length || 0 },
+    { header: "Actions", key: "actions", render: (_, f) => (
+      <Group gap="xs" justify="center" wrap="nowrap">
+        <Tooltip label="Edit Floor">
+          <ActionIcon variant="light" color="yellow" size="sm" onClick={() => handleEdit(f)}>
+            <IconEdit size={16} />
+          </ActionIcon>
+        </Tooltip>
+        <Tooltip label="Delete Floor">
+          <ActionIcon variant="light" color="red" size="sm" onClick={() => openDeleteModal(f)}>
+            <IconTrash size={16} />
+          </ActionIcon>
+        </Tooltip>
+        <Tooltip label="Go To Rooms">
+          <ActionIcon variant="light" color="blue" size="sm" onClick={() => navigate(`/rooms?floorId=${f.floorId}`)}>
+            <IconArrowRight size={16} />
+          </ActionIcon>
+        </Tooltip>
+      </Group>
+    )}
+  ];
 
   return (
     <div>
-      <div className="page-header">
+      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h2>Floor Management</h2>
+        {!isCreateMode ? (
+          <Button onClick={() => navigate("/floors/create")}>
+            <IconPlus size={18} style={{ marginRight: "5px" }} /> Create Floor
+          </Button>
+        ) : (
+          <Button onClick={() => navigate("/floors")} variant="outline" leftSection={<IconArrowLeft size={18} />}>
+            Back
+          </Button>
+        )}
       </div>
 
-      <div className="form-card">
-        <h3 style={{ marginBottom: "15px" }}>
-          {editingId ? "Edit Floor" : "Add New Floor"}
-        </h3>
+      {isCreateMode ? (
+        <div className="form-card">
+          <h3 style={{ marginBottom: "15px" }}>
+            {editingId ? "Edit Floor" : "Add New Floor"}
+          </h3>
 
-        <form onSubmit={save}>
-          <div className="form-grid">
-            <div className="form-group">
-              <label>Building</label>
-              <Select
-                placeholder="Select Building"
-                data={buildings.map((b) => ({ value: b.buildingId, label: b.buildingName }))}
-                value={form.buildingId}
-                onChange={(val) => setForm({ ...form, buildingId: val })}
-                disabled={!!editingId}
-                searchable
-                required
-              />
+          <form onSubmit={save}>
+            <div className="form-grid">
+              <div className="form-group">
+                <label>Location</label>
+                <Select
+                  placeholder="Select Location"
+                  data={locations.map((l) => ({ value: l.locationId, label: l.locationName }))}
+                  value={selectedLocation}
+                  onChange={(val) => {
+                    setSelectedLocation(val);
+                    setForm({ ...form, buildingId: "" }); // Reset building when location changes
+                  }}
+                  disabled={!!editingId}
+                  searchable
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Building</label>
+                <Select
+                  placeholder={selectedLocation ? "Select Building" : "Select Location First"}
+                  data={buildings.filter(b => b.locationId === selectedLocation).map((b) => ({ value: b.buildingId, label: b.buildingName }))}
+                  value={form.buildingId}
+                  onChange={(val) => setForm({ ...form, buildingId: val })}
+                  disabled={!selectedLocation || !!editingId}
+                  searchable
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Floor Number</label>
+                <TextInput
+                  type="number"
+                  placeholder="e.g. 1"
+                  value={form.floorNumber}
+                  onChange={(e) => setForm({ ...form, floorNumber: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Floor Name</label>
+                <TextInput
+                  placeholder="e.g. Ground Floor"
+                  value={form.floorName}
+                  onChange={(e) => setForm({ ...form, floorName: e.target.value })}
+                  required
+                />
+              </div>
             </div>
 
-            <div className="form-group">
-              <label>Floor Number</label>
-              <TextInput
-                type="number"
-                placeholder="e.g. 1"
-                value={form.floorNumber}
-                onChange={(e) => setForm({ ...form, floorNumber: e.target.value })}
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Floor Name</label>
-              <TextInput
-                placeholder="e.g. Ground Floor"
-                value={form.floorName}
-                onChange={(e) => setForm({ ...form, floorName: e.target.value })}
-                required
-              />
-            </div>
-          </div>
-
-          <Group mt="md">
-            <Button type="submit" className="btn btn-primary">
-              {editingId ? "Update Floor" : "Save Floor"}
-            </Button>
-            {editingId && (
-              <Button variant="outline" color="gray" onClick={cancelEdit}>
-                Cancel
+            <Group justify="center" mt="xl">
+              <Button type="submit">
+                {editingId ? "Update Floor" : "Save Floor"}
               </Button>
-            )}
-          </Group>
-        </form>
-      </div>
-
-      <div className="data-card">
-        <div className="data-card-header">
-          <h3>All Floors ({filteredItems.length})</h3>
-          <TextInput
-            placeholder="Search floors..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            style={{ width: "300px" }}
-          />
+              {editingId && (
+                <Button variant="outline" color="gray" onClick={cancelEdit}>
+                  Cancel
+                </Button>
+              )}
+            </Group>
+          </form>
         </div>
+      ) : (
+        <DataTable
+          title="All Floors"
+          columns={columns}
+          data={floors}
+          loading={loading}
+          search={search}
+          onSearch={setSearch}
+          totalCount={totalCount}
+          page={page}
+          totalPages={Math.ceil(totalCount / pageSize)}
+          onPageChange={setPage}
+        />
+      )}
 
-        <table>
-          <thead>
-            <tr>
-              <th>Floor ID</th>
-              <th>Floor #</th>
-              <th>Name</th>
-              <th>Building</th>
-              <th>Rooms</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredItems.map((f) => (
-              <tr key={f.id || f.floorId}>
-                <td><strong>{f.floorId}</strong></td>
-                <td>{f.floorNumber}</td>
-                <td>{f.floorName}</td>
-                <td>{getBuildingName(f.buildingId)}</td>
-                <td>{f.rooms?.length || 0}</td>
-                <td>
-                  <Group gap="xs">
-                    <Tooltip label="Manage Rooms">
-                      <ActionIcon 
-                        variant="light" 
-                        color="blue" 
-                        onClick={() => navigate(`/rooms?floorId=${f.floorId}`)}
-                      >
-                        <IconArrowRight size={16} />
-                      </ActionIcon>
-                    </Tooltip>
-                    <Button variant="light" color="yellow" size="compact-xs" onClick={() => handleEdit(f)}>
-                      Edit
-                    </Button>
-                    <Button variant="light" color="red" size="compact-xs" onClick={() => openDeleteModal(f)}>
-                      Delete
-                    </Button>
-                  </Group>
-                </td>
-              </tr>
-            ))}
-            {filteredItems.length === 0 && (
-              <tr>
-                <td colSpan="6" style={{ textAlign: "center", padding: "40px", color: "#64748b" }}>
-                  {loading ? "Loading floors..." : "No floors found"}
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      <Modal opened={opened} onClose={close} title="Delete Floor"  styles={{
-    title: {
-      fontSize: "18px",
-      fontWeight: 600,
-      color: "#e03131", // red color
-    },
-  }} centered>
+      <Modal opened={opened} onClose={close} title="Delete Floor" styles={{
+        title: {
+          fontSize: "18px",
+          fontWeight: 600,
+          color: "#e03131", // red color
+        },
+      }} centered>
         <Text size="sm">
           Are you sure you want to delete floor <strong>{selectedItem?.floorName}</strong>? This action cannot be undone.
         </Text>
         <Group justify="flex-end" mt="xl">
-          <Button variant="default" onClick={close}>Cancel</Button>
+          <Button variant="outline" color="gray" onClick={close}>Cancel</Button>
           <Button color="red" onClick={confirmDelete}>Delete</Button>
         </Group>
       </Modal>

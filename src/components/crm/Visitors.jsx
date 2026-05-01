@@ -3,16 +3,25 @@ import { Button, Group, Badge, Text } from "@mantine/core";
 import api from "../../api/Interceptor";
 import notify from "../utils/Notification";
 import DataTable from "../common/DataTable";
+import useDebounce from "../../common/useDebounce";
+
+import { IconDoorEnter } from "@tabler/icons-react";
 
 const Visitors = () => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState("");
+  const [totalCount, setTotalCount] = useState(0);
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
+  const debouncedSearch = useDebounce(search, 500);
 
   const load = async () => {
     try {
       setLoading(true);
-      const res = await api.get("/visitors");
-      setItems(res.data?.response || res.data?.data || []);
+      const res = await api.get(`/visitors/view?page=${page - 1}&pageSize=${pageSize}&searchTerm=${debouncedSearch}`);
+      setItems(res.data?.response || []);
+      setTotalCount(res.data?.count || 0);
     } catch (err) {
       notify({ title: "Error", message: "Failed to load visitors.", error: true });
     } finally {
@@ -20,7 +29,7 @@ const Visitors = () => {
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [page, debouncedSearch]);
 
   const updateStatus = async (id, status) => {
     try {
@@ -59,14 +68,14 @@ const Visitors = () => {
     { header: "Phone", key: "phone", render: (val) => val || "—" },
     { header: "Purpose", key: "purpose" },
     { header: "Request Date", key: "requestDate", render: (val) => <Text size="xs">{formatDate(val)}</Text> },
-    { 
-      header: "Status", 
-      key: "status", 
-      render: (val) => <Badge color={statusColors[val]}>{val}</Badge> 
+    {
+      header: "Status",
+      key: "status",
+      render: (val) => <Badge color={statusColors[val]}>{val}</Badge>
     },
-    { 
-      header: "In / Out", 
-      key: "inTime", 
+    {
+      header: "In / Out",
+      key: "inTime",
       render: (_, v) => (
         <div style={{ textAlign: "center" }}>
           <Text size="xs" c="green">In: {formatDate(v.inTime)}</Text>
@@ -74,9 +83,9 @@ const Visitors = () => {
         </div>
       )
     },
-    { 
-      header: "Actions", 
-      key: "actions", 
+    {
+      header: "Actions",
+      key: "actions",
       render: (_, v) => (
         <Group gap="xs" justify="center">
           {v.status === "PENDING" && (
@@ -99,14 +108,23 @@ const Visitors = () => {
   return (
     <div>
       <div className="page-header">
-        <h2>🚪 Visitor Management</h2>
+        <Group gap="xs">
+          <IconDoorEnter size={24} color="#3f92c5" />
+          <h2 style={{ margin: 0 }}>Visitor Management</h2>
+        </Group>
       </div>
 
-      <DataTable 
+      <DataTable
         title="Visitor Requests"
         columns={columns}
         data={items}
         loading={loading}
+        search={search}
+        onSearch={setSearch}
+        totalCount={totalCount}
+        page={page}
+        totalPages={Math.ceil(totalCount / pageSize)}
+        onPageChange={setPage}
       />
     </div>
   );

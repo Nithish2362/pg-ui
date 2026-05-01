@@ -2,15 +2,17 @@ import React, { useState, useEffect } from "react";
 import { Modal, Button, TextInput, Select, Text, Group, ActionIcon, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useNavigate, useLocation } from "react-router-dom";
-import { IconArrowRight } from "@tabler/icons-react";
+import { IconArrowRight, IconArrowLeft, IconEdit, IconTrash, IconPlus } from "@tabler/icons-react";
 import api from "../../../api/Interceptor";
 import notify from "../../utils/Notification";
 
 import useDebounce from "../../../common/useDebounce";
+import DataTable from "../../common/DataTable";
 
 const Buildings = () => {
   const navigate = useNavigate();
   const locationState = useLocation();
+  const isCreateMode = locationState.pathname === "/buildings/create";
   const queryParams = new URLSearchParams(locationState.search);
   const preSelectedLocationId = queryParams.get("locationId");
 
@@ -18,6 +20,9 @@ const Buildings = () => {
   const [locations, setLocations] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
 
   const [selectedItem, setSelectedItem] = useState(null);
   const [opened, { open, close }] = useDisclosure(false);
@@ -41,11 +46,14 @@ const Buildings = () => {
   const load = async () => {
     try {
       setLoading(true);
-      const buildingRes = await api.get("/admin/buildings");
-      const locationRes = await api.get("/admin/locations/get-all");
+      const [buildingRes, locationRes] = await Promise.all([
+        api.get(`/admin/buildings/view?page=${page - 1}&pageSize=${pageSize}&searchTerm=${debouncedSearch}`),
+        api.get("/admin/locations/get-all"),
+      ]);
 
-      setItems(buildingRes.data.response || buildingRes.data.data || buildingRes.data || []);
-      setLocations(locationRes.data.response || locationRes.data.data || locationRes.data || []);
+      setItems(buildingRes.data?.response || []);
+      setTotalCount(buildingRes.data?.count || 0);
+      setLocations(locationRes.data?.response || locationRes.data?.data || locationRes.data || []);
     } catch (error) {
       console.error("Error loading data:", error);
       notify({
@@ -61,7 +69,7 @@ const Buildings = () => {
 
   useEffect(() => {
     load();
-  }, []);
+  }, [page, debouncedSearch]);
 
   // ================== SAVE / UPDATE ==================
   const save = async (e) => {
@@ -95,6 +103,7 @@ const Buildings = () => {
       setForm({ buildingName: "", buildingNumber: "", locationId: "" });
       setEditingId(null);
       load();
+      navigate("/buildings");
     } catch (error) {
       console.error(error);
       notify({
@@ -114,6 +123,7 @@ const Buildings = () => {
       locationId: item.locationId || "",
     });
     setEditingId(item.buildingId); // Using business ID for the URL path
+    navigate("/buildings/create");
   };
 
   const openDeleteModal = (item) => {
@@ -146,149 +156,127 @@ const Buildings = () => {
   const cancelEdit = () => {
     setEditingId(null);
     setForm({ buildingName: "", buildingNumber: "", locationId: "" });
+    navigate("/buildings");
   };
 
-  // ================== UTILS ==================
   const getLocationName = (id) => {
     const loc = locations.find((x) => x.locationId === id);
     return loc ? loc.locationName : id;
   };
 
-  const filteredItems = items.filter((b) => {
-    if (!debouncedSearch.trim()) return true;
-    const text = debouncedSearch.toLowerCase();
-    return (
-      b.buildingName?.toLowerCase().includes(text) ||
-      b.buildingId?.toLowerCase().includes(text) ||
-      getLocationName(b.locationId)?.toLowerCase().includes(text)
-    );
-  });
+  const columns = [
+    { header: "Building ID", key: "buildingId", render: (val) => <strong>{val}</strong> },
+    { header: "Building Name", key: "buildingName" },
+    { header: "Location", key: "locationId", render: (val) => getLocationName(val) },
+    { header: "Floors", key: "floors", render: (val) => val?.length || 0 },
+    { header: "Actions", key: "actions", render: (_, b) => (
+      <Group gap="xs" justify="center" wrap="nowrap">
+        <Tooltip label="Edit Building">
+          <ActionIcon variant="light" color="yellow" size="sm" onClick={() => handleEdit(b)}>
+            <IconEdit size={16} />
+          </ActionIcon>
+        </Tooltip>
+        <Tooltip label="Delete Building">
+          <ActionIcon variant="light" color="red" size="sm" onClick={() => openDeleteModal(b)}>
+            <IconTrash size={16} />
+          </ActionIcon>
+        </Tooltip>
+        <Tooltip label="Go To Floors">
+          <ActionIcon variant="light" color="blue" size="sm" onClick={() => navigate(`/floors?buildingId=${b.buildingId}`)}>
+            <IconArrowRight size={16} />
+          </ActionIcon>
+        </Tooltip>
+      </Group>
+    )}
+  ];
 
   return (
     <div>
-      <div className="page-header">
+      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h2>Building Management</h2>
+        {!isCreateMode ? (
+          <Button onClick={() => navigate("/buildings/create")}>
+            <IconPlus size={18} style={{ marginRight: "5px" }} /> Create Building
+          </Button>
+        ) : (
+          <Button onClick={() => navigate("/buildings")} variant="outline" leftSection={<IconArrowLeft size={18} />}>
+            Back
+          </Button>
+        )}
       </div>
 
-      {/* Form Card */}
-      <div className="form-card">
-        <h3 style={{ marginBottom: "15px" }}>
-          {editingId ? "Edit Building" : "Add New Building"}
-        </h3>
+      {isCreateMode ? (
+        <div className="form-card">
+          <h3 style={{ marginBottom: "15px" }}>
+            {editingId ? "Edit Building" : "Add New Building"}
+          </h3>
 
-        <form onSubmit={save}>
-          <div className="form-grid">
-            <div className="form-group">
-              <label>Location</label>
-              <Select
-                placeholder="Select Location"
-                data={locations.map((loc) => ({ value: loc.locationId, label: loc.locationName }))}
-                value={form.locationId}
-                onChange={(val) => setForm({ ...form, locationId: val })}
-                disabled={!!editingId}
-                searchable
-                required
-              />
+          <form onSubmit={save}>
+            <div className="form-grid">
+              <div className="form-group">
+                <label>Location</label>
+                <Select
+                  placeholder="Select Location"
+                  data={locations.map((loc) => ({ value: loc.locationId, label: loc.locationName }))}
+                  value={form.locationId}
+                  onChange={(val) => setForm({ ...form, locationId: val })}
+                  disabled={!!editingId}
+                  searchable
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Building Name</label>
+                <TextInput
+                  placeholder="Enter Building Name"
+                  value={form.buildingName}
+                  onChange={(e) => setForm({ ...form, buildingName: e.target.value })}
+                  required
+                />
+              </div>
             </div>
 
-            <div className="form-group">
-              <label>Building Name</label>
-              <TextInput
-                placeholder="Enter Building Name"
-                value={form.buildingName}
-                onChange={(e) => setForm({ ...form, buildingName: e.target.value })}
-                required
-              />
-            </div>
-          </div>
-
-          <Group mt="md">
-            <Button type="submit" className="btn btn-primary">
-              {editingId ? "Update Building" : "Save Building"}
-            </Button>
-            {editingId && (
-              <Button variant="outline" color="gray" onClick={cancelEdit}>
-                Cancel
+            <Group justify="center" mt="xl">
+              <Button type="submit">
+                {editingId ? "Update Building" : "Save Building"}
               </Button>
-            )}
-          </Group>
-        </form>
-      </div>
-
-      {/* Data Table Card */}
-      <div className="data-card">
-        <div className="data-card-header">
-          <h3>All Buildings ({filteredItems.length})</h3>
-          <TextInput
-            placeholder="Search by Name, ID or Location..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            style={{ width: "300px" }}
-          />
+              {editingId && (
+                <Button variant="outline" color="gray" onClick={cancelEdit}>
+                  Cancel
+                </Button>
+              )}
+            </Group>
+          </form>
         </div>
-
-        <table>
-          <thead>
-            <tr>
-              <th>Building ID</th>
-              <th>Building Name</th>
-              <th>Location</th>
-              <th>Floors</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredItems.map((b) => (
-              <tr key={b.id || b.buildingId}>
-                <td><strong>{b.buildingId}</strong></td>
-                <td>{b.buildingName}</td>
-                <td>{getLocationName(b.locationId)}</td>
-                <td>{b.floors?.length || 0}</td>
-                <td>
-                  <Group gap="xs">
-                    <Tooltip label="Manage Floors">
-                      <ActionIcon 
-                        variant="light" 
-                        color="blue" 
-                        onClick={() => navigate(`/floors?buildingId=${b.buildingId}`)}
-                      >
-                        <IconArrowRight size={16} />
-                      </ActionIcon>
-                    </Tooltip>
-                    <Button variant="light" color="yellow" size="compact-xs" onClick={() => handleEdit(b)}>
-                      Edit
-                    </Button>
-                    <Button variant="light" color="red" size="compact-xs" onClick={() => openDeleteModal(b)}>
-                      Delete
-                    </Button>
-                  </Group>
-                </td>
-              </tr>
-            ))}
-            {filteredItems.length === 0 && (
-              <tr>
-                <td colSpan="5" style={{ textAlign: "center", padding: "40px", color: "#64748b" }}>
-                  {loading ? "Loading buildings..." : "No buildings found"}
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      ) : (
+        <DataTable
+          title="All Buildings"
+          columns={columns}
+          data={items}
+          loading={loading}
+          search={search}
+          onSearch={setSearch}
+          totalCount={totalCount}
+          page={page}
+          totalPages={Math.ceil(totalCount / pageSize)}
+          onPageChange={setPage}
+        />
+      )}
 
       {/* Delete Confirmation Modal */}
-      <Modal opened={opened} onClose={close} title="Delete Building"   styles={{
-    title: {
-      fontSize: "18px",
-      fontWeight: 600,
-      color: "#e03131", // red color
-    },
-  }}centered>
+      <Modal opened={opened} onClose={close} title="Delete Building" styles={{
+        title: {
+          fontSize: "18px",
+          fontWeight: 600,
+          color: "#e03131", // red color
+        },
+      }} centered>
         <Text size="sm">
           Are you sure you want to delete building <strong>{selectedItem?.buildingName}</strong>? This action cannot be undone.
         </Text>
         <Group justify="flex-end" mt="xl">
-          <Button variant="default" onClick={close}>Cancel</Button>
+          <Button variant="outline" color="gray" onClick={close}>Cancel</Button>
           <Button color="red" onClick={confirmDelete}>Delete</Button>
         </Group>
       </Modal>

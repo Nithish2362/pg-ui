@@ -1,17 +1,26 @@
 import React, { useState, useEffect } from "react";
-import { Badge, Text } from "@mantine/core";
+import { IconClock } from "@tabler/icons-react";
+import { Badge, Text, Group } from "@mantine/core";
 import api from "../../api/Interceptor";
 import notify from "../utils/Notification";
+import DataTable from "../common/DataTable";
+import useDebounce from "../../common/useDebounce";
 
 const TenantLogs = () => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState("");
+  const [totalCount, setTotalCount] = useState(0);
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
+  const debouncedSearch = useDebounce(search, 500);
 
   const load = async () => {
     try {
       setLoading(true);
-      const res = await api.get("/tenant-logs");
-      setItems(res.data?.response || res.data?.data || []);
+      const res = await api.get(`/tenant-logs/view?page=${page - 1}&pageSize=${pageSize}&searchTerm=${debouncedSearch}`);
+      setItems(res.data?.response || []);
+      setTotalCount(res.data?.count || 0);
     } catch (err) {
       notify({ title: "Error", message: "Failed to load logs.", error: true });
     } finally {
@@ -19,53 +28,46 @@ const TenantLogs = () => {
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [page, debouncedSearch]);
 
   const formatDate = (dateStr) => {
     if (!dateStr) return "—";
     return new Date(dateStr).toLocaleString();
   };
 
+  const columns = [
+    { header: "ID", key: "id", render: (val) => <Text size="xs" c="dimmed">#{val}</Text> },
+    { header: "PG Number", key: "pgNumber", render: (val) => <strong>{val}</strong> },
+    { header: "Out Time", key: "outTime", render: (val) => formatDate(val) },
+    { header: "In Time", key: "inTime", render: (val) => formatDate(val) },
+    { header: "Current Status", key: "status", render: (val) => (
+      <Badge color={val === "IN" ? "green" : "red"}>
+        {val}
+      </Badge>
+    )}
+  ];
+
   return (
     <div>
       <div className="page-header">
-        <h2>⏱️ In/Out Logs</h2>
+        <Group gap="xs">
+          <IconClock size={24} color="#3f92c5" />
+          <h2 style={{ margin: 0 }}>In/Out Logs</h2>
+        </Group>
       </div>
 
-      <div className="data-card">
-        <div className="data-card-header">
-          <h3>All Logs ({items.length})</h3>
-        </div>
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>PG Number</th>
-              <th>Out Time</th>
-              <th>In Time</th>
-              <th>Current Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.map(l => (
-              <tr key={l.id}>
-                <td><Text size="xs" c="dimmed">#{l.id}</Text></td>
-                <td><strong>{l.pgNumber}</strong></td>
-                <td>{formatDate(l.outTime)}</td>
-                <td>{formatDate(l.inTime)}</td>
-                <td>
-                  <Badge color={l.status === "IN" ? "green" : "red"}>
-                    {l.status}
-                  </Badge>
-                </td>
-              </tr>
-            ))}
-            {items.length === 0 && (
-              <tr><td colSpan="5" style={{ textAlign: "center", padding: "30px" }}>{loading ? "Loading..." : "No logs found"}</td></tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      <DataTable
+        title="All Logs"
+        columns={columns}
+        data={items}
+        loading={loading}
+        search={search}
+        onSearch={setSearch}
+        totalCount={totalCount}
+        page={page}
+        totalPages={Math.ceil(totalCount / pageSize)}
+        onPageChange={setPage}
+      />
     </div>
   );
 };

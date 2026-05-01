@@ -9,30 +9,37 @@ export function ModuleJson(parentId) {
     // Property  → Location, Rooms, Floors, Beds
     // Residents → Tenants, Payments
     // Community → Complaints, Visitors, Notices, Logs
-    const mandatoryModules = [
-        // ── Roots (Top Level) ──────────────────────────────────────────────
-        { id: 'DASHBOARD',  name: 'Dashboard',  parent_id: null, orderBy: 1, path: '/dashboard' },
-        { id: 'PROPERTY',   name: 'Property',   parent_id: null, orderBy: 2, path: '/property',   defaultChildId: 'LOCATION' },
-        { id: 'RESIDENTS',  name: 'Residents',  parent_id: null, orderBy: 3, path: '/residents',  defaultChildId: 'TENANTS' },
-        { id: 'COMMUNITY',  name: 'Community',  parent_id: null, orderBy: 4, path: '/community',  defaultChildId: 'COMPLAINTS' },
+    const isAdmin = user.role === 'ADMIN' || user.role === 'ROLE_ADMIN';
+    const isTenant = user.role === 'TENANT' || user.role === 'ROLE_TENANT';
 
-        // ── Property sub-tabs ──────────────────────────────────────────────
-        { id: 'LOCATION',  name: 'Location',  parent_id: 'PROPERTY',  orderBy: 1, path: '/locations' },
-        { id: 'BUILDINGS', name: 'Buildings', parent_id: 'PROPERTY',  orderBy: 2, path: '/buildings' },
-        { id: 'FLOORS',    name: 'Floors',    parent_id: 'PROPERTY',  orderBy: 3, path: '/floors' },
-        { id: 'ROOMS',     name: 'Rooms',     parent_id: 'PROPERTY',  orderBy: 4, path: '/rooms' },
-        { id: 'BEDS',      name: 'Beds',      parent_id: 'PROPERTY',  orderBy: 5, path: '/beds' },
+    let mandatoryModules = [];
 
-        // ── Residents sub-tabs ─────────────────────────────────────────────
-        { id: 'TENANTS',   name: 'Tenants',   parent_id: 'RESIDENTS', orderBy: 1, path: '/tenants' },
-        { id: 'PAYMENTS',  name: 'Payments',  parent_id: 'RESIDENTS', orderBy: 2, path: '/payments' },
+    if (isAdmin) {
+        mandatoryModules = [
+            { id: 'DASHBOARD', name: 'Dashboard', parent_id: null, orderBy: 1, path: '/dashboard' },
+            { id: 'PROPERTY', name: 'Property', parent_id: null, orderBy: 2, path: '/property', defaultChildId: 'LOCATION' },
+            { id: 'RESIDENTS', name: 'Residents', parent_id: null, orderBy: 3, path: '/residents', defaultChildId: 'TENANTS' },
+            { id: 'NOTIFICATIONS', name: 'Notifications', parent_id: null, orderBy: 4, path: '/notifications' },
 
-        // ── Community sub-tabs ─────────────────────────────────────────────
-        { id: 'COMPLAINTS', name: 'Complaints', parent_id: 'COMMUNITY', orderBy: 1, path: '/complaints' },
-        { id: 'VISITORS',   name: 'Visitors',   parent_id: 'COMMUNITY', orderBy: 2, path: '/visitors' },
-        { id: 'NOTICES',    name: 'Notices',    parent_id: 'COMMUNITY', orderBy: 3, path: '/notices' },
-        { id: 'LOGS',       name: 'Logs',       parent_id: 'COMMUNITY', orderBy: 4, path: '/logs' },
-    ];
+            // Property sub-tabs
+            { id: 'LOCATION', name: 'Location', parent_id: 'PROPERTY', orderBy: 1, path: '/locations' },
+            { id: 'BUILDINGS', name: 'Buildings', parent_id: 'PROPERTY', orderBy: 2, path: '/buildings' },
+            { id: 'FLOORS', name: 'Floors', parent_id: 'PROPERTY', orderBy: 3, path: '/floors' },
+            { id: 'ROOMS', name: 'Rooms', parent_id: 'PROPERTY', orderBy: 4, path: '/rooms' },
+            { id: 'BEDS', name: 'Beds', parent_id: 'PROPERTY', orderBy: 5, path: '/beds' },
+
+            // Residents sub-tabs
+            { id: 'TENANTS', name: 'Tenants', parent_id: 'RESIDENTS', orderBy: 1, path: '/tenants' },
+            { id: 'PAYMENTS', name: 'Payments', parent_id: 'RESIDENTS', orderBy: 2, path: '/payments' },
+
+        ];
+    } else if (isTenant) {
+        mandatoryModules = [
+            { id: 'TENANT_DASHBOARD', name: 'Dashboard', parent_id: null, orderBy: 1, path: '/tenant/dashboard' },
+            { id: 'TENANT_PAYMENTS', name: 'My Payments', parent_id: null, orderBy: 2, path: '/tenant/payments' },
+            { id: 'TENANT_PROFILE', name: 'My Profile', parent_id: null, orderBy: 3, path: '/tenant/profile' },
+        ];
+    }
 
     const normalizePath = (p) => {
         if (!p) return null;
