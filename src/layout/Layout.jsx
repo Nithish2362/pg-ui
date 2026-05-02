@@ -135,7 +135,7 @@ export default function Layout() {
               </Tabs>
             )}
 
-            <Suspense fallback={<div style={{ padding: '2rem', textAlign: 'center' }}>Loading...</div>}>
+            <Suspense >
               <Outlet />
             </Suspense>
           </div>
