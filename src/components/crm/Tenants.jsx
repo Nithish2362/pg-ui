@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Button, TextInput, Select, Text, Group, Badge, Modal, Grid, Textarea, NumberInput, ActionIcon, Tooltip, LoadingOverlay, Paper } from '@mantine/core';
-import { useDisclosure } from '@mantine/hooks';
-import { IconPlus, IconEdit, IconTrash, IconReceipt, IconCheck, IconX, IconUserPlus, IconSearch, IconFilter } from '@tabler/icons-react';
+import { Button, TextInput, Select, Text, Group, Badge, Modal, ActionIcon, Tooltip, Tabs } from '@mantine/core';
+import { useNavigate } from 'react-router-dom';
+import { IconX, IconUserPlus, IconCurrencyRupee } from '@tabler/icons-react';
 import api from '../../api/Interceptor';
 import notify from '../utils/Notification';
 import useDebounce from '../../common/useDebounce';
 import DataTable from '../common/DataTable';
 
 const Tenants = () => {
+  const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const isStaff = user.role === 'STAFF';
 
@@ -18,40 +19,19 @@ const Tenants = () => {
   const [pageSize, setPageSize] = useState(10);
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState('ACTIVE');
+  const [counts, setCounts] = useState({ active: 0, awaiting: 0, history: 0 });
   const debouncedSearch = useDebounce(search, 500);
 
   // Filter State (Admin Only)
   const [filterLoc, setFilterLoc] = useState(null);
   const [filterBld, setFilterBld] = useState(null);
 
-  // Master Data for Cascading Selection
+  // Master Data
   const [locations, setLocations] = useState([]);
   const [buildings, setBuildings] = useState([]);
-  const [floors, setFloors] = useState([]);
-  const [rooms, setRooms] = useState([]);
-  const [beds, setBeds] = useState([]);
 
-  const [opened, { open, close }] = useDisclosure(false);
   const [checkoutOpened, setCheckoutOpened] = useState(false);
   const [selectedTenant, setSelectedTenant] = useState(null);
-  const [editingId, setEditingId] = useState(null);
-
-  const [form, setForm] = useState({
-    studentName: '',
-    mobileNumber: '',
-    email: '',
-    address: '',
-    parentName: '',
-    parentMobileNumber: '',
-    advancePayment: 0,
-    rentStartDate: new Date().toISOString().split('T')[0],
-    paymentMode: 'CASH',
-    locationId: '',
-    buildingId: '',
-    floorId: '',
-    roomId: '',
-    bedId: ''
-  });
 
   const loadMasters = async () => {
     try {
@@ -65,49 +45,6 @@ const Tenants = () => {
   };
 
   useEffect(() => { loadMasters(); }, []);
-
-  // Cascade: Location -> Building
-  useEffect(() => {
-    if (form.locationId) {
-      // Already loaded all buildings, just filter in UI if needed or fetch if API supports it
-    }
-  }, [form.locationId]);
-
-  // Cascade: Building -> Floor
-  useEffect(() => {
-    const fetchFloors = async () => {
-      if (!form.buildingId) { setFloors([]); return; }
-      try {
-        const res = await api.get(`/admin/floors?buildingId=${form.buildingId}`);
-        setFloors(res.data?.response || []);
-      } catch (err) { setFloors([]); }
-    };
-    fetchFloors();
-  }, [form.buildingId]);
-
-  // Cascade: Floor -> Room
-  useEffect(() => {
-    const fetchRooms = async () => {
-      if (!form.floorId) { setRooms([]); return; }
-      try {
-        const res = await api.get(`/admin/rooms?floorId=${form.floorId}`);
-        setRooms(res.data?.response || []);
-      } catch (err) { setRooms([]); }
-    };
-    fetchRooms();
-  }, [form.floorId]);
-
-  // Cascade: Room -> Bed
-  useEffect(() => {
-    const fetchBeds = async () => {
-      if (!form.roomId) { setBeds([]); return; }
-      try {
-        const res = await api.get(`/admin/beds?roomId=${form.roomId}`);
-        setBeds(res.data?.response || []);
-      } catch (err) { setBeds([]); }
-    };
-    fetchBeds();
-  }, [form.roomId]);
 
   const load = async () => {
     try {
@@ -126,39 +63,14 @@ const Tenants = () => {
     }
   };
 
-  useEffect(() => { load(); }, [page, debouncedSearch, pageSize, activeTab, filterLoc, filterBld]);
-
-  const handleSave = async (e) => {
-    e.preventDefault();
+  const loadCounts = async () => {
     try {
-      const payload = {
-        ...form,
-        paymentAmount: form.advancePayment // mapping for backend
-      };
-      if (editingId) {
-        // Update logic...
-      } else {
-        await api.post(`/admin/tenants?bedId=${form.bedId}`, payload);
-        notify({ title: "Success", message: "Tenant registered successfully!", success: true });
-      }
-      close();
-      resetForm();
-      load();
-    } catch (error) {
-      notify({ title: "Error", message: error.response?.data?.message || "Operation failed", error: true });
-    }
+      const res = await api.get("/admin/tenants/counts");
+      setCounts(res.data?.response || { active: 0, awaiting: 0, history: 0 });
+    } catch (err) { console.error("Error loading counts", err); }
   };
 
-  const resetForm = () => {
-    setForm({
-      studentName: '', mobileNumber: '', email: '', address: '',
-      parentName: '', parentMobileNumber: '', advancePayment: 0,
-      rentStartDate: new Date().toISOString().split('T')[0],
-      paymentMode: 'CASH', locationId: '', buildingId: '',
-      floorId: '', roomId: '', bedId: ''
-    });
-    setEditingId(null);
-  };
+  useEffect(() => { load(); loadCounts(); }, [page, debouncedSearch, pageSize, activeTab, filterLoc, filterBld]);
 
   const handleCheckout = async () => {
     try {
@@ -178,22 +90,61 @@ const Tenants = () => {
     { header: "Room/Bed", key: "roomName", render: (val, t) => `${val} - ${t.bedNumber}` },
     { header: "Mobile", key: "mobileNumber" },
     {
-      header: "Status", key: "status", render: (val) => (
-        <Badge color={val === 'ACTIVE' ? 'green' : (val === 'NOT_APPROVED' ? 'yellow' : 'gray')}>
-          {val}
-        </Badge>
-      )
+      header: "Payment", key: "payment", render: (_, t) => {
+        const balance = t.balanceAmount || 0;
+        if (t.status === 'NOT_APPROVED') {
+          return (
+            <Group gap="xs">
+              <Text fw={600} size="sm">{balance}</Text>
+              <Button
+                size="compact-xs"
+                color="yellow"
+                variant="light"
+                onClick={() => navigate(`/payments?tab=pending&section=advance&search=${t.studentName}`)}
+              >
+                Pay Now
+              </Button>
+            </Group>
+          );
+        }
+        if (t.status === 'ACTIVE') {
+          if (balance > 0) {
+            return (
+              <Group gap="xs">
+                <Text fw={600} size="sm">{balance}</Text>
+                <Button
+                  size="compact-xs"
+                  color="red"
+                  variant="light"
+                  onClick={() => navigate(`/payments?tab=pending&section=rent&search=${t.studentName}`)}
+                >
+                  Pay Now
+                </Button>
+              </Group>
+            );
+          } else {
+            return (
+              <Group gap="xs">
+                <Text fw={600} size="sm">0</Text>
+                <Badge color="green" variant="light">PAID</Badge>
+              </Group>
+            );
+          }
+        }
+        return <Text c="dimmed" size="xs">-</Text>;
+      }
     },
     {
       header: "Actions", key: "actions", render: (_, t) => (
         <Group gap="xs">
           {t.status === 'ACTIVE' && (
-            <Tooltip label="Checkout">
-              <ActionIcon color="red" variant="light" onClick={() => { setSelectedTenant(t); setCheckoutOpened(true); }}>
-                <IconX size={16} />
+            <Tooltip label="Checkout Resident">
+              <ActionIcon color="red" variant="subtle" onClick={() => { setSelectedTenant(t); setCheckoutOpened(true); }}>
+                <IconX size={18} />
               </ActionIcon>
             </Tooltip>
           )}
+          {t.status === 'INACTIVE' && <Text c="dimmed" size="xs">-</Text>}
         </Group>
       )
     }
@@ -206,23 +157,23 @@ const Tenants = () => {
           <h2>Resident Management</h2>
           {!isStaff && (
             <Group gap="sm">
-              <Select 
-                placeholder="Select Location" 
-                data={locations.map(l => ({ value: l.locationId, label: l.locationName }))} 
-                value={filterLoc} 
-                onChange={val => { setFilterLoc(val); setFilterBld(null); }} 
-                clearable 
+              <Select
+                placeholder="Select Location"
+                data={locations.map(l => ({ value: l.locationId, label: l.locationName }))}
+                value={filterLoc}
+                onChange={val => { setFilterLoc(val); setFilterBld(null); }}
+                clearable
                 size="md"
                 style={{ width: '220px' }}
                 variant="filled"
               />
-              <Select 
-                placeholder="Select Building" 
-                data={buildings.filter(b => !filterLoc || b.locationId === filterLoc).map(b => ({ value: b.buildingId, label: b.buildingName }))} 
-                value={filterBld} 
-                onChange={setFilterBld} 
-                clearable 
-                disabled={!filterLoc} 
+              <Select
+                placeholder="Select Building"
+                data={buildings.filter(b => !filterLoc || b.locationId === filterLoc).map(b => ({ value: b.buildingId, label: b.buildingName }))}
+                value={filterBld}
+                onChange={setFilterBld}
+                clearable
+                disabled={!filterLoc}
                 size="md"
                 style={{ width: '220px' }}
                 variant="filled"
@@ -230,14 +181,39 @@ const Tenants = () => {
             </Group>
           )}
         </Group>
-        <Button leftSection={<IconUserPlus size={18} />} onClick={() => { resetForm(); open(); }} size="sm">Register Tenant</Button>
+        <Button leftSection={<IconUserPlus size={18} />} onClick={() => navigate('/tenants/create')} size="sm">Register Tenant</Button>
       </div>
 
-      <Group mb="md">
-        <Button variant={activeTab === 'ACTIVE' ? 'filled' : 'outline'} onClick={() => setActiveTab('ACTIVE')} size="sm">Active</Button>
-        <Button variant={activeTab === 'NOT_APPROVED' ? 'filled' : 'outline'} onClick={() => setActiveTab('NOT_APPROVED')} size="sm">Pending Approval</Button>
-        <Button variant={activeTab === 'INACTIVE' ? 'filled' : 'outline'} onClick={() => setActiveTab('INACTIVE')} size="sm">History</Button>
-      </Group>
+      <Tabs
+        value={activeTab}
+        onChange={setActiveTab}
+        mb="xl"
+        styles={{
+          tab: { padding: '12px 20px', fontWeight: 600 },
+          list: { borderBottom: 'none' }
+        }}
+      >
+        <Tabs.List>
+          <Tabs.Tab value="ACTIVE" color="blue">
+            <Group gap={8}>
+              <span>Active</span>
+              <Badge variant="filled" color="blue" size="sm">{counts.active}</Badge>
+            </Group>
+          </Tabs.Tab>
+          <Tabs.Tab value="NOT_APPROVED" color="yellow">
+            <Group gap={8}>
+              <span>Pending Approval</span>
+              <Badge variant="filled" color="yellow" size="sm">{counts.awaiting}</Badge>
+            </Group>
+          </Tabs.Tab>
+          <Tabs.Tab value="INACTIVE" color="gray">
+            <Group gap={8}>
+              <span>Vacated</span>
+              <Badge variant="filled" color="gray" size="sm">{counts.history}</Badge>
+            </Group>
+          </Tabs.Tab>
+        </Tabs.List>
+      </Tabs>
 
 
       <DataTable
@@ -254,45 +230,6 @@ const Tenants = () => {
         pageSize={pageSize}
         onPageSizeChange={setPageSize}
       />
-
-      <Modal opened={opened} onClose={close} title="New Tenant Registration" size="xl" centered>
-        <form onSubmit={handleSave}>
-          <Grid>
-            <Grid.Col span={6}><TextInput label="Full Name" placeholder="Student Name" value={form.studentName} onChange={e => setForm({ ...form, studentName: e.target.value })} required /></Grid.Col>
-            <Grid.Col span={6}><TextInput label="Mobile Number" placeholder="10 digit mobile" value={form.mobileNumber} onChange={e => setForm({ ...form, mobileNumber: e.target.value })} required /></Grid.Col>
-            <Grid.Col span={6}><TextInput label="Email Address" placeholder="email@example.com" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} required /></Grid.Col>
-            <Grid.Col span={6}><TextInput label="Parent Name" value={form.parentName} onChange={e => setForm({ ...form, parentName: e.target.value })} /></Grid.Col>
-
-            <Grid.Col span={12}><Paper p="md" withBorder bg="gray.0"><Text fw={700} mb="xs">Room Assignment (Cascading Selection)</Text>
-              <Grid>
-                <Grid.Col span={4}>
-                  <Select label="Location" data={locations.map(l => ({ value: l.locationId, label: l.locationName }))} value={form.locationId} onChange={val => setForm({ ...form, locationId: val, buildingId: '', floorId: '', roomId: '', bedId: '' })} required searchable />
-                </Grid.Col>
-                <Grid.Col span={4}>
-                  <Select label="Building" data={buildings.filter(b => b.locationId === form.locationId).map(b => ({ value: b.buildingId, label: b.buildingName }))} value={form.buildingId} onChange={val => setForm({ ...form, buildingId: val, floorId: '', roomId: '', bedId: '' })} required searchable disabled={!form.locationId} />
-                </Grid.Col>
-                <Grid.Col span={4}>
-                  <Select label="Floor" data={floors.map(f => ({ value: f.floorId, label: f.floorName }))} value={form.floorId} onChange={val => setForm({ ...form, floorId: val, roomId: '', bedId: '' })} required searchable disabled={!form.buildingId} />
-                </Grid.Col>
-                <Grid.Col span={6}>
-                  <Select label="Room" data={rooms.map(r => ({ value: r.roomId, label: `Room ${r.roomNumber} (${r.roomType})` }))} value={form.roomId} onChange={val => setForm({ ...form, roomId: val, bedId: '' })} required searchable disabled={!form.floorId} />
-                </Grid.Col>
-                <Grid.Col span={6}>
-                  <Select label="Bed" data={beds.filter(b => !b.isOccupied).map(b => ({ value: b.bedId, label: `Bed ${b.bedNumber}` }))} value={form.bedId} onChange={val => setForm({ ...form, bedId: val })} required searchable disabled={!form.roomId} />
-                </Grid.Col>
-              </Grid>
-            </Paper></Grid.Col>
-
-            <Grid.Col span={4}><NumberInput label="Advance Payment (₹)" value={form.advancePayment} onChange={val => setForm({ ...form, advancePayment: val })} required min={0} /></Grid.Col>
-            <Grid.Col span={4}><Select label="Payment Mode" data={['CASH', 'ONLINE', 'UPI']} value={form.paymentMode} onChange={val => setForm({ ...form, paymentMode: val })} /></Grid.Col>
-            <Grid.Col span={4}><TextInput label="Rent Start Date" type="date" value={form.rentStartDate} onChange={e => setForm({ ...form, rentStartDate: e.target.value })} /></Grid.Col>
-          </Grid>
-          <Group justify="flex-end" mt="xl">
-            <Button variant="outline" color="gray" onClick={close}>Cancel</Button>
-            <Button type="submit">Complete Registration</Button>
-          </Group>
-        </form>
-      </Modal>
 
       <Modal opened={checkoutOpened} onClose={() => setCheckoutOpened(false)} title="Confirm Checkout" centered>
         <Text size="sm">Are you sure you want to checkout <b>{selectedTenant?.studentName}</b>? This will release the bed and mark them as Inactive.</Text>

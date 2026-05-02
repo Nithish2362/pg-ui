@@ -3,7 +3,7 @@ import { useReactToPrint } from "react-to-print";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Modal, Button, TextInput, Select, Text, Group, Badge, Textarea, Tabs, ThemeIcon, Stack, Paper, Divider, Center } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconArrowLeft, IconPlus, IconHome, IconHeart, IconPrinter, IconCheck, IconQrcode, IconDeviceMobile, IconCash, IconUser, IconCurrencyRupee, IconNote } from "@tabler/icons-react";
+import { IconArrowLeft, IconPlus, IconHome, IconHeart, IconPrinter, IconCheck, IconQrcode, IconDeviceMobile, IconCash, IconUser, IconCurrencyRupee, IconNote, IconBuildingCommunity } from "@tabler/icons-react";
 import api from "../../../api/Interceptor";
 import notify from "../../utils/Notification";
 import DataTable from "../../common/DataTable";
@@ -26,15 +26,24 @@ const PaymentReceipt = React.forwardRef(({ receipt }, ref) => {
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
         <div>
-          <h1 style={{ margin: 0, fontSize: "28px", color: "#6366f1", display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <IconHome size={32} /> PG Hostel
+          <h1 style={{ margin: 0, fontSize: "28px", color: "#3f92c5", display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <IconBuildingCommunity size={32} color="#3f92c5" />
+            <span style={{
+              fontWeight: 900,
+              fontSize: '1.5rem',
+              letterSpacing: '-0.5px',
+              background: 'linear-gradient(to right, #3f92c5, #13415a)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent'
+            }}>
+              STAYWOW
+            </span>
           </h1>
           <p style={{ margin: "4px 0 0", color: "#64748b", fontSize: "13px" }}>Payment Receipt</p>
         </div>
         <div style={{ textAlign: "right" }}>
           {receipt.receiptNo && (
             <>
-              <p style={{ margin: 0, fontSize: "13px", color: "#64748b" }}>Receipt #</p>
               <p style={{ margin: 0, fontWeight: "bold", fontSize: "16px" }}>{receipt.receiptNo}</p>
             </>
           )}
@@ -84,7 +93,7 @@ const PaymentReceipt = React.forwardRef(({ receipt }, ref) => {
       </div>
 
       <p style={{ textAlign: "center", color: "#94a3b8", fontSize: "13px", margin: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}>
-        Thank you for your payment! <IconHeart size={14} color="#f43f5e" fill="#f43f5e" />
+        Thank you for your payment !
       </p>
     </div>
   );
@@ -148,6 +157,16 @@ const Payments = () => {
 
   const [activeSection, setActiveSection] = useState("ADVANCE");
   const [activeTab, setActiveTab] = useState("PENDING");
+
+  useEffect(() => {
+    const params = new URLSearchParams(locationState.search);
+    const tab = params.get("tab");
+    const section = params.get("section");
+    const s = params.get("search");
+    if (tab) setActiveTab(tab.toUpperCase());
+    if (section) setActiveSection(section.toUpperCase());
+    if (s) setSearch(s);
+  }, [locationState.search]);
 
   const printReceipt = useReactToPrint({ contentRef: receiptRef });
 
@@ -361,23 +380,23 @@ const Payments = () => {
           <h2>Payment Management</h2>
           {!isCreateMode && (
             <Group gap="sm">
-              <Select 
-                placeholder="Select Location" 
-                data={locations.map(l => ({ value: l.locationId, label: l.locationName }))} 
-                value={filterLoc} 
-                onChange={val => { setFilterLoc(val); setFilterBld(null); }} 
-                clearable 
+              <Select
+                placeholder="Select Location"
+                data={locations.map(l => ({ value: l.locationId, label: l.locationName }))}
+                value={filterLoc}
+                onChange={val => { setFilterLoc(val); setFilterBld(null); }}
+                clearable
                 size="md"
                 style={{ width: '220px' }}
                 variant="filled"
               />
-              <Select 
-                placeholder="Select Building" 
-                data={buildings.filter(b => !filterLoc || b.locationId === filterLoc).map(b => ({ value: b.buildingId, label: b.buildingName }))} 
-                value={filterBld} 
-                onChange={setFilterBld} 
-                clearable 
-                disabled={!filterLoc} 
+              <Select
+                placeholder="Select Building"
+                data={buildings.filter(b => !filterLoc || b.locationId === filterLoc).map(b => ({ value: b.buildingId, label: b.buildingName }))}
+                value={filterBld}
+                onChange={setFilterBld}
+                clearable
+                disabled={!filterLoc}
                 size="md"
                 style={{ width: '220px' }}
                 variant="filled"

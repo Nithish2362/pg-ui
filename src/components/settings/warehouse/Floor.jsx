@@ -154,23 +154,23 @@ const Floors = () => {
           <h2>Floor Management</h2>
           {!isCreateMode && (
             <Group gap="sm">
-              <Select 
-                placeholder="Select Location" 
-                data={locations.map(l => ({ value: l.locationId, label: l.locationName }))} 
-                value={filterLoc} 
-                onChange={val => { setFilterLoc(val); setFilterBld(null); }} 
-                clearable 
+              <Select
+                placeholder="Select Location"
+                data={locations.map(l => ({ value: l.locationId, label: l.locationName }))}
+                value={filterLoc}
+                onChange={val => { setFilterLoc(val); setFilterBld(null); }}
+                clearable
                 size="md"
                 style={{ width: '220px' }}
                 variant="filled"
               />
-              <Select 
-                placeholder="Select Building" 
-                data={buildings.filter(b => !filterLoc || b.locationId === filterLoc).map(b => ({ value: b.buildingId, label: b.buildingName }))} 
-                value={filterBld} 
-                onChange={setFilterBld} 
-                clearable 
-                disabled={!filterLoc} 
+              <Select
+                placeholder="Select Building"
+                data={buildings.filter(b => !filterLoc || b.locationId === filterLoc).map(b => ({ value: b.buildingId, label: b.buildingName }))}
+                value={filterBld}
+                onChange={setFilterBld}
+                clearable
+                disabled={!filterLoc}
                 size="md"
                 style={{ width: '220px' }}
                 variant="filled"
@@ -187,48 +187,48 @@ const Floors = () => {
       </div>
 
       {
-    isCreateMode ? (
-      <div className="form-card">
-        <h3 style={{ marginBottom: "15px" }}>{editingId ? "Edit Floor" : "Add New Floor"}</h3>
-        <form onSubmit={save}>
-          <div className="form-grid">
-            <div className="form-group">
-              <label>Location</label>
-              <Select placeholder="Select Location" data={locations.map((l) => ({ value: l.locationId, label: l.locationName }))} value={selectedLocation} onChange={(val) => { setSelectedLocation(val); setForm({ ...form, buildingId: "" }); }} disabled={!!editingId} searchable required />
-            </div>
-            <div className="form-group">
-              <label>Building</label>
-              <Select placeholder={selectedLocation ? "Select Building" : "Select Location First"} data={buildings.filter(b => b.locationId === selectedLocation).map((b) => ({ value: b.buildingId, label: b.buildingName }))} value={form.buildingId} onChange={(val) => setForm({ ...form, buildingId: val })} disabled={!selectedLocation || !!editingId} searchable required />
-            </div>
-            <div className="form-group">
-              <label>Floor Number</label>
-              <TextInput type="number" placeholder="e.g. 1" value={form.floorNumber} onChange={(e) => setForm({ ...form, floorNumber: e.target.value })} required />
-            </div>
-            <div className="form-group">
-              <label>Floor Name</label>
-              <TextInput placeholder="e.g. Ground Floor" value={form.floorName} onChange={(e) => setForm({ ...form, floorName: e.target.value })} required />
-            </div>
+        isCreateMode ? (
+          <div className="form-card">
+            <h3 style={{ marginBottom: "15px" }}>{editingId ? "Edit Floor" : "Add New Floor"}</h3>
+            <form onSubmit={save}>
+              <div className="form-grid">
+                <div className="form-group">
+                  <label>Location</label>
+                  <Select placeholder="Select Location" data={locations.map((l) => ({ value: l.locationId, label: l.locationName }))} value={selectedLocation} onChange={(val) => { setSelectedLocation(val); setForm({ ...form, buildingId: "" }); }} disabled={!!editingId} searchable required />
+                </div>
+                <div className="form-group">
+                  <label>Building</label>
+                  <Select placeholder={selectedLocation ? "Select Building" : "Select Location First"} data={buildings.filter(b => b.locationId === selectedLocation).map((b) => ({ value: b.buildingId, label: b.buildingName }))} value={form.buildingId} onChange={(val) => setForm({ ...form, buildingId: val })} disabled={!selectedLocation || !!editingId} searchable required />
+                </div>
+                <div className="form-group">
+                  <label>Floor Number</label>
+                  <TextInput type="number" placeholder="e.g. 1" value={form.floorNumber} onChange={(e) => setForm({ ...form, floorNumber: e.target.value })} required />
+                </div>
+                <div className="form-group">
+                  <label>Floor Name</label>
+                  <TextInput placeholder="e.g. Ground Floor" value={form.floorName} onChange={(e) => setForm({ ...form, floorName: e.target.value })} required />
+                </div>
+              </div>
+              <Group justify="center" mt="xl">
+                <Button type="submit">{editingId ? "Update Floor" : "Save Floor"}</Button>
+                {editingId && <Button variant="outline" color="gray" onClick={cancelEdit}>Cancel</Button>}
+              </Group>
+            </form>
           </div>
-          <Group justify="center" mt="xl">
-            <Button type="submit">{editingId ? "Update Floor" : "Save Floor"}</Button>
-            {editingId && <Button variant="outline" color="gray" onClick={cancelEdit}>Cancel</Button>}
-          </Group>
-        </form>
-      </div>
-    ) : (
-      <>
-        <DataTable title="All Floors" columns={columns} data={floors} loading={loading} search={search} onSearch={setSearch} totalCount={totalCount} page={page} totalPages={Math.ceil(totalCount / pageSize)} onPageChange={setPage} pageSize={pageSize} onPageSizeChange={setPageSize} />
-      </>
-    )
-  }
+        ) : (
+          <>
+            <DataTable title="All Floors" columns={columns} data={floors} loading={loading} search={search} onSearch={setSearch} totalCount={totalCount} page={page} totalPages={Math.ceil(totalCount / pageSize)} onPageChange={setPage} pageSize={pageSize} onPageSizeChange={setPageSize} />
+          </>
+        )
+      }
 
-  <Modal opened={opened} onClose={close} title="Delete Floor" centered>
-    <Text size="sm">Are you sure you want to delete floor <strong>{selectedItem?.floorName}</strong>?</Text>
-    <Group justify="flex-end" mt="xl">
-      <Button variant="outline" color="gray" onClick={close}>Cancel</Button>
-      <Button color="red" onClick={confirmDelete}>Delete</Button>
-    </Group>
-  </Modal>
+      <Modal opened={opened} onClose={close} title="Delete Floor" centered>
+        <Text size="sm">Are you sure you want to delete floor <strong>{selectedItem?.floorName}</strong>?</Text>
+        <Group justify="flex-end" mt="xl">
+          <Button variant="outline" color="gray" onClick={close}>Cancel</Button>
+          <Button color="red" onClick={confirmDelete}>Delete</Button>
+        </Group>
+      </Modal>
     </div >
   );
 };
