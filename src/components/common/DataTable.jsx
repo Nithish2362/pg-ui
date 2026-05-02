@@ -17,8 +17,8 @@ import { IconSearch } from '@tabler/icons-react';
  * @param {function} onPageSizeChange - Rows per page change handler (optional)
  */
 const DataTable = ({ 
-  columns, 
-  data, 
+  columns = [], 
+  data = [], 
   loading, 
   search, 
   onSearch, 
@@ -30,13 +30,15 @@ const DataTable = ({
   pageSize = 10,
   onPageSizeChange
 }) => {
+  const safeData = Array.isArray(data) ? data : [];
+  const safeColumns = Array.isArray(columns) ? columns : [];
   const start = (page - 1) * pageSize + 1;
-  const end = Math.min(page * pageSize, totalCount || data.length);
+  const end = Math.min(page * pageSize, totalCount || safeData.length);
 
   return (
     <div className="data-card">
       <div className="data-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h3 style={{ margin: 0 }}>{title} {totalCount !== undefined ? `(${totalCount})` : data.length > 0 ? `(${data.length})` : ''}</h3>
+        <h3 style={{ margin: 0 }}>{title} {totalCount !== undefined ? `(${totalCount})` : safeData.length > 0 ? `(${safeData.length})` : ''}</h3>
         
         <Group>
           {onSearch && (
@@ -64,7 +66,7 @@ const DataTable = ({
         <Table verticalSpacing="md" horizontalSpacing="xl">
           <Table.Thead>
             <Table.Tr>
-              {columns.map((col, i) => (
+              {safeColumns.map((col, i) => (
                 <Table.Th key={i} style={{ textAlign: 'center' }}>{col.header}</Table.Th>
               ))}
             </Table.Tr>
@@ -72,20 +74,20 @@ const DataTable = ({
           <Table.Tbody>
             {loading ? (
               <Table.Tr>
-                <Table.Td colSpan={columns.length} style={{ textAlign: 'center', padding: '60px' }}>
+                <Table.Td colSpan={safeColumns.length} style={{ textAlign: 'center', padding: '60px' }}>
                   <Loader size="sm" />
                 </Table.Td>
               </Table.Tr>
-            ) : data.length === 0 ? (
+            ) : safeData.length === 0 ? (
               <Table.Tr>
-                <Table.Td colSpan={columns.length} style={{ textAlign: 'center', padding: '60px', color: '#64748b' }}>
+                <Table.Td colSpan={safeColumns.length} style={{ textAlign: 'center', padding: '60px', color: '#64748b' }}>
                   No records found
                 </Table.Td>
               </Table.Tr>
             ) : (
-              data.map((row, rowIndex) => (
+              safeData.map((row, rowIndex) => (
                 <Table.Tr key={row.id || rowIndex}>
-                  {columns.map((col, colIndex) => (
+                  {safeColumns.map((col, colIndex) => (
                     <Table.Td key={colIndex} style={{ textAlign: 'center' }}>
                       {col.render ? col.render(row[col.key], row) : row[col.key]}
                     </Table.Td>
@@ -99,8 +101,8 @@ const DataTable = ({
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px', padding: '0 10px' }}>
         <Text size="sm" c="dimmed">
-          {data.length > 0 ? (
-            <>Showing <b>{start}</b> to <b>{end}</b> of <b>{totalCount || data.length}</b> entries</>
+          {safeData.length > 0 ? (
+            <>Showing <b>{start}</b> to <b>{end}</b> of <b>{totalCount || safeData.length}</b> entries</>
           ) : (
             'Showing 0 entries'
           )}

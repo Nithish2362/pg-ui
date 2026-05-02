@@ -21,6 +21,7 @@ const NotificationsHub = () => {
     const [totalCount, setTotalCount] = useState(0);
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(5);
+    const [search, setSearch] = useState('');
     const debouncedSearch = useDebounce(search, 400);
 
     // Modal State

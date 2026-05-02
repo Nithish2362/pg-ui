@@ -31,14 +31,10 @@ export function ModuleJson(parentId) {
             // Residents sub-tabs
             { id: 'TENANTS', name: 'Tenants', parent_id: 'RESIDENTS', orderBy: 1, path: '/tenants' },
             { id: 'PAYMENTS', name: 'Payments', parent_id: 'RESIDENTS', orderBy: 2, path: '/payments' },
-
-            { id: 'COMMUNITY', name: 'Community', parent_id: null, orderBy: 4, path: '/community', defaultChildId: 'COMPLAINTS' },
-            { id: 'COMPLAINTS', name: 'Complaints', parent_id: 'COMMUNITY', orderBy: 1, path: '/complaints' },
-            { id: 'VISITORS', name: 'Visitors', parent_id: 'COMMUNITY', orderBy: 2, path: '/visitors' },
-            { id: 'NOTICES', name: 'Notices', parent_id: 'COMMUNITY', orderBy: 3, path: '/notices' },
-            { id: 'LOGS', name: 'Logs', parent_id: 'COMMUNITY', orderBy: 4, path: '/logs' },
-
-            { id: 'NOTIFICATIONS', name: 'Notifications', parent_id: null, orderBy: 5, path: '/notifications' },
+            // { id: 'COMPLAINTS', name: 'Complaints', parent_id: 'RESIDENTS', orderBy: 3, path: '/complaints' },
+            // { id: 'VISITORS', name: 'Visitors', parent_id: 'RESIDENTS', orderBy: 4, path: '/visitors' },
+            // { id: 'NOTICES', name: 'Notices', parent_id: 'RESIDENTS', orderBy: 5, path: '/notices' },
+            // { id: 'LOGS', name: 'Logs', parent_id: 'RESIDENTS', orderBy: 6, path: '/logs' },
         ];
     } else if (isTenant) {
         mandatoryModules = [
