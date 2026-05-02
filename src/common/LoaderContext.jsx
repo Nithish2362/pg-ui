@@ -3,29 +3,39 @@ import { createContext, useContext, useRef, useState } from 'react';
 
 const LoaderContext = createContext();
 
+// Static object for access outside components
+export const loader = {
+    show: () => { },
+    hide: () => { }
+};
+
 export const LoaderProvider = ({ children }) => {
     const [isLoading, setIsLoading] = useState(false);
     const loadingCountRef = useRef(0);
-    let hideTimeOut = useRef(null)
+    let hideTimeOut = useRef(null);
 
     const showLoader = () => {
-      loadingCountRef.current +=1;
-      if(hideTimeOut.current){
-        clearTimeout(hideTimeOut.current);
-        hideTimeOut.current = null;
-      }
-      setIsLoading(true)
+        loadingCountRef.current += 1;
+        if (hideTimeOut.current) {
+            clearTimeout(hideTimeOut.current);
+            hideTimeOut.current = null;
+        }
+        setIsLoading(true);
     };
 
     const hideLoader = () => {
-        loadingCountRef.current = Math.max(0,loadingCountRef.current -1);
-      if(loadingCountRef.current ===0){
-        hideTimeOut.current = setTimeout(()=>{
-            setIsLoading(false);
-            hideTimeOut.current = null;
-        },200)
-      }
+        loadingCountRef.current = Math.max(0, loadingCountRef.current - 1);
+        if (loadingCountRef.current === 0) {
+            hideTimeOut.current = setTimeout(() => {
+                setIsLoading(false);
+                hideTimeOut.current = null;
+            }, 200);
+        }
     };
+
+    // Link static methods to stateful methods
+    loader.show = showLoader;
+    loader.hide = hideLoader;
 
     return (
         <LoaderContext.Provider value={{

@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { APP_BASE_URL } from './AppUrls';
+import { loader } from '../common/LoaderContext';
 
 export const createPGAPI = () => {
   const api = axios.create({
@@ -8,13 +9,28 @@ export const createPGAPI = () => {
 
   api.interceptors.request.use(
     (config) => {
+      loader.show();
       const token = localStorage.getItem('token');
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
       return config;
     },
-    (error) => Promise.reject(error)
+    (error) => {
+      loader.hide();
+      return Promise.reject(error);
+    }
+  );
+
+  api.interceptors.response.use(
+    (response) => {
+      loader.hide();
+      return response;
+    },
+    (error) => {
+      loader.hide();
+      return Promise.reject(error);
+    }
   );
 
   return api;

@@ -5,7 +5,6 @@ import { useDisclosure } from "@mantine/hooks";
 import { useLocation, useNavigate } from "react-router-dom";
 import api from "../../../api/Interceptor";
 import notify from "../../utils/Notification";
-
 import useDebounce from "../../../common/useDebounce";
 import DataTable from "../../common/DataTable";
 
@@ -26,6 +25,12 @@ const Beds = () => {
   const [totalCount, setTotalCount] = useState(0);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
+
+  // Filters
+  const [filterLoc, setFilterLoc] = useState(null);
+  const [filterBld, setFilterBld] = useState(null);
+  const [filterFlr, setFilterFlr] = useState(null);
+  const [filterRom, setFilterRom] = useState(null);
 
   const [selectedLocation, setSelectedLocation] = useState("");
   const [selectedBuilding, setSelectedBuilding] = useState("");
@@ -54,8 +59,14 @@ const Beds = () => {
   const load = async () => {
     try {
       setLoading(true);
+      let url = `/admin/beds/view?page=${page - 1}&pageSize=${pageSize}&searchTerm=${debouncedSearch}`;
+      if (filterLoc) url += `&locationId=${filterLoc}`;
+      if (filterBld) url += `&buildingId=${filterBld}`;
+      if (filterFlr) url += `&floorId=${filterFlr}`;
+      if (filterRom) url += `&roomId=${filterRom}`;
+
       const [bedRes, roomRes, floorRes, buildingRes, locationRes] = await Promise.all([
-        api.get(`/admin/beds/view?page=${page - 1}&pageSize=${pageSize}&searchTerm=${debouncedSearch}`),
+        api.get(url),
         api.get("/admin/rooms"),
         api.get("/admin/floors"),
         api.get("/admin/buildings"),
@@ -70,12 +81,7 @@ const Beds = () => {
       setLocations(locationRes.data?.response || locationRes.data?.data || locationRes.data || []);
     } catch (error) {
       console.error("Error loading data:", error);
-      notify({
-        title: "Error!",
-        message: "Failed to load beds or rooms.",
-        success: false,
-        error: true,
-      });
+      notify({ title: "Error!", message: "Failed to load beds.", error: true });
     } finally {
       setLoading(false);
     }
@@ -83,47 +89,29 @@ const Beds = () => {
 
   useEffect(() => {
     load();
-  }, [page, debouncedSearch, pageSize]);
+  }, [page, debouncedSearch, pageSize, filterLoc, filterBld, filterFlr, filterRom]);
 
   // ================== SAVE / UPDATE ==================
   const save = async (e) => {
     e.preventDefault();
-
     try {
       if (editingId) {
         await api.put(`/admin/beds/${editingId}`, form);
-        notify({
-          title: "Updated!",
-          message: "Bed updated successfully.",
-          success: true,
-        });
+        notify({ title: "Updated!", message: "Bed updated successfully.", success: true });
       } else {
         await api.post("/admin/beds", form);
-        notify({
-          title: "Success!",
-          message: "Bed created successfully.",
-          success: true,
-        });
+        notify({ title: "Success!", message: "Bed created successfully.", success: true });
       }
-
       setForm({ bedNumber: "", isOccupied: false, bedId: "", roomId: "" });
       setEditingId(null);
       load();
       navigate("/beds");
     } catch (error) {
-      console.error(error);
-      notify({
-        title: "Error!",
-        message: error.response?.data?.message || "Failed to save bed.",
-        success: false,
-        error: true,
-      });
+      notify({ title: "Error!", message: error.response?.data?.message || "Failed to save bed.", error: true });
     }
   };
 
-  // ================== EDIT / DELETE ==================
   const handleEdit = (item) => {
-    // Cascading state restoration
     const room = rooms.find(r => r.roomId === item.roomId);
     if (room) {
       setSelectedFloor(room.floorId);
@@ -131,18 +119,10 @@ const Beds = () => {
       if (floor) {
         setSelectedBuilding(floor.buildingId);
         const building = buildings.find(b => b.buildingId === floor.buildingId);
-        if (building) {
-          setSelectedLocation(building.locationId);
-        }
+        if (building) setSelectedLocation(building.locationId);
       }
     }
-
-    setForm({
-      bedNumber: item.bedNumber || "",
-      isOccupied: item.isOccupied || false,
-      bedId: item.bedId || "",
-      roomId: item.roomId || "",
-    });
+    setForm({ bedNumber: item.bedNumber || "", isOccupied: item.isOccupied || false, bedId: item.bedId || "", roomId: item.roomId || "" });
     setEditingId(item.bedId);
     navigate("/beds/create");
   };
@@ -154,23 +134,13 @@ const Beds = () => {
 
   const confirmDelete = async () => {
     if (!selectedItem?.bedId) return;
-
     try {
       await api.delete(`/admin/beds/${selectedItem.bedId}`);
-      notify({
-        title: "Deleted!",
-        message: "Bed deleted successfully.",
-        success: true,
-      });
+      notify({ title: "Deleted!", message: "Bed deleted successfully.", success: true });
       close();
       load();
     } catch (error) {
-      notify({
-        title: "Error!",
-        message: "Unable to delete bed.",
-        success: false,
-        error: true,
-      });
+      notify({ title: "Error!", message: "Unable to delete bed.", error: true });
     }
   };
 
@@ -183,15 +153,10 @@ const Beds = () => {
     navigate("/beds");
   };
 
-  const getRoomNumber = (id) => {
-    const room = rooms.find((x) => x.roomId === id);
-    return room ? room.roomNumber : id;
-  };
-
   const columns = [
     { header: "Bed ID", key: "bedId", render: (val) => <strong>{val}</strong> },
     { header: "Bed Number", key: "bedNumber" },
-    { header: "Room", key: "roomId", render: (val) => getRoomNumber(val) },
+    { header: "Room", key: "roomNumber" },
     {
       header: "Occupied", key: "isOccupied", render: (val) => (
         <Badge color={val ? "red" : "green"} variant="light">
@@ -202,16 +167,8 @@ const Beds = () => {
     {
       header: "Actions", key: "actions", render: (_, b) => (
         <Group gap="xs" justify="center" wrap="nowrap">
-          <Tooltip label="Edit Bed">
-            <ActionIcon variant="light" color="yellow" size="sm" onClick={() => handleEdit(b)}>
-              <IconEdit size={16} />
-            </ActionIcon>
-          </Tooltip>
-          <Tooltip label="Delete Bed">
-            <ActionIcon variant="light" color="red" size="sm" onClick={() => openDeleteModal(b)}>
-              <IconTrash size={16} />
-            </ActionIcon>
-          </Tooltip>
+          <Tooltip label="Edit Bed"><ActionIcon variant="light" color="yellow" size="sm" onClick={() => handleEdit(b)}><IconEdit size={16} /></ActionIcon></Tooltip>
+          <Tooltip label="Delete Bed"><ActionIcon variant="light" color="red" size="sm" onClick={() => openDeleteModal(b)}><IconTrash size={16} /></ActionIcon></Tooltip>
         </Group>
       )
     }
@@ -219,149 +176,108 @@ const Beds = () => {
 
   return (
     <div>
-      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h2>Bed Management</h2>
+      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 'md' }}>
+        <Group align="center" gap="xl">
+          <h2>Bed Management</h2>
+          {!isCreateMode && (
+            <Group gap="sm">
+              <Select 
+                placeholder="Select Location" 
+                data={locations.map(l => ({ value: l.locationId, label: l.locationName }))} 
+                value={filterLoc} 
+                onChange={val => { setFilterLoc(val); setFilterBld(null); setFilterFlr(null); setFilterRom(null); }} 
+                clearable 
+                size="md"
+                style={{ width: '180px' }}
+                variant="filled"
+              />
+              <Select 
+                placeholder="Select Building" 
+                data={buildings.filter(b => !filterLoc || b.locationId === filterLoc).map(b => ({ value: b.buildingId, label: b.buildingName }))} 
+                value={filterBld} 
+                onChange={val => { setFilterBld(val); setFilterFlr(null); setFilterRom(null); }} 
+                clearable 
+                disabled={!filterLoc} 
+                size="md"
+                style={{ width: '180px' }}
+                variant="filled"
+              />
+              <Select 
+                placeholder="Select Floor" 
+                data={floors.filter(f => !filterBld || f.buildingId === filterBld).map(f => ({ value: f.floorId, label: f.floorName }))} 
+                value={filterFlr} 
+                onChange={val => { setFilterFlr(val); setFilterRom(null); }} 
+                clearable 
+                disabled={!filterBld} 
+                size="md"
+                style={{ width: '180px' }}
+                variant="filled"
+              />
+              <Select 
+                placeholder="Select Room" 
+                data={rooms.filter(r => !filterFlr || r.floorId === filterFlr).map(r => ({ value: r.roomId, label: `Room ${r.roomNumber}` }))} 
+                value={filterRom} 
+                onChange={setFilterRom} 
+                clearable 
+                disabled={!filterFlr} 
+                size="md"
+                style={{ width: '180px' }}
+                variant="filled"
+              />
+            </Group>
+          )}
+        </Group>
+
         {!isCreateMode ? (
-          <Button onClick={() => navigate("/beds/create")}>
-            <IconPlus size={18} style={{ marginRight: "5px" }} /> Create Bed
-          </Button>
+          <Button onClick={() => navigate("/beds/create")} leftSection={<IconPlus size={18} />} size="sm">Create Bed</Button>
         ) : (
-          <Button onClick={() => navigate("/beds")} variant="outline" leftSection={<IconArrowLeft size={18} />}>
-            Back
-          </Button>
+          <Button onClick={() => navigate("/beds")} variant="outline" leftSection={<IconArrowLeft size={18} />} size="sm">Back</Button>
         )}
       </div>
 
       {isCreateMode ? (
         <div className="form-card">
-          <h3 style={{ marginBottom: "15px" }}>
-            {editingId ? "Edit Bed" : "Add New Bed"}
-          </h3>
-
+          <h3 style={{ marginBottom: "15px" }}>{editingId ? "Edit Bed" : "Add New Bed"}</h3>
           <form onSubmit={save}>
             <div className="form-grid">
               <div className="form-group">
                 <label>Location</label>
-                <Select
-                  placeholder="Select Location"
-                  data={locations.map((l) => ({ value: l.locationId, label: l.locationName }))}
-                  value={selectedLocation}
-                  onChange={(val) => {
-                    setSelectedLocation(val);
-                    setSelectedBuilding("");
-                    setSelectedFloor("");
-                    setForm({ ...form, roomId: "" });
-                  }}
-                  disabled={!!editingId}
-                  searchable
-                  required
-                />
+                <Select placeholder="Select Location" data={locations.map((l) => ({ value: l.locationId, label: l.locationName }))} value={selectedLocation} onChange={(val) => { setSelectedLocation(val); setSelectedBuilding(""); setSelectedFloor(""); setForm({ ...form, roomId: "" }); }} disabled={!!editingId} searchable required />
               </div>
-
               <div className="form-group">
                 <label>Building</label>
-                <Select
-                  placeholder={selectedLocation ? "Select Building" : "Select Location First"}
-                  data={buildings.filter(b => b.locationId === selectedLocation).map((b) => ({ value: b.buildingId, label: b.buildingName }))}
-                  value={selectedBuilding}
-                  onChange={(val) => {
-                    setSelectedBuilding(val);
-                    setSelectedFloor("");
-                    setForm({ ...form, roomId: "" });
-                  }}
-                  disabled={!selectedLocation || !!editingId}
-                  searchable
-                  required
-                />
+                <Select placeholder={selectedLocation ? "Select Building" : "Select Location First"} data={buildings.filter(b => b.locationId === selectedLocation).map((b) => ({ value: b.buildingId, label: b.buildingName }))} value={selectedBuilding} onChange={(val) => { setSelectedBuilding(val); setSelectedFloor(""); setForm({ ...form, roomId: "" }); }} disabled={!selectedLocation || !!editingId} searchable required />
               </div>
-
               <div className="form-group">
                 <label>Floor</label>
-                <Select
-                  placeholder={selectedBuilding ? "Select Floor" : "Select Building First"}
-                  data={floors.filter(f => f.buildingId === selectedBuilding).map((f) => ({ value: f.floorId, label: f.floorName }))}
-                  value={selectedFloor}
-                  onChange={(val) => {
-                    setSelectedFloor(val);
-                    setForm({ ...form, roomId: "" });
-                  }}
-                  disabled={!selectedBuilding || !!editingId}
-                  searchable
-                  required
-                />
+                <Select placeholder={selectedBuilding ? "Select Floor" : "Select Building First"} data={floors.filter(f => f.buildingId === selectedBuilding).map((f) => ({ value: f.floorId, label: f.floorName }))} value={selectedFloor} onChange={(val) => { setSelectedFloor(val); setForm({ ...form, roomId: "" }); }} disabled={!selectedBuilding || !!editingId} searchable required />
               </div>
-
               <div className="form-group">
                 <label>Room</label>
-                <Select
-                  placeholder={selectedFloor ? "Select Room" : "Select Floor First"}
-                  data={rooms.filter(r => r.floorId === selectedFloor).map((r) => ({ value: r.roomId, label: `Room ${r.roomNumber} (${r.roomId})` }))}
-                  value={form.roomId}
-                  onChange={(val) => setForm({ ...form, roomId: val })}
-                  disabled={!selectedFloor || !!editingId}
-                  searchable
-                  required
-                />
+                <Select placeholder={selectedFloor ? "Select Room" : "Select Floor First"} data={rooms.filter(r => r.floorId === selectedFloor).map((r) => ({ value: r.roomId, label: `Room ${r.roomNumber}` }))} value={form.roomId} onChange={(val) => setForm({ ...form, roomId: val })} disabled={!selectedFloor || !!editingId} searchable required />
               </div>
-
               <div className="form-group">
                 <label>Bed Number</label>
-                <TextInput
-                  placeholder="e.g. B1"
-                  value={form.bedNumber}
-                  onChange={(e) => setForm({ ...form, bedNumber: e.target.value })}
-                  required
-                />
+                <TextInput placeholder="e.g. B1" value={form.bedNumber} onChange={(e) => setForm({ ...form, bedNumber: e.target.value })} required />
               </div>
-
               <div className="form-group" style={{ display: 'flex', alignItems: 'center', paddingTop: '25px' }}>
-                <Switch
-                  label="Is Occupied?"
-                  checked={form.isOccupied}
-                  onChange={(event) => setForm({ ...form, isOccupied: event.currentTarget.checked })}
-                />
+                <Switch label="Is Occupied?" checked={form.isOccupied} onChange={(event) => setForm({ ...form, isOccupied: event.currentTarget.checked })} />
               </div>
             </div>
-
             <Group justify="center" mt="xl">
-              <Button type="submit">
-                {editingId ? "Update Bed" : "Add Bed"}
-              </Button>
-              {editingId && (
-                <Button variant="outline" color="gray" onClick={cancelEdit}>
-                  Cancel
-                </Button>
-              )}
+              <Button type="submit">{editingId ? "Update Bed" : "Add Bed"}</Button>
+              {editingId && <Button variant="outline" color="gray" onClick={cancelEdit}>Cancel</Button>}
             </Group>
           </form>
         </div>
       ) : (
-        <DataTable
-          title="All Beds"
-          columns={columns}
-          data={beds}
-          loading={loading}
-          search={search}
-          onSearch={setSearch}
-          totalCount={totalCount}
-          page={page}
-          totalPages={Math.ceil(totalCount / pageSize)}
-          onPageChange={setPage}
-          pageSize={pageSize}
-          onPageSizeChange={setPageSize}
-        />
+        <>
+          <DataTable title="All Beds" columns={columns} data={beds} loading={loading} search={search} onSearch={setSearch} totalCount={totalCount} page={page} totalPages={Math.ceil(totalCount / pageSize)} onPageChange={setPage} pageSize={pageSize} onPageSizeChange={setPageSize} />
+        </>
       )}
 
-      <Modal opened={opened} onClose={close} title="Delete Bed" styles={{
-        title: {
-          fontSize: "18px",
-          fontWeight: 600,
-          color: "#e03131", // red color
-        },
-      }} centered>
-        <Text size="sm">
-          Are you sure you want to delete bed <strong>{selectedItem?.bedNumber}</strong>? This action cannot be undone.
-        </Text>
+      <Modal opened={opened} onClose={close} title="Delete Bed" centered>
+        <Text size="sm">Are you sure you want to delete bed <strong>{selectedItem?.bedNumber}</strong>?</Text>
         <Group justify="flex-end" mt="xl">
           <Button variant="outline" color="gray" onClick={close}>Cancel</Button>
           <Button color="red" onClick={confirmDelete}>Delete</Button>

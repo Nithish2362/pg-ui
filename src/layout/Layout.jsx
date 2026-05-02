@@ -1,66 +1,54 @@
-import { AppShell, Avatar, Button, Group, Tabs } from '@mantine/core';
-import { IconLogout, IconHome } from '@tabler/icons-react';
+import { AppShell, Avatar, Button, Group, Tabs, Text } from '@mantine/core';
+import { IconLogout, IconHome, IconBuildingCommunity } from '@tabler/icons-react';
 import { createContext, Suspense, useCallback, useMemo } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { ModuleJson } from '../moduleData/ModuleJson';
+import ModuleJson from '../moduleData/ModuleJson';
 import '../css/Header.css';
 
 export const ActiveTabContext = createContext();
 
 export default function Layout() {
-  const [user] = [JSON.parse(localStorage.getItem('user'))];
-
+  const user = JSON.parse(localStorage.getItem('user') || "{}");
+  console.log(user, "nknk");
   const navigate = useNavigate();
   const { pathname } = useLocation();
 
-  // ── All top-level nav items (Dashboard, Property, Residents, Community)
-  const headerData = useMemo(() => ModuleJson(null), []);
+  // Get dynamic modules based on role
+  const headerData = useMemo(() => ModuleJson(), []);
 
-  // ── Determine which top-level item is active based on current pathname
+  // Determine which top-level item is active
   const activeHeader = useMemo(() => {
-    // Find exact path match first (e.g. /dashboard)
-    let match = headerData.find(h => h.path === pathname);
-    if (match) return match;
+    const currentModule = headerData.find(m => m.path === pathname || pathname.startsWith(m.path + '/'));
+    if (!currentModule) return headerData.find(h => h.parent_id === null) || null;
 
-    // Then check if pathname starts with any child path
-    for (const header of headerData) {
-      if (header.children?.some(c => pathname.startsWith(c.path))) {
-        return header;
-      }
-    }
+    if (currentModule.parent_id === null) return currentModule;
 
-    // Fallback for direct top-level prefix match (e.g. /property/something)
-    let prefixMatch = headerData.find(h => h.path !== '/' && pathname.startsWith(h.path));
-    if (prefixMatch) return prefixMatch;
-
-    return headerData[0] || null;
+    // If it's a child, find its parent
+    return headerData.find(m => m.id === currentModule.parent_id) || currentModule;
   }, [headerData, pathname]);
 
-  // ── Child tabs for current active header
-  const childTabs = useMemo(() => activeHeader?.children || [], [activeHeader]);
+  // Children for current active header (Residents -> Tenants, Payments)
+  const childTabs = useMemo(() => {
+    // If ModuleJson doesn't have children array, we find modules where parent_id matches activeHeader.id
+    return headerData.filter(m => m.parent_id === activeHeader?.id);
+  }, [activeHeader, headerData]);
 
-  // ── Active tab: the child whose path matches current pathname
-  // ── Active tab: the child whose path matches current pathname or is a prefix
   const activeTab = useMemo(() => {
-    // Exact match first
     const exact = childTabs.find(t => t.path === pathname);
     if (exact) return exact;
-
-    // Prefix match (e.g. /buildings/create matches /buildings)
     return childTabs.find(t => t.path !== '/' && pathname.startsWith(t.path)) || childTabs[0] || null;
   }, [childTabs, pathname]);
 
-  // ── Navigate to header item (go to its default child or own path)
   const handleHeaderClick = useCallback((header) => {
-    if (header.children?.length > 0) {
-      const defaultChild = header.children.find(c => c.id === header.defaultChildId) || header.children[0];
+    const children = headerData.filter(m => m.parent_id === header.id);
+    if (children.length > 0) {
+      const defaultChild = children.find(c => c.id === header.defaultChildId) || children[0];
       navigate(defaultChild.path);
     } else {
       navigate(header.path);
     }
-  }, [navigate]);
+  }, [navigate, headerData]);
 
-  // ── Navigate to a sub-tab
   const handleTabClick = useCallback((tabId) => {
     const tab = childTabs.find(t => String(t.id) === String(tabId));
     if (tab) navigate(tab.path);
@@ -73,22 +61,39 @@ export default function Layout() {
 
   const contextValue = { user, activeHeader, activeTab, childTabs };
 
+  // Only top level items for the header
+  const topLevelNav = headerData.filter(m => m.parent_id === null);
+
   return (
     <ActiveTabContext.Provider value={contextValue}>
       <AppShell header={{ height: 50 }} padding="md">
         <AppShell.Header className="nav-header-shell">
           <nav className='nav-bar'>
             <div style={{ display: 'flex', alignItems: 'center', height: '100%', gap: '1.5rem' }}>
-              <svg width="0" height="0" style={{ position: 'absolute' }}>
-                <linearGradient id="logo-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#00c8ff" />
-                  <stop offset="100%" stopColor="#000000" />
-                </linearGradient>
-              </svg>
-              <div className="logo-text" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <IconHome size={32} color="url(#logo-gradient)" /> PG ADMIN
+              <div className="logo-text" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{
+                  background: 'linear-gradient(135deg, #3f92c5 0%, #296b92 100%)',
+                  borderRadius: '10px',
+                  padding: '6px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: '0 4px 12px rgba(63, 146, 197, 0.3)'
+                }}>
+                  <IconBuildingCommunity size={22} color="white" />
+                </div>
+                <span style={{
+                  fontWeight: 900,
+                  fontSize: '1.5rem',
+                  letterSpacing: '-0.5px',
+                  background: 'linear-gradient(to right, #3f92c5, #13415a)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent'
+                }}>
+                  STAYWOW
+                </span>
               </div>
-              {headerData.map((headernav) => (
+              {topLevelNav.map((headernav) => (
                 <div
                   key={headernav.id}
                   className={`nav-item ${activeHeader?.id === headernav.id ? 'nav-item-active' : ''}`}
@@ -100,12 +105,17 @@ export default function Layout() {
               ))}
             </div>
             <div className="user-section">
-              <Group gap="xs">
-                <div className="user-info">
-                  <span>Hi, {user?.username}</span>
-                  <Avatar size="sm" color="blue" radius="xl">{user?.username?.charAt(0).toUpperCase()}</Avatar>
+              <Group gap="sm">
+                <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'right', gap: '2px' }}>
+                  <Text size="xs" fw={900} c="blue" style={{ lineHeight: 1 }}>{user?.role}</Text>
+                  <Text size="sm" fw={500} c="dimmed" style={{ lineHeight: 1 }}>
+                    Hi , {user?.fullName || user?.username}
+                  </Text>
                 </div>
-                <Button color="gray" size="xs" onClick={handleLogout} leftSection={<IconLogout size={14} />}>
+                <Avatar size="md" color="blue">
+                  {user?.fullName?.charAt(0) || user?.username?.charAt(0)}
+                </Avatar>
+                <Button color="gray" variant="subtle" size="xs" onClick={handleLogout} leftSection={<IconLogout size={16} />}>
                   Logout
                 </Button>
               </Group>
@@ -114,9 +124,9 @@ export default function Layout() {
         </AppShell.Header>
 
         <AppShell.Main>
-          <div >
+          <div style={{ marginTop: '10px' }}>
             {childTabs.length > 0 && (
-              <Tabs value={activeTab ? String(activeTab.id) : null} onChange={handleTabClick} mb="md">
+              <Tabs value={activeTab ? String(activeTab.id) : null} onChange={handleTabClick} mb="xl">
                 <Tabs.List>
                   {childTabs.map(tab => (
                     <Tabs.Tab key={tab.id} value={String(tab.id)}>{tab.name}</Tabs.Tab>

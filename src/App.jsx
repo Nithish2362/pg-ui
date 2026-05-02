@@ -2,7 +2,8 @@ import React, { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Loader } from '@mantine/core';
 import './App.css';
-import { ModuleJson } from './moduleData/ModuleJson';
+import ModuleJson from './moduleData/ModuleJson';
+import GlobalLoader from './common/GlobalLoader';
 
 // Lazy loading components
 const Login = lazy(() => import('./components/login/AdminLogin'));
@@ -20,6 +21,8 @@ const Visitors = lazy(() => import('./components/crm/Visitors'));
 const Notices = lazy(() => import('./components/crm/Notices'));
 const TenantLogs = lazy(() => import('./components/crm/TenantLogs'));
 const NotificationsHub = lazy(() => import('./components/crm/NotificationsHub'));
+const Staff = lazy(() => import('./components/crm/Staff'));
+const Expenses = lazy(() => import('./components/crm/Expenses'));
 const TenantDashboard = lazy(() => import('./components/tenant/TenantDashboard'));
 const NotFound = lazy(() => import('./common/NotFound'));
 
@@ -55,11 +58,11 @@ const ProtectedRoute = ({ element: Component }) => {
 function App() {
   return (
     <Suspense fallback={
-      <div className="loading-container">
-        <p className="loading-text">Loading</p>
-        <Loader color="#3f92c5" style={{ marginLeft: "0.5rem", display: "flex", alignItems: "center", height: "1.5rem" }} type="dots" />
+      <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff' }}>
+        <div className="loader"></div>
       </div>
     }>
+      <GlobalLoader />
       <Routes>
         <Route path="/login" element={<Login />} />
 
@@ -93,6 +96,13 @@ function App() {
 
           {/* Notifications */}
           <Route path="/notifications" element={<ProtectedRoute element={NotificationsHub} />} />
+
+          {/* Staff */}
+          <Route path="/staff" element={<ProtectedRoute element={Staff} />} />
+          <Route path="/staff/create" element={<ProtectedRoute element={Staff} />} />
+
+          {/* Expenses */}
+          <Route path="/expenses" element={<ProtectedRoute element={Expenses} />} />
 
           {/* Tenant Portal */}
           <Route path="/tenant/dashboard" element={<ProtectedRoute element={TenantDashboard} />} />

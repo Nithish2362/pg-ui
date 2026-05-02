@@ -5,7 +5,6 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { IconArrowRight, IconArrowLeft, IconEdit, IconTrash, IconPlus } from "@tabler/icons-react";
 import api from "../../../api/Interceptor";
 import notify from "../../utils/Notification";
-
 import useDebounce from "../../../common/useDebounce";
 import DataTable from "../../common/DataTable";
 
@@ -25,6 +24,11 @@ const Rooms = () => {
   const [totalCount, setTotalCount] = useState(0);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
+
+  // Filters
+  const [filterLoc, setFilterLoc] = useState(null);
+  const [filterBld, setFilterBld] = useState(null);
+  const [filterFlr, setFilterFlr] = useState(null);
 
   const [selectedLocation, setSelectedLocation] = useState("");
   const [selectedBuilding, setSelectedBuilding] = useState("");
@@ -55,8 +59,13 @@ const Rooms = () => {
   const load = async () => {
     try {
       setLoading(true);
+      let url = `/admin/rooms/view?page=${page - 1}&pageSize=${pageSize}&searchTerm=${debouncedSearch}`;
+      if (filterLoc) url += `&locationId=${filterLoc}`;
+      if (filterBld) url += `&buildingId=${filterBld}`;
+      if (filterFlr) url += `&floorId=${filterFlr}`;
+
       const [roomRes, floorRes, buildingRes, locationRes] = await Promise.all([
-        api.get(`/admin/rooms/view?page=${page - 1}&pageSize=${pageSize}&searchTerm=${debouncedSearch}`),
+        api.get(url),
         api.get("/admin/floors"),
         api.get("/admin/buildings"),
         api.get("/admin/locations/get-all"),
@@ -69,12 +78,7 @@ const Rooms = () => {
       setLocations(locationRes.data?.response || locationRes.data?.data || locationRes.data || []);
     } catch (error) {
       console.error("Error loading data:", error);
-      notify({
-        title: "Error!",
-        message: "Failed to load rooms or floors.",
-        success: false,
-        error: true,
-      });
+      notify({ title: "Error!", message: "Failed to load rooms.", error: true });
     } finally {
       setLoading(false);
     }
@@ -82,7 +86,7 @@ const Rooms = () => {
 
   useEffect(() => {
     load();
-  }, [page, debouncedSearch, pageSize]);
+  }, [page, debouncedSearch, pageSize, filterLoc, filterBld, filterFlr]);
 
   // ================== SAVE / UPDATE ==================
   const save = async (e) => {
@@ -98,46 +102,23 @@ const Rooms = () => {
     try {
       if (editingId) {
         await api.put(`/admin/rooms/${editingId}`, payload);
-        notify({
-          title: "Updated!",
-          message: "Room updated successfully.",
-          success: true,
-        });
+        notify({ title: "Updated!", message: "Room updated successfully.", success: true });
       } else {
         await api.post("/admin/rooms", payload);
-        notify({
-          title: "Success!",
-          message: "Room created successfully.",
-          success: true,
-        });
+        notify({ title: "Success!", message: "Room created successfully.", success: true });
       }
 
-      setForm({
-        roomNumber: "",
-        roomType: "AC",
-        sharingType: 2,
-        monthlyRent: "",
-        totalBeds: "",
-        roomId: "",
-        floorId: "",
-      });
+      setForm({ roomNumber: "", roomType: "AC", sharingType: 2, monthlyRent: "", totalBeds: "", roomId: "", floorId: "" });
       setEditingId(null);
       load();
       navigate("/rooms");
     } catch (error) {
-      console.error(error);
-      notify({
-        title: "Error!",
-        message: error.response?.data?.message || "Failed to save room.",
-        success: false,
-        error: true,
-      });
+      notify({ title: "Error!", message: error.response?.data?.message || "Failed to save room.", error: true });
     }
   };
 
   // ================== EDIT / DELETE ==================
   const handleEdit = (item) => {
-    // Find building from floor, and location from building
     const floor = floors.find(f => f.floorId === item.floorId);
     if (floor) {
       setSelectedBuilding(floor.buildingId);
@@ -167,51 +148,29 @@ const Rooms = () => {
 
   const confirmDelete = async () => {
     if (!selectedItem?.roomId) return;
-
     try {
       await api.delete(`/admin/rooms/${selectedItem.roomId}`);
-      notify({
-        title: "Deleted!",
-        message: "Room deleted successfully.",
-        success: true,
-      });
+      notify({ title: "Deleted!", message: "Room deleted successfully.", success: true });
       close();
       load();
     } catch (error) {
-      notify({
-        title: "Error!",
-        message: "Unable to delete room.",
-        success: false,
-        error: true,
-      });
+      notify({ title: "Error!", message: "Unable to delete room.", error: true });
     }
   };
 
   const cancelEdit = () => {
     setEditingId(null);
-    setForm({
-      roomNumber: "",
-      roomType: "AC",
-      sharingType: 2,
-      monthlyRent: "",
-      totalBeds: "",
-      roomId: "",
-      floorId: "",
-    });
+    setForm({ roomNumber: "", roomType: "AC", sharingType: 2, monthlyRent: "", totalBeds: "", roomId: "", floorId: "" });
     setSelectedLocation("");
     setSelectedBuilding("");
     navigate("/rooms");
   };
 
-  const getFloorName = (id) => {
-    const floor = floors.find((x) => x.floorId === id);
-    return floor ? floor.floorName : id;
-  };
-
   const columns = [
     { header: "Room ID", key: "roomId", render: (val) => <strong>{val}</strong> },
     { header: "Room #", key: "roomNumber" },
-    { header: "Floor", key: "floorId", render: (val) => getFloorName(val) },
+    { header: "Building", key: "buildingName" },
+    { header: "Floor", key: "floorName" },
     {
       header: "Type", key: "roomType", render: (val) => (
         <Badge color={val === "AC" ? "blue" : "orange"} variant="light">
@@ -221,25 +180,12 @@ const Rooms = () => {
     },
     { header: "Sharing", key: "sharingType", render: (val) => `${val} Sharing` },
     { header: "Rent", key: "monthlyRent", render: (val) => `₹${val}` },
-    { header: "Beds", key: "totalBeds", render: (val, r) => r.beds?.length || val },
     {
       header: "Actions", key: "actions", render: (_, r) => (
         <Group gap="xs" justify="center" wrap="nowrap">
-          <Tooltip label="Edit Room">
-            <ActionIcon variant="light" color="yellow" size="sm" onClick={() => handleEdit(r)}>
-              <IconEdit size={16} />
-            </ActionIcon>
-          </Tooltip>
-          <Tooltip label="Delete Room">
-            <ActionIcon variant="light" color="red" size="sm" onClick={() => openDeleteModal(r)}>
-              <IconTrash size={16} />
-            </ActionIcon>
-          </Tooltip>
-          <Tooltip label="Go To Beds">
-            <ActionIcon variant="light" color="blue" size="sm" onClick={() => navigate(`/beds?roomId=${r.roomId}`)}>
-              <IconArrowRight size={16} />
-            </ActionIcon>
-          </Tooltip>
+          <Tooltip label="Edit Room"><ActionIcon variant="light" color="yellow" size="sm" onClick={() => handleEdit(r)}><IconEdit size={16} /></ActionIcon></Tooltip>
+          <Tooltip label="Delete Room"><ActionIcon variant="light" color="red" size="sm" onClick={() => openDeleteModal(r)}><IconTrash size={16} /></ActionIcon></Tooltip>
+          <Tooltip label="Go To Beds"><ActionIcon variant="light" color="blue" size="sm" onClick={() => navigate(`/beds?roomId=${r.roomId}`)}><IconArrowRight size={16} /></ActionIcon></Tooltip>
         </Group>
       )
     }
@@ -247,25 +193,57 @@ const Rooms = () => {
 
   return (
     <div>
-      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h2>Room Management</h2>
+      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 'md' }}>
+        <Group align="center" gap="xl">
+          <h2>Room Management</h2>
+          {!isCreateMode && (
+            <Group gap="sm">
+              <Select 
+                placeholder="Select Location" 
+                data={locations.map(l => ({ value: l.locationId, label: l.locationName }))} 
+                value={filterLoc} 
+                onChange={val => { setFilterLoc(val); setFilterBld(null); setFilterFlr(null); }} 
+                clearable 
+                size="md"
+                style={{ width: '200px' }}
+                variant="filled"
+              />
+              <Select 
+                placeholder="Select Building" 
+                data={buildings.filter(b => !filterLoc || b.locationId === filterLoc).map(b => ({ value: b.buildingId, label: b.buildingName }))} 
+                value={filterBld} 
+                onChange={val => { setFilterBld(val); setFilterFlr(null); }} 
+                clearable 
+                disabled={!filterLoc} 
+                size="md"
+                style={{ width: '200px' }}
+                variant="filled"
+              />
+              <Select 
+                placeholder="Select Floor" 
+                data={floors.filter(f => !filterBld || f.buildingId === filterBld).map(f => ({ value: f.floorId, label: f.floorName }))} 
+                value={filterFlr} 
+                onChange={setFilterFlr} 
+                clearable 
+                disabled={!filterBld} 
+                size="md"
+                style={{ width: '200px' }}
+                variant="filled"
+              />
+            </Group>
+          )}
+        </Group>
+
         {!isCreateMode ? (
-          <Button onClick={() => navigate("/rooms/create")}>
-            <IconPlus size={18} style={{ marginRight: "5px" }} /> Create Room
-          </Button>
+          <Button onClick={() => navigate("/rooms/create")} leftSection={<IconPlus size={18} />} size="sm">Create Room</Button>
         ) : (
-          <Button onClick={() => navigate("/rooms")} variant="outline" leftSection={<IconArrowLeft size={18} />}>
-            Back
-          </Button>
+          <Button onClick={() => navigate("/rooms")} variant="outline" leftSection={<IconArrowLeft size={18} />} size="sm">Back</Button>
         )}
       </div>
 
       {isCreateMode ? (
         <div className="form-card">
-          <h3 style={{ marginBottom: "15px" }}>
-            {editingId ? "Edit Room" : "Add New Room"}
-          </h3>
-
+          <h3 style={{ marginBottom: "15px" }}>{editingId ? "Edit Room" : "Add New Room"}</h3>
           <form onSubmit={save}>
             <div className="form-grid">
               <div className="form-group">
@@ -274,11 +252,7 @@ const Rooms = () => {
                   placeholder="Select Location"
                   data={locations.map((l) => ({ value: l.locationId, label: l.locationName }))}
                   value={selectedLocation}
-                  onChange={(val) => {
-                    setSelectedLocation(val);
-                    setSelectedBuilding("");
-                    setForm({ ...form, floorId: "" });
-                  }}
+                  onChange={(val) => { setSelectedLocation(val); setSelectedBuilding(""); setForm({ ...form, floorId: "" }); }}
                   disabled={!!editingId}
                   searchable
                   required
@@ -291,10 +265,7 @@ const Rooms = () => {
                   placeholder={selectedLocation ? "Select Building" : "Select Location First"}
                   data={buildings.filter(b => b.locationId === selectedLocation).map((b) => ({ value: b.buildingId, label: b.buildingName }))}
                   value={selectedBuilding}
-                  onChange={(val) => {
-                    setSelectedBuilding(val);
-                    setForm({ ...form, floorId: "" });
-                  }}
+                  onChange={(val) => { setSelectedBuilding(val); setForm({ ...form, floorId: "" }); }}
                   disabled={!selectedLocation || !!editingId}
                   searchable
                   required
@@ -316,112 +287,62 @@ const Rooms = () => {
 
               <div className="form-group">
                 <label>Room Number</label>
-                <TextInput
-                  placeholder="e.g. 101"
-                  value={form.roomNumber}
-                  onChange={(e) => setForm({ ...form, roomNumber: e.target.value })}
-                  required
-                />
+                <TextInput placeholder="e.g. 101" value={form.roomNumber} onChange={(e) => setForm({ ...form, roomNumber: e.target.value })} required />
               </div>
 
               <div className="form-group">
                 <label>Room Type</label>
-                <Select
-                  data={[
-                    { value: "AC", label: "AC" },
-                    { value: "NON_AC", label: "Non-AC" },
-                  ]}
-                  value={form.roomType}
-                  onChange={(val) => setForm({ ...form, roomType: val })}
-                  required
-                />
+                <Select data={[{ value: "AC", label: "AC" }, { value: "NON_AC", label: "Non-AC" }]} value={form.roomType} onChange={(val) => setForm({ ...form, roomType: val })} required />
               </div>
 
               <div className="form-group">
                 <label>Sharing Type</label>
                 <Select
-                  data={[
-                    { value: "1", label: "1 Sharing" },
-                    { value: "2", label: "2 Sharing" },
-                    { value: "3", label: "3 Sharing" },
-                    { value: "4", label: "4 Sharing" },
-                    { value: "5", label: "5 Sharing" },
-                    { value: "6", label: "6 Sharing" },
-
-                  ]}
-                  value={form.sharingType}
-                  onChange={(val) =>
-                    setForm({
-                      ...form,
-                      sharingType: val,
-                      totalBeds: val, // auto set beds same as sharing
-                    })
-                  }
+                  data={["1", "2", "3", "4", "5", "6"].map(v => ({ value: v, label: `${v} Sharing` }))}
+                  value={String(form.sharingType)}
+                  onChange={(val) => setForm({ ...form, sharingType: val, totalBeds: val })}
                   required
                 />
               </div>
 
               <div className="form-group">
                 <label>Monthly Rent (₹)</label>
-                <TextInput
-                  type="number"
-                  placeholder="Rent amount"
-                  value={form.monthlyRent}
-                  onChange={(e) => setForm({ ...form, monthlyRent: e.target.value })}
-                  required
-                />
+                <TextInput type="number" placeholder="Rent amount" value={form.monthlyRent} onChange={(e) => setForm({ ...form, monthlyRent: e.target.value })} required />
               </div>
 
               <div className="form-group">
                 <label>Total Beds</label>
-                <TextInput
-                  type="number"
-                  placeholder="Number of beds"
-                  value={form.totalBeds}
-                  required
-                />
+                <TextInput type="number" placeholder="Number of beds" value={form.totalBeds} readOnly />
               </div>
             </div>
 
             <Group justify="center" mt="xl">
-              <Button type="submit">
-                {editingId ? "Update Room" : "Save Room"}
-              </Button>
-              {editingId && (
-                <Button variant="outline" color="gray" onClick={cancelEdit}>
-                  Cancel
-                </Button>
-              )}
+              <Button type="submit">{editingId ? "Update Room" : "Save Room"}</Button>
+              {editingId && <Button variant="outline" color="gray" onClick={cancelEdit}>Cancel</Button>}
             </Group>
           </form>
         </div>
       ) : (
-        <DataTable
-          title="All Rooms"
-          columns={columns}
-          data={rooms}
-          loading={loading}
-          search={search}
-          onSearch={setSearch}
-          totalCount={totalCount}
-          page={page}
-          totalPages={Math.ceil(totalCount / pageSize)}
-          onPageChange={setPage}
-          pageSize={pageSize}
-          onPageSizeChange={setPageSize}
-        />
+        <>
+          <DataTable
+            title="All Rooms"
+            columns={columns}
+            data={rooms}
+            loading={loading}
+            search={search}
+            onSearch={setSearch}
+            totalCount={totalCount}
+            page={page}
+            totalPages={Math.ceil(totalCount / pageSize)}
+            onPageChange={setPage}
+            pageSize={pageSize}
+            onPageSizeChange={setPageSize}
+          />
+        </>
       )}
 
-      <Modal opened={opened} onClose={close} title="Delete Room" styles={{
-        title: {
-          fontSize: "18px",
-          fontWeight: 600,
-          color: "#e03131", // red color
-        },
-      }} centered>
-        <Text size="sm">
-          Are you sure you want to delete room <strong>{selectedItem?.roomNumber}</strong>? This action cannot be undone.
-        </Text>
+      <Modal opened={opened} onClose={close} title="Delete Room" centered>
+        <Text size="sm">Are you sure you want to delete room <strong>{selectedItem?.roomNumber}</strong>?</Text>
         <Group justify="flex-end" mt="xl">
           <Button variant="outline" color="gray" onClick={close}>Cancel</Button>
           <Button color="red" onClick={confirmDelete}>Delete</Button>

@@ -1,27 +1,22 @@
-import _ from "lodash";
-
-export function ModuleJson(parentId) {
+const ModuleJson = () => {
     const user = JSON.parse(localStorage.getItem("user") || "{}");
-    const backendViews = Array.isArray(user?.views) ? user.views : [];
-
-    // ─── Core mandatory hierarchy ───────────────────────────────────────────
-    // Top-level: Dashboard | Property | Residents | Community
-    // Property  → Location, Rooms, Floors, Beds
-    // Residents → Tenants, Payments
-    // Community → Complaints, Visitors, Notices, Logs
-    const isAdmin = user.role === 'ADMIN' || user.role === 'ROLE_ADMIN';
-    const isTenant = user.role === 'TENANT' || user.role === 'ROLE_TENANT';
+    const role = user.role || '';
+    const isSuperAdmin = role === 'SUPER_ADMIN' || role === 'ADMIN';
+    const isStaff = role === 'STAFF';
+    const isTenant = role === 'TENANT' || role === 'ROLE_TENANT';
 
     let mandatoryModules = [];
 
-    if (isAdmin) {
+    if (isSuperAdmin) {
         mandatoryModules = [
             { id: 'DASHBOARD', name: 'Dashboard', parent_id: null, orderBy: 1, path: '/dashboard' },
             { id: 'PROPERTY', name: 'Property', parent_id: null, orderBy: 2, path: '/property', defaultChildId: 'LOCATION' },
             { id: 'RESIDENTS', name: 'Residents', parent_id: null, orderBy: 3, path: '/residents', defaultChildId: 'TENANTS' },
             { id: 'NOTIFICATIONS', name: 'Notifications', parent_id: null, orderBy: 4, path: '/notifications' },
+            { id: 'STAFF', name: 'Staff Details', parent_id: null, orderBy: 5, path: '/staff' },
+            { id: 'EXPENSES', name: 'Expense Details', parent_id: null, orderBy: 6, path: '/expenses' },
 
-            // Property sub-tabs
+            // Property sub-tabs (Admin Only)
             { id: 'LOCATION', name: 'Location', parent_id: 'PROPERTY', orderBy: 1, path: '/locations' },
             { id: 'BUILDINGS', name: 'Buildings', parent_id: 'PROPERTY', orderBy: 2, path: '/buildings' },
             { id: 'FLOORS', name: 'Floors', parent_id: 'PROPERTY', orderBy: 3, path: '/floors' },
@@ -31,10 +26,17 @@ export function ModuleJson(parentId) {
             // Residents sub-tabs
             { id: 'TENANTS', name: 'Tenants', parent_id: 'RESIDENTS', orderBy: 1, path: '/tenants' },
             { id: 'PAYMENTS', name: 'Payments', parent_id: 'RESIDENTS', orderBy: 2, path: '/payments' },
-            // { id: 'COMPLAINTS', name: 'Complaints', parent_id: 'RESIDENTS', orderBy: 3, path: '/complaints' },
-            // { id: 'VISITORS', name: 'Visitors', parent_id: 'RESIDENTS', orderBy: 4, path: '/visitors' },
-            // { id: 'NOTICES', name: 'Notices', parent_id: 'RESIDENTS', orderBy: 5, path: '/notices' },
-            // { id: 'LOGS', name: 'Logs', parent_id: 'RESIDENTS', orderBy: 6, path: '/logs' },
+        ];
+    } else if (isStaff) {
+        mandatoryModules = [
+            { id: 'DASHBOARD', name: 'Dashboard', parent_id: null, orderBy: 1, path: '/dashboard' },
+            { id: 'RESIDENTS', name: 'Residents', parent_id: null, orderBy: 2, path: '/residents', defaultChildId: 'TENANTS' },
+            { id: 'EXPENSES', name: 'My Expenses', parent_id: null, orderBy: 3, path: '/expenses' },
+            { id: 'NOTIFICATIONS', name: 'Notifications', parent_id: null, orderBy: 4, path: '/notifications' },
+
+            // Residents sub-tabs
+            { id: 'TENANTS', name: 'Tenants', parent_id: 'RESIDENTS', orderBy: 1, path: '/tenants' },
+            { id: 'PAYMENTS', name: 'Payments', parent_id: 'RESIDENTS', orderBy: 2, path: '/payments' },
         ];
     } else if (isTenant) {
         mandatoryModules = [
@@ -44,59 +46,7 @@ export function ModuleJson(parentId) {
         ];
     }
 
-    const normalizePath = (p) => {
-        if (!p) return null;
-        let path = String(p).toLowerCase().trim();
-        if (!path.startsWith('/')) path = '/' + path;
-        return path;
-    };
+    return mandatoryModules;
+};
 
-    // Use a Map keyed by normalized PATH to strictly prevent duplicates
-    const moduleMap = new Map();
-
-    // 1. Add mandatory modules
-    mandatoryModules.forEach(m => {
-        const path = normalizePath(m.path);
-        moduleMap.set(path, {
-            ...m,
-            id: String(m.id).toUpperCase(),
-            path,
-            parent_id: m.parent_id ? String(m.parent_id).toUpperCase() : null
-        });
-    });
-
-    // 2. Merge backend views (by path to ensure uniqueness)
-    backendViews.forEach(m => {
-        const path = normalizePath(m.path);
-        if (path) {
-            const existing = moduleMap.get(path);
-            moduleMap.set(path, {
-                ...m,
-                id: m.id ? String(m.id).toUpperCase() : (existing?.id || Math.random().toString()),
-                path,
-                // Keep mandatory parent_id if it exists to maintain the hierarchy
-                parent_id: existing?.parent_id || (m.parent_id ? String(m.parent_id).toUpperCase() : null)
-            });
-        }
-    });
-
-    const data = Array.from(moduleMap.values());
-
-    const normalize = (val) => {
-        if (!val || val === "null" || val === "NULL") return null;
-        return String(val).toUpperCase();
-    };
-
-    function buildTree(items, pid = null) {
-        const targetPid = normalize(pid);
-        return items
-            .filter(item => normalize(item.parent_id || item.parentId) === targetPid)
-            .sort((a, b) => (a.orderBy || 0) - (b.orderBy || 0))
-            .map(item => ({
-                ...item,
-                children: buildTree(items, item.id)
-            }));
-    }
-
-    return buildTree(data, parentId);
-}
+export default ModuleJson;

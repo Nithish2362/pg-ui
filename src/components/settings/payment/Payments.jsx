@@ -114,6 +114,8 @@ const Payments = () => {
 
   const [payments, setPayments] = useState([]);
   const [tenants, setTenants] = useState([]);
+  const [locations, setLocations] = useState([]);
+  const [buildings, setBuildings] = useState([]);
   const navigate = useNavigate();
   const locationState = useLocation();
   const isCreateMode = locationState.pathname === "/payments/create";
@@ -125,6 +127,10 @@ const Payments = () => {
   const [selectedItem, setSelectedItem] = useState(null);
   const [opened, { open, close }] = useDisclosure(false);
   const receiptRef = useRef();
+
+  // Filters
+  const [filterLoc, setFilterLoc] = useState(null);
+  const [filterBld, setFilterBld] = useState(null);
 
   // Payment Flow State
   const [upiId, setUpiId] = useState("");
@@ -145,13 +151,34 @@ const Payments = () => {
 
   const printReceipt = useReactToPrint({ contentRef: receiptRef });
 
+  const loadMasters = async () => {
+    try {
+      const [locRes, bldRes] = await Promise.all([
+        api.get("/admin/locations/get-all"),
+        api.get("/admin/buildings")
+      ]);
+      setLocations(locRes.data?.response || []);
+      setBuildings(bldRes.data?.response || []);
+    } catch (err) { console.error(err); }
+  };
+
   const load = async () => {
     try {
       setLoading(true);
+      let url = `/admin/payments/view?page=${page - 1}&pageSize=${pageSize}&status=${activeTab}&searchTerm=${debouncedSearch}`;
+      if (filterLoc) url += `&locationId=${filterLoc}`;
+      if (filterBld) url += `&buildingId=${filterBld}`;
+
+      let countsUrl = `/admin/payments/counts`;
+      const cParams = [];
+      if (filterLoc) cParams.push(`locationId=${filterLoc}`);
+      if (filterBld) cParams.push(`buildingId=${filterBld}`);
+      if (cParams.length > 0) countsUrl += `?${cParams.join('&')}`;
+
       const [paymentRes, tenantRes, countsRes] = await Promise.all([
-        api.get(`/admin/payments/view?page=${page - 1}&pageSize=${pageSize}&status=${activeTab}&searchTerm=${debouncedSearch}`),
+        api.get(url),
         api.get("/admin/tenants"),
-        api.get("/admin/payments/counts")
+        api.get(countsUrl)
       ]);
 
       setPayments(paymentRes.data?.response || []);
@@ -165,7 +192,8 @@ const Payments = () => {
     }
   };
 
-  useEffect(() => { load(); }, [page, activeTab, debouncedSearch, pageSize]);
+  useEffect(() => { loadMasters(); }, []);
+  useEffect(() => { load(); }, [page, activeTab, debouncedSearch, pageSize, filterLoc, filterBld]);
 
   // Handle auto-fill when navigating from "Pay Balance" or "Unpaid"
   useEffect(() => {
@@ -328,11 +356,41 @@ const Payments = () => {
   return (
     <div>
       {/* HEADER */}
-      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h2>Payment Management</h2>
-        <Button onClick={() => navigate("/payments/create")}>
-          <IconPlus size={18} style={{ marginRight: "5px" }} /> Record Payment
-        </Button>
+      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 'md' }}>
+        <Group align="center" gap="xl">
+          <h2>Payment Management</h2>
+          {!isCreateMode && (
+            <Group gap="sm">
+              <Select 
+                placeholder="Select Location" 
+                data={locations.map(l => ({ value: l.locationId, label: l.locationName }))} 
+                value={filterLoc} 
+                onChange={val => { setFilterLoc(val); setFilterBld(null); }} 
+                clearable 
+                size="md"
+                style={{ width: '220px' }}
+                variant="filled"
+              />
+              <Select 
+                placeholder="Select Building" 
+                data={buildings.filter(b => !filterLoc || b.locationId === filterLoc).map(b => ({ value: b.buildingId, label: b.buildingName }))} 
+                value={filterBld} 
+                onChange={setFilterBld} 
+                clearable 
+                disabled={!filterLoc} 
+                size="md"
+                style={{ width: '220px' }}
+                variant="filled"
+              />
+            </Group>
+          )}
+        </Group>
+
+        {!isCreateMode && (
+          <Button onClick={() => navigate("/payments/create")} size="sm">
+            <IconPlus size={18} style={{ marginRight: "5px" }} /> Record Payment
+          </Button>
+        )}
       </div>
 
       {/* TABS & TABLE */}

@@ -72,13 +72,7 @@ const DataTable = ({
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
-            {loading ? (
-              <Table.Tr>
-                <Table.Td colSpan={safeColumns.length} style={{ textAlign: 'center', padding: '60px' }}>
-                  <Loader size="sm" />
-                </Table.Td>
-              </Table.Tr>
-            ) : safeData.length === 0 ? (
+            {safeData.length === 0 && !loading ? (
               <Table.Tr>
                 <Table.Td colSpan={safeColumns.length} style={{ textAlign: 'center', padding: '60px', color: '#64748b' }}>
                   No records found

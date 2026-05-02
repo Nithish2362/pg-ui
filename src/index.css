@@ -24,6 +24,10 @@
   --transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
+html {
+  scrollbar-gutter: stable;
+}
+
 body {
   font-family: 'Plus Jakarta Sans', sans-serif;
   background: var(--bg-primary);
@@ -31,6 +35,7 @@ body {
   line-height: 1.6;
   margin: 0;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
 #root {
@@ -53,9 +58,11 @@ h4 {
 
 /* Premium Navigation Header */
 .nav-header-shell {
-  background: rgba(255, 255, 255, 0.8) !important;
+  background: rgba(255, 255, 255, 0.9) !important;
   backdrop-filter: blur(20px);
   border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
+  height: 70px !important;
+  z-index: 1000;
 }
 
 .nav-item {
