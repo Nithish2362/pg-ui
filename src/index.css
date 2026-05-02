@@ -61,7 +61,6 @@ h4 {
   background: rgba(255, 255, 255, 0.9) !important;
   backdrop-filter: blur(20px);
   border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
-  height: 70px !important;
   z-index: 1000;
 }
 
