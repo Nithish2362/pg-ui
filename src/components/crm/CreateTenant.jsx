@@ -16,6 +16,9 @@ const CreateTenant = () => {
   const [rooms, setRooms] = useState([]);
   const [beds, setBeds] = useState([]);
 
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const isStaff = user?.role === 'STAFF';
+
   const [form, setForm] = useState({
     studentName: '',
     mobileNumber: '',
@@ -30,8 +33,8 @@ const CreateTenant = () => {
     advancePayment: 0,
     rentStartDate: new Date().toISOString().split('T')[0],
     paymentMode: 'CASH',
-    locationId: '',
-    buildingId: '',
+    locationId: isStaff ? user.locationId : '',
+    buildingId: isStaff ? user.buildingId : '',
     floorId: '',
     roomId: '',
     bedId: ''
@@ -218,8 +221,12 @@ const CreateTenant = () => {
                 </Group>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                  <Select label="Location" data={locations.map(l => ({ value: l.locationId, label: l.locationName }))} value={form.locationId} onChange={val => setForm({ ...form, locationId: val, buildingId: '', floorId: '', roomId: '', bedId: '' })} required searchable />
-                  <Select label="Building" data={buildings.filter(b => b.locationId === form.locationId).map(b => ({ value: b.buildingId, label: b.buildingName }))} value={form.buildingId} onChange={val => setForm({ ...form, buildingId: val, floorId: '', roomId: '', bedId: '' })} required searchable disabled={!form.locationId} />
+                  {!isStaff && (
+                    <>
+                      <Select label="Location" data={locations.map(l => ({ value: l.locationId, label: l.locationName }))} value={form.locationId} onChange={val => setForm({ ...form, locationId: val, buildingId: '', floorId: '', roomId: '', bedId: '' })} required searchable />
+                      <Select label="Building" data={buildings.filter(b => b.locationId === form.locationId).map(b => ({ value: b.buildingId, label: b.buildingName }))} value={form.buildingId} onChange={val => setForm({ ...form, buildingId: val, floorId: '', roomId: '', bedId: '' })} required searchable disabled={!form.locationId} />
+                    </>
+                  )}
                   <Select label="Floor" data={floors.map(f => ({ value: f.floorId, label: f.floorName }))} value={form.floorId} onChange={val => setForm({ ...form, floorId: val, roomId: '', bedId: '' })} required searchable disabled={!form.buildingId} />
                   <Select label="Room" data={rooms.map(r => ({ value: r.roomId, label: `Room ${r.roomNumber} (${r.roomType})` }))} value={form.roomId} onChange={val => setForm({ ...form, roomId: val, bedId: '' })} required searchable disabled={!form.floorId} />
                   <Select label="Bed" data={beds.filter(b => !b.isOccupied).map(b => ({ value: b.bedId, label: `Bed ${b.bedNumber}` }))} value={form.bedId} onChange={val => setForm({ ...form, bedId: val })} required searchable disabled={!form.roomId} />
@@ -234,7 +241,6 @@ const CreateTenant = () => {
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                   <NumberInput label="Advance Payment (₹)" value={form.advancePayment} onChange={val => setForm({ ...form, advancePayment: val })} required min={0} size="md" />
-                  <Select label="Payment Mode" data={['CASH', 'ONLINE', 'UPI']} value={form.paymentMode} onChange={val => setForm({ ...form, paymentMode: val })} size="md" />
                   <TextInput label="Rent Start Date" type="date" value={form.rentStartDate} onChange={e => setForm({ ...form, rentStartDate: e.target.value })} size="md" />
                 </div>
 

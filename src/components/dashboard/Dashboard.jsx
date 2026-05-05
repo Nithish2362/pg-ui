@@ -83,21 +83,21 @@ const Dashboard = () => {
         <h2>Business Overview</h2>
         {!isStaff && (
           <Group>
-            <Select 
-              placeholder="All Locations" 
-              data={locations.map(l => ({ value: l.locationId, label: l.locationName }))} 
-              value={filterLoc} 
-              onChange={val => { setFilterLoc(val); setFilterBld(null); }} 
-              clearable 
+            <Select
+              placeholder="All Locations"
+              data={locations.map(l => ({ value: l.locationId, label: l.locationName }))}
+              value={filterLoc}
+              onChange={val => { setFilterLoc(val); setFilterBld(null); }}
+              clearable
               size="xs"
               style={{ width: '150px' }}
             />
-            <Select 
-              placeholder="All Buildings" 
-              data={buildings.filter(b => !filterLoc || b.locationId === filterLoc).map(b => ({ value: b.buildingId, label: b.buildingName }))} 
-              value={filterBld} 
-              onChange={setFilterBld} 
-              clearable 
+            <Select
+              placeholder="All Buildings"
+              data={buildings.filter(b => !filterLoc || b.locationId === filterLoc).map(b => ({ value: b.buildingId, label: b.buildingName }))}
+              value={filterBld}
+              onChange={setFilterBld}
+              clearable
               disabled={!filterLoc}
               size="xs"
               style={{ width: '150px' }}
@@ -107,43 +107,105 @@ const Dashboard = () => {
       </div>
 
       {loading ? (
-        <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="xl">
-          {Array(4).fill(0).map((_, i) => <Skeleton key={i} height={140} radius="md" />)}
+        <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="xl">
+          {Array(6).fill(0).map((_, i) => <Skeleton key={i} height={140} radius="md" />)}
         </SimpleGrid>
       ) : (
         <>
-          <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="xl" mb="xl">
-            <StatCard 
-              title="Occupancy" 
-              value={`${Math.round(stats.occupancyPercentage || 0)}%`} 
+          <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="xl" mb="xl">
+            {/* OCCUPANCY CARD */}
+            <StatCard
+              title="Occupancy"
+              value={`${Math.round(stats.occupancyPercentage || 0)}%`}
               subValue={`${stats.totalBeds - stats.availableBeds} / ${stats.totalBeds} Beds Occupied`}
-              icon={IconBed} 
-              color="blue" 
-              path="/beds" 
+              icon={IconBed}
+              color="blue"
+              path="/beds"
             />
-            <StatCard 
-              title="Revenue (This Month)" 
-              value={`₹${stats.totalRevenue?.toLocaleString() || 0}`} 
-              subValue={`₹${stats.pendingRevenue?.toLocaleString() || 0} Pending`}
-              icon={IconCurrencyRupee} 
-              color="green" 
-              path="/payments" 
+
+            {/* DETAILED REVENUE CARD */}
+            <Paper p="xl" radius="md" withBorder>
+              <Group justify="space-between" mb="md">
+                <Text size="xs" c="dimmed" fw={700} tt="uppercase">Revenue (This Month)</Text>
+                <ThemeIcon color="green" variant="light" size={38} radius="md">
+                  <IconCurrencyRupee size={24} stroke={1.5} />
+                </ThemeIcon>
+              </Group>
+
+              <Stack gap={4}>
+                <Group justify="space-between">
+                  <Text size="sm">Advance Paid</Text>
+                  <Text size="sm" fw={700}>₹{stats.advancePaidThisMonth?.toLocaleString() || 0}</Text>
+                </Group>
+                <Group justify="space-between">
+                  <Text size="sm">Rent Paid</Text>
+                  <Text size="sm" fw={700}>₹{stats.rentPaidThisMonth?.toLocaleString() || 0}</Text>
+                </Group>
+                <Divider my="xs" />
+                <Group justify="space-between">
+                  <Text size="sm" c="orange">Advance Balance</Text>
+                  <Text size="sm" fw={700} c="orange">₹{stats.advanceBalance?.toLocaleString() || 0}</Text>
+                </Group>
+                <Group justify="space-between">
+                  <Text size="sm" c="red">Rent Balance</Text>
+                  <Text size="sm" fw={700} c="red">₹{stats.rentBalance?.toLocaleString() || 0}</Text>
+                </Group>
+              </Stack>
+            </Paper>
+
+            {/* STAFF CARD */}
+            <StatCard
+              title="Staff Overview"
+              value={stats.totalStaff || 0}
+              subValue="Total staff members"
+              icon={IconUsers}
+              color="violet"
+              path="/staff"
             />
-            <StatCard 
-              title="Active Residents" 
-              value={stats.activeResidents || 0} 
-              subValue={`${stats.newTenantsThisMonth || 0} New this month`}
-              icon={IconUsers} 
-              color="violet" 
-              path="/tenants" 
+
+            {/* RESIDENT OVERVIEW CARD */}
+            <Paper p="xl" radius="md" withBorder onClick={() => navigate('/tenants')} style={{ cursor: 'pointer' }}>
+              <Group justify="space-between" mb="md">
+                <Text size="xs" c="dimmed" fw={700} tt="uppercase">Resident Overview</Text>
+                <ThemeIcon color="violet" variant="light" size={38} radius="md">
+                  <IconUsers size={24} stroke={1.5} />
+                </ThemeIcon>
+              </Group>
+
+              <Stack gap={4}>
+                <Group justify="space-between">
+                  <Text size="sm">Active</Text>
+                  <Text size="sm" fw={700}>{stats.activeResidents || 0}</Text>
+                </Group>
+                <Group justify="space-between">
+                  <Text size="sm">Vacated</Text>
+                  <Text size="sm" fw={700}>{stats.vacatedTenantsThisMonth || 0}</Text>
+                </Group>
+                <Divider my="xs" />
+                <Group justify="space-between">
+                  <Text size="sm" c="red">Advance Not Paid</Text>
+                  <Text size="sm" fw={700} c="red">{stats.advanceNotPaidResidents || 0}</Text>
+                </Group>
+              </Stack>
+            </Paper>
+
+            {/* EXPENSE CARD */}
+            <StatCard
+              title="Total Expenses"
+              value={`₹${stats.totalExpenses?.toLocaleString() || 0}`}
+              subValue="Maintenance & Operations"
+              icon={IconAlertCircle}
+              color="red"
+              path="/expenses"
             />
-             <StatCard 
-              title="Check-outs" 
-              value={stats.vacatedTenantsThisMonth || 0} 
-              subValue="Tenants left this month"
-              icon={IconUserMinus} 
-              color="orange" 
-              path="/tenants" 
+
+            {/* PROFIT CARD */}
+            <StatCard
+              title="Net Profit"
+              value={`₹${stats.totalProfit?.toLocaleString() || 0}`}
+              subValue="Revenue minus Expenses"
+              icon={IconTrendingUp}
+              color={stats.totalProfit >= 0 ? "teal" : "red"}
             />
           </SimpleGrid>
 
@@ -156,14 +218,14 @@ const Dashboard = () => {
               <Group align="flex-end" justify="space-around" h={200} gap="xs">
                 {Object.entries(stats.monthlyRevenue || {}).map(([month, rev]) => (
                   <Stack key={month} align="center" gap={4} style={{ flex: 1 }}>
-                    <Box 
-                      bg="blue.5" 
-                      w="100%" 
-                      style={{ 
+                    <Box
+                      bg="blue.5"
+                      w="100%"
+                      style={{
                         height: `${Math.max((rev / (Math.max(...Object.values(stats.monthlyRevenue)) || 1)) * 150, 5)}px`,
                         borderRadius: '4px 4px 0 0',
                         transition: 'height 0.5s ease'
-                      }} 
+                      }}
                     />
                     <Text size="xs" fw={600}>{month}</Text>
                   </Stack>
@@ -181,9 +243,9 @@ const Dashboard = () => {
                   </Group>
                   <Progress value={stats.occupancyPercentage} color="blue" size="lg" radius="xl" />
                 </div>
-                
+
                 <Divider />
-                
+
                 <Group justify="space-between">
                   <Stack gap={0}>
                     <Text size="xs" c="dimmed">PAYMENTS DONE</Text>

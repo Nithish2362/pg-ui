@@ -109,7 +109,7 @@ export default function Layout() {
                 <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'right', gap: '2px' }}>
                   <Text size="xs" fw={900} c="blue" style={{ lineHeight: 1 }}>{user?.role}</Text>
                   <Text size="sm" fw={500} c="dimmed" style={{ lineHeight: 1 }}>
-                    Hi , {user?.fullName || user?.username}
+                    Hi , {user?.name}
                   </Text>
                 </div>
                 <Avatar size="md" color="blue">

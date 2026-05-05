@@ -17,6 +17,7 @@ const Staff = () => {
   const [loading, setLoading] = useState(false);
   const [locations, setLocations] = useState([]);
   const [buildings, setBuildings] = useState([]);
+  const [assignedBuildings, setAssignedBuildings] = useState([]);
   const [search, setSearch] = useState("");
   const [totalCount, setTotalCount] = useState(0);
   const [page, setPage] = useState(1);
@@ -49,15 +50,19 @@ const Staff = () => {
       if (filterLoc) url += `&locationId=${filterLoc}`;
       if (filterBld) url += `&buildingId=${filterBld}`;
 
-      const [staffRes, locationRes, buildingRes] = await Promise.all([
+      const [staffRes, locationRes, buildingRes, allStaffRes] = await Promise.all([
         api.get(url),
         api.get("/admin/locations/get-all"),
-        api.get("/admin/buildings")
+        api.get("/admin/buildings"),
+        api.get("/admin/staff/view?page=0&pageSize=1000")
       ]);
       setItems(staffRes.data?.response || []);
       setTotalCount(staffRes.data?.count || 0);
       setLocations(locationRes.data?.response || locationRes.data?.data || []);
       setBuildings(buildingRes.data?.response || buildingRes.data?.data || []);
+      
+      const allAssignedBuildingIds = allStaffRes.data?.response?.map(s => s.buildingId).filter(id => id) || [];
+      setAssignedBuildings(allAssignedBuildingIds);
     } catch (err) {
       notify({ title: "Error", message: "Failed to load data", error: true });
     } finally {
@@ -237,16 +242,18 @@ const Staff = () => {
                   value={form.locationId}
                   onChange={val => setForm({ ...form, locationId: val, buildingId: "" })}
                   searchable
+                  clearable
                 />
               </Grid.Col>
               <Grid.Col span={6}>
                 <Select
                   label="Assign Building"
                   placeholder={form.locationId ? "Choose Building" : "Select location first"}
-                  data={buildings.filter(b => b.locationId === form.locationId).map(b => ({ value: b.buildingId, label: b.buildingName }))}
+                  data={buildings.filter(b => b.locationId === form.locationId && (!assignedBuildings.includes(b.buildingId) || b.buildingId === form.buildingId)).map(b => ({ value: b.buildingId, label: b.buildingName }))}
                   value={form.buildingId}
                   onChange={val => setForm({ ...form, buildingId: val })}
                   searchable
+                  clearable
                   disabled={!form.locationId}
                 />
               </Grid.Col>

@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useReactToPrint } from "react-to-print";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Modal, Button, TextInput, Select, Text, Group, Badge, Textarea, Tabs, ThemeIcon, Stack, Paper, Divider, Center } from "@mantine/core";
+import { Modal, Button, TextInput, Select, Text, Group, Badge, Textarea, Tabs, ThemeIcon, Stack, Paper, Divider, Center, FileInput, ActionIcon } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconArrowLeft, IconPlus, IconHome, IconHeart, IconPrinter, IconCheck, IconQrcode, IconDeviceMobile, IconCash, IconUser, IconCurrencyRupee, IconNote, IconBuildingCommunity } from "@tabler/icons-react";
+import { IconArrowLeft, IconPlus, IconHome, IconHeart, IconPrinter, IconCheck, IconQrcode, IconDeviceMobile, IconCash, IconUser, IconCurrencyRupee, IconNote, IconBuildingCommunity, IconUpload, IconEye } from "@tabler/icons-react";
 import api from "../../../api/Interceptor";
 import notify from "../../utils/Notification";
 import DataTable from "../../common/DataTable";
@@ -61,8 +61,11 @@ const PaymentReceipt = React.forwardRef(({ receipt }, ref) => {
             {[
               ["Tenant Name", receipt.tenantName],
               ["PG Number", receipt.tenantPgNumber],
-              ["Payment Month", `${receipt.paymentMonth} ${receipt.paymentYear}`],
-            ].map(([label, value]) => (
+              ["Payment Date", receipt.paymentDate ? new Date(receipt.paymentDate).toLocaleDateString('en-GB') : ""],
+              ["Received By", receipt.staffRole ? <><strong style={{ color: '#1e293b', textTransform: 'uppercase' }}>{receipt.staffRole}</strong> {receipt.staffUsername ? `(${receipt.staffUsername})` : ""}</> : "-"],
+              ["Name", receipt.staffName || "-"],
+              ["PG", receipt.staffBuildingName || "-"],
+            ].filter(Boolean).map(([label, value]) => (
               <tr key={label}>
                 <td style={{ padding: "6px 0", color: "#64748b", width: "40%" }}>{label}</td>
                 <td style={{ padding: "6px 0", fontWeight: 500 }}>{value}</td>
@@ -81,8 +84,11 @@ const PaymentReceipt = React.forwardRef(({ receipt }, ref) => {
               ["Amount Paid", `₹${receipt.amount}`],
               ["Payment Mode", receipt.paymentMode],
               ["Status", receipt.status],
+
+              receipt.paymentTime && ["Time", receipt.paymentTime],
+              receipt.transactionId && ["Transaction ID", receipt.transactionId],
               ["Remarks", receipt.remarks || "—"],
-            ].map(([label, value]) => (
+            ].filter(Boolean).map(([label, value]) => (
               <tr key={label}>
                 <td style={{ padding: "6px 0", color: "#64748b", width: "40%" }}>{label}</td>
                 <td style={{ padding: "6px 0", fontWeight: label === "Amount Paid" ? "bold" : 500, fontSize: label === "Amount Paid" ? "18px" : "14px", color: label === "Amount Paid" ? "#6366f1" : "#1e293b" }}>{value}</td>
@@ -112,6 +118,7 @@ const STATUS_CONFIG = {
 };
 
 const Payments = () => {
+  const currentUser = JSON.parse(localStorage.getItem('user') || "{}");
   const emptyForm = {
     paymentId: null,
     tenantId: "",
@@ -125,6 +132,9 @@ const Payments = () => {
   const [tenants, setTenants] = useState([]);
   const [locations, setLocations] = useState([]);
   const [buildings, setBuildings] = useState([]);
+
+  const bldName = buildings.find(b => b.buildingId === currentUser?.buildingId)?.buildingName;
+  const receivedBy = currentUser ? `${currentUser.role} - ${currentUser.name || currentUser.fullName || ""}${currentUser.role === 'STAFF' && bldName ? ` (${bldName})` : ""}` : "-";
   const navigate = useNavigate();
   const locationState = useLocation();
   const isCreateMode = locationState.pathname === "/payments/create";
@@ -142,9 +152,7 @@ const Payments = () => {
   const [filterBld, setFilterBld] = useState(null);
 
   // Payment Flow State
-  const [upiId, setUpiId] = useState("");
-  const [utr, setUtr] = useState("");
-  const [showQr, setShowQr] = useState(false);
+  const [screenshotBase64, setScreenshotBase64] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
   const [isPaid, setIsPaid] = useState(false);
 
@@ -234,9 +242,7 @@ const Payments = () => {
   const handleCloseCreateModal = () => {
     setForm(emptyForm);
     setSelectedTenantRent(null);
-    setUpiId("");
-    setUtr("");
-    setShowQr(false);
+    setScreenshotBase64("");
     setIsVerifying(false);
     setIsPaid(false);
     navigate("/payments");
@@ -248,7 +254,7 @@ const Payments = () => {
       const amt = Number(form.amount);
       const isRent = form.paymentType === "MONTHLY_RENT";
       const status = amt === 0 ? "PENDING" : "UNAPPROVED";
-      const receiptNo = amt > 0 ? `REC-PG-${Date.now().toString().slice(-6)}` : "";
+      const receiptNo = amt > 0 ? `RECEIPT-${Date.now().toString().slice(-6)}` : "";
 
       const payload = {
         amount: amt,
@@ -262,6 +268,14 @@ const Payments = () => {
         isApproved: false,
         receiptNo: receiptNo
       };
+      if (form.paymentMode === 'ONLINE') {
+        if (!form.transactionId || !screenshotBase64) {
+          notify({ title: 'Validation Error', message: 'Transaction ID and Screenshot are required for Online Payments', error: true });
+          return;
+        }
+        payload.transactionId = form.transactionId;
+        payload.screenshotUrl = screenshotBase64;
+      }
 
       await (form.paymentId
         ? api.put(`/admin/payments/${form.paymentId}`, payload)
@@ -321,16 +335,9 @@ const Payments = () => {
   const filteredPayments = payments.filter(p => p.paymentType === activeSection);
 
   const columns = [
-    {
-      header: "Tenant", key: "tenantName", render: (val, p) => (
-        <div>
-          <div style={{ fontWeight: 600 }}>{val}</div>
-          <div style={{ fontSize: "12px", color: "#94a3b8" }}>{p.tenantPgNumber}</div>
-        </div>
-      )
-    },
+    { header: "Tenant Name", key: "tenantName", render: (val) => <span style={{ fontWeight: 600 }}>{val}</span> },
+    { header: "Tenant ID", key: "tenantPgNumber", render: (val) => <span style={{ color: "#64748b", fontSize: "12px" }}>{val}</span> },
     { header: "Amount", key: "amount", render: (val) => <strong style={{ color: "#6366f1", fontSize: "16px" }}>₹{val}</strong> },
-    { header: "Month / Year", key: "paymentMonth", render: (val, p) => `${val} ${p.paymentYear}` },
     { header: "Date", key: "paymentDate", render: (val) => <span style={{ fontSize: "13px" }}>{val}</span> },
     {
       header: "Mode", key: "paymentMode", render: (val) => (
@@ -339,6 +346,14 @@ const Payments = () => {
         </span>
       )
     },
+    ...(activeTab === "UNAPPROVED" || activeTab === "APPROVED" ? [{
+      header: "Received By", key: "staffName", render: (val, p) => (
+        <div>
+          <div style={{ fontWeight: 600, fontSize: "13px" }}>{val || "-"}</div>
+          <div style={{ fontSize: "11px", color: "#94a3b8", textTransform: 'uppercase' }}>{p.staffRole}</div>
+        </div>
+      )
+    }] : []),
     {
       header: "Status", key: "status", render: (val) => {
         const cfg = STATUS_CONFIG[val] || { bg: "#f1f5f9", color: "#64748b", label: val };
@@ -353,9 +368,14 @@ const Payments = () => {
       header: "Actions", key: "actions", render: (_, p) => (
         <Group gap="xs" justify="center">
           {activeTab === "UNAPPROVED" && (
-            <Button variant="filled" color="green" size="compact-xs" onClick={() => approvePayment(p)}>
-              Approve
-            </Button>
+            <>
+              <ActionIcon variant="light" color="blue" title="View Details" onClick={() => openReceipt(p)}>
+                <IconEye size={18} />
+              </ActionIcon>
+              <Button variant="filled" color="green" size="compact-xs" onClick={() => approvePayment(p)}>
+                Approve
+              </Button>
+            </>
           )}
           {activeTab === "PENDING" && (
             <Button variant="filled" color="yellow" size="compact-xs" onClick={() => handlePayBalance(p)}>
@@ -363,9 +383,11 @@ const Payments = () => {
             </Button>
           )}
           {activeTab === "APPROVED" && (
-            <Button variant="light" color="indigo" size="compact-xs" leftSection={<IconPrinter size={14} />} onClick={() => openReceipt(p)}>
-              Receipt
-            </Button>
+            <>
+              <ActionIcon variant="light" color="blue" title="View Details" onClick={() => openReceipt(p)}>
+                <IconEye size={18} />
+              </ActionIcon>
+            </>
           )}
         </Group>
       )
@@ -493,7 +515,7 @@ const Payments = () => {
         overlayProps={{ backgroundOpacity: 0.55, blur: 3 }}
       >
         <div style={{ minHeight: '400px' }}>
-          {!showQr && !isPaid ? (
+          {!isPaid ? (
             <Stack gap="lg">
               {selectedTenantRent && (
                 <Paper p="md" radius="md" withBorder bg="indigo.0">
@@ -513,7 +535,9 @@ const Payments = () => {
                 label="Select Tenant"
                 placeholder="Search by name or PG ID"
                 leftSection={<IconUser size={18} />}
-                data={tenants.map(t => ({ value: String(t.id), label: `${t.pgNumber} – ${t.studentName}` }))}
+                data={tenants
+                  .filter(t => locationState.state?.tenantId ? String(t.id) === String(locationState.state.tenantId) : true)
+                  .map(t => ({ value: String(t.id), label: `${t.pgNumber} – ${t.studentName}` }))}
                 value={form.tenantId}
                 onChange={(val) => {
                   setForm({ ...form, tenantId: val });
@@ -522,6 +546,8 @@ const Payments = () => {
                 }}
                 searchable
                 required
+                disabled={!!locationState.state?.tenantId}
+                styles={!!locationState.state?.tenantId ? { input: { opacity: 1, color: 'inherit', WebkitTextFillColor: 'inherit', cursor: 'not-allowed', backgroundColor: '#f8f9fa' } } : undefined}
               />
 
               <Group grow>
@@ -530,7 +556,7 @@ const Payments = () => {
                   leftSection={form.paymentMode === 'CASH' ? <IconCash size={18} /> : <IconQrcode size={18} />}
                   data={[
                     { value: 'CASH', label: 'Cash Payment' },
-                    { value: 'UPI', label: 'UPI / Online' }
+                    { value: 'ONLINE', label: 'Online Payment' }
                   ]}
                   value={form.paymentMode}
                   onChange={(val) => setForm({ ...form, paymentMode: val })}
@@ -551,6 +577,8 @@ const Payments = () => {
                     setForm(newForm);
                   }}
                   required
+                  disabled
+                  styles={{ input: { opacity: 1, color: 'inherit', WebkitTextFillColor: 'inherit', cursor: 'not-allowed', backgroundColor: '#f8f9fa' } }}
                 />
               </Group>
 
@@ -565,15 +593,35 @@ const Payments = () => {
                 disabled={!!form.paymentId || (form.paymentType === 'MONTHLY_RENT' && !!selectedTenantRent)}
               />
 
-              {form.paymentMode === 'UPI' && (
-                <TextInput
-                  label="Receiver UPI ID"
-                  placeholder="e.g. merchant@upi"
-                  leftSection={<IconDeviceMobile size={18} />}
-                  value={upiId}
-                  onChange={(e) => setUpiId(e.target.value)}
-                  required
-                />
+              {form.paymentMode === 'ONLINE' && (
+                <>
+                  <TextInput
+                    label="UPI Transaction ID"
+                    placeholder="Enter 12-digit transaction ID"
+                    leftSection={<IconDeviceMobile size={18} />}
+                    value={form.transactionId || ''}
+                    onChange={(e) => setForm({ ...form, transactionId: e.target.value })}
+                    required
+                    mt="md"
+                  />
+                  <FileInput
+                    label="Upload Payment Screenshot"
+                    placeholder="Select image"
+                    accept="image/png,image/jpeg,image/jpg"
+                    leftSection={<IconUpload size={18} />}
+                    onChange={(file) => {
+                      if (!file) {
+                        setScreenshotBase64('');
+                        return;
+                      }
+                      const reader = new FileReader();
+                      reader.readAsDataURL(file);
+                      reader.onload = () => setScreenshotBase64(reader.result);
+                    }}
+                    required
+                    mt="md"
+                  />
+                </>
               )}
 
               <Textarea
@@ -588,9 +636,9 @@ const Payments = () => {
 
               <Group justify="flex-end">
                 <Button variant="outline" color="gray" onClick={handleCloseCreateModal}>Cancel</Button>
-                {form.paymentMode === 'UPI' ? (
-                  <Button size="md" onClick={() => setShowQr(true)} disabled={!form.amount || !upiId || !form.tenantId} leftSection={<IconQrcode size={18} />}>
-                    Generate QR
+                {form.paymentMode === 'ONLINE' ? (
+                  <Button size="md" onClick={() => save()} disabled={!form.amount || !form.tenantId || !form.transactionId || !screenshotBase64} leftSection={<IconCheck size={18} />}>
+                    Record Online Payment
                   </Button>
                 ) : (
                   <Button size="md" onClick={() => save()} disabled={!form.amount || !form.tenantId} leftSection={<IconCheck size={18} />}>
@@ -677,7 +725,14 @@ const Payments = () => {
           <Paper>
             <PaymentReceipt receipt={selectedReceipt} ref={receiptRef} />
           </Paper>
-          <Button size="sm" styles={{ width: "150px", display: "flex", justifyContent: "center", alignItems: "center", margin: "0 auto" }} leftSection={<IconPrinter size={20} />} onClick={printReceipt}>Print Receipt</Button>
+          <Group justify="center" mt="md">
+            {selectedReceipt?.status === 'APPROVED' && (
+              <Button size="sm" styles={{ width: "150px" }} leftSection={<IconPrinter size={20} />} onClick={printReceipt}>Print Receipt</Button>
+            )}
+            {selectedReceipt?.screenshotUrl && (
+              <Button size="sm" color="teal" styles={{ width: "180px" }} onClick={() => window.open(selectedReceipt.screenshotUrl, '_blank')}>View Screenshot</Button>
+            )}
+          </Group>
         </Stack>
       </Modal>
     </div>

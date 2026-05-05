@@ -46,8 +46,8 @@ const Expenses = () => {
     expenseDate: new Date().toISOString().split('T')[0],
     category: "",
     remarks: "",
-    locationId: "",
-    buildingId: "",
+    locationId: isStaff ? user.locationId : "",
+    buildingId: isStaff ? user.buildingId : "",
   });
 
   const load = async () => {
@@ -100,15 +100,29 @@ const Expenses = () => {
     setEditingId(null);
     setForm({
       title: "", amount: 0, expenseDate: new Date().toISOString().split('T')[0],
-      category: "", remarks: "", locationId: "", buildingId: "",
+      category: "", remarks: "",
+      locationId: isStaff ? user.locationId : "",
+      buildingId: isStaff ? user.buildingId : "",
     });
   };
 
   const columns = [
-    { header: "Date", key: "expenseDate" },
+    { header: "Expense Date", key: "expenseDate" },
+    { header: "Recorded On", key: "createdDate", render: (val) => val ? new Date(val).toLocaleDateString() : "-" },
     { header: "Title", key: "title" },
     { header: "Category", key: "category", render: (val) => <Badge variant="light">{val}</Badge> },
     { header: "Amount", key: "amount", render: (val) => <Text fw={700} c="red">₹{val}</Text> },
+    {
+      header: "Staff",
+      key: "staffName",
+      render: (val, row) => (
+        <div>
+          <Text size="sm" fw={500}>{val}</Text>
+          {row.isOldStaff && <Text size="10px" c="red" fw={600} tt="uppercase">Old Staff</Text>}
+        </div>
+      )
+    },
+    { header: "Staff ID", key: "staffNumber", render: (val) => <Text size="xs" c="dimmed">{val}</Text> },
     { header: "Location", key: "locationName" },
     { header: "Building", key: "buildingName" },
     {
@@ -125,7 +139,6 @@ const Expenses = () => {
             setEditingId(t.id);
             setModalOpened(true);
           }}><IconEdit size={16} /></ActionIcon>
-          <ActionIcon variant="light" color="red" onClick={() => { setSelectedItem(t); open(); }}><IconTrash size={16} /></ActionIcon>
         </Group>
       )
     }
@@ -138,23 +151,23 @@ const Expenses = () => {
           <h2>{isStaff ? "Building Expenses" : "Global Expense Management"}</h2>
           {!isStaff && (
             <Group gap="sm">
-              <Select 
-                placeholder="Select Location" 
-                data={locations.map(l => ({ value: l.locationId, label: l.locationName }))} 
-                value={filterLoc} 
-                onChange={val => { setFilterLoc(val); setFilterBld(null); }} 
-                clearable 
+              <Select
+                placeholder="Select Location"
+                data={locations.map(l => ({ value: l.locationId, label: l.locationName }))}
+                value={filterLoc}
+                onChange={val => { setFilterLoc(val); setFilterBld(null); }}
+                clearable
                 size="md"
                 style={{ width: '220px' }}
                 variant="filled"
               />
-              <Select 
-                placeholder="Select Building" 
-                data={buildings.filter(b => !filterLoc || b.locationId === filterLoc).map(b => ({ value: b.buildingId, label: b.buildingName }))} 
-                value={filterBld} 
-                onChange={setFilterBld} 
-                clearable 
-                disabled={!filterLoc} 
+              <Select
+                placeholder="Select Building"
+                data={buildings.filter(b => !filterLoc || b.locationId === filterLoc).map(b => ({ value: b.buildingId, label: b.buildingName }))}
+                value={filterBld}
+                onChange={setFilterBld}
+                clearable
+                disabled={!filterLoc}
                 size="md"
                 style={{ width: '220px' }}
                 variant="filled"

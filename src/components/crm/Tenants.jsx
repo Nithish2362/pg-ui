@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button, TextInput, Select, Text, Group, Badge, Modal, ActionIcon, Tooltip, Tabs } from '@mantine/core';
 import { useNavigate } from 'react-router-dom';
-import { IconX, IconUserPlus, IconCurrencyRupee } from '@tabler/icons-react';
+import { IconX, IconUserPlus, IconCurrencyRupee, IconLogout } from '@tabler/icons-react';
 import api from '../../api/Interceptor';
 import notify from '../utils/Notification';
 import useDebounce from '../../common/useDebounce';
@@ -90,45 +90,53 @@ const Tenants = () => {
     { header: "Room/Bed", key: "roomName", render: (val, t) => `${val} - ${t.bedNumber}` },
     { header: "Mobile", key: "mobileNumber" },
     {
-      header: "Payment", key: "payment", render: (_, t) => {
+      header: "Amount", key: "amount", render: (_, t) => (
+        <Text fw={900} size="sm" >₹ {t.balanceAmount || 0}</Text>
+      )
+    },
+    {
+      header: "Payment Action", key: "paymentAction", render: (_, t) => {
         const balance = t.balanceAmount || 0;
+
+        if (t.hasUnapprovedPayment) {
+          return (
+            <Button
+              size="compact-xs"
+              color="indigo"
+              variant="filled"
+              onClick={() => navigate(`/payments?tab=unapproved&search=${t.studentName}`)}
+            >
+              Verify Payment
+            </Button>
+          );
+        }
+
         if (t.status === 'NOT_APPROVED') {
           return (
-            <Group gap="xs">
-              <Text fw={600} size="sm">{balance}</Text>
-              <Button
-                size="compact-xs"
-                color="yellow"
-                variant="light"
-                onClick={() => navigate(`/payments?tab=pending&section=advance&search=${t.studentName}`)}
-              >
-                Pay Now
-              </Button>
-            </Group>
+            <Button
+              size="compact-xs"
+              color="yellow"
+              variant="light"
+              onClick={() => navigate(`/payments?tab=pending&section=advance&search=${t.studentName}`)}
+            >
+              Pay Now
+            </Button>
           );
         }
         if (t.status === 'ACTIVE') {
           if (balance > 0) {
             return (
-              <Group gap="xs">
-                <Text fw={600} size="sm">{balance}</Text>
-                <Button
-                  size="compact-xs"
-                  color="red"
-                  variant="light"
-                  onClick={() => navigate(`/payments?tab=pending&section=rent&search=${t.studentName}`)}
-                >
-                  Pay Now
-                </Button>
-              </Group>
+              <Button
+                size="compact-xs"
+                color="red"
+                variant="light"
+                onClick={() => navigate(`/payments?tab=pending&section=rent&search=${t.studentName}`)}
+              >
+                Pay Now
+              </Button>
             );
           } else {
-            return (
-              <Group gap="xs">
-                <Text fw={600} size="sm">0</Text>
-                <Badge color="green" variant="light">PAID</Badge>
-              </Group>
-            );
+            return <Badge color="green" variant="light">PAID</Badge>;
           }
         }
         return <Text c="dimmed" size="xs">-</Text>;
@@ -136,11 +144,18 @@ const Tenants = () => {
     },
     {
       header: "Actions", key: "actions", render: (_, t) => (
-        <Group gap="xs">
+        <Group gap="xs" justify="center">
           {t.status === 'ACTIVE' && (
             <Tooltip label="Checkout Resident">
-              <ActionIcon color="red" variant="subtle" onClick={() => { setSelectedTenant(t); setCheckoutOpened(true); }}>
-                <IconX size={18} />
+              <ActionIcon color="red" variant="subtle" onClick={() => {
+                if (t.balanceAmount > 0) {
+                  notify({ title: "Checkout Blocked", message: `Please clear pending amount of ₹${t.balanceAmount} before checkout.`, error: true });
+                } else {
+                  setSelectedTenant(t);
+                  setCheckoutOpened(true);
+                }
+              }}>
+                <IconLogout size={18} />
               </ActionIcon>
             </Tooltip>
           )}
@@ -218,7 +233,7 @@ const Tenants = () => {
 
       <DataTable
         title="Resident List"
-        columns={columns}
+        columns={activeTab === 'ACTIVE' ? columns : columns.filter(c => c.key !== 'actions')}
         data={items}
         loading={loading}
         search={search}
