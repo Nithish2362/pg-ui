@@ -61,8 +61,7 @@ h4 {
   background: rgba(255, 255, 255, 0.9) !important;
   backdrop-filter: blur(20px);
   border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
-  height: 70px !important;
-  z-index: 1000;
+  z-index: 1001;
 }
 
 .nav-item {
@@ -138,13 +137,9 @@ h4 {
 
 .data-card {
   background: #ffffff;
-  border-radius: 20px;
-  border: 1px solid #f0f0f0;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
 }
 
 .data-card-header {
-  margin-bottom: 25px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -194,9 +189,11 @@ tr:hover td {
 .page-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-end;
+  align-items: center;
   margin-bottom: 30px;
   padding: 0 10px;
+  flex-wrap: wrap;
+  gap: 15px;
 }
 
 .page-header h2 {
@@ -208,4 +205,61 @@ tr:hover td {
 .page-header p {
   color: var(--text-muted);
   font-size: 1rem;
+}
+
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 1rem !important;
+  }
+
+  .page-header > div {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    width: 100%;
+    gap: 0.75rem !important;
+  }
+
+  .page-header > div > div {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    width: 100%;
+    gap: 0.5rem !important;
+  }
+
+  .page-header .mantine-Select-root,
+  .page-header .mantine-TextInput-root {
+    width: 100% !important;
+  }
+
+  .page-header > button {
+    width: 100% !important;
+    margin-top: 0.5rem;
+  }
+
+  .page-header h2 {
+    font-size: 1.5rem !important;
+    text-align: left;
+    margin-bottom: 0.25rem;
+  }
+
+  /* Make Tabs scrollable horizontally on mobile */
+  .mantine-Tabs-list {
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; 
+    border-bottom: 1px solid #e2e8f0;
+    margin-bottom: 0.5rem;
+  }
+  .mantine-Tabs-list::-webkit-scrollbar {
+    display: none; 
+  }
+  .mantine-Tabs-tab {
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+    padding: 10px 16px !important;
+    font-size: 14px !important;
+  }
 }

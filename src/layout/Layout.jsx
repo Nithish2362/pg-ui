@@ -1,4 +1,5 @@
-import { AppShell, Avatar, Button, Group, Tabs, Text } from '@mantine/core';
+import { AppShell, Avatar, Button, Group, Tabs, Text, Burger, Drawer, Stack, ActionIcon } from '@mantine/core';
+import { useDisclosure } from '@mantine/hooks';
 import { IconLogout, IconHome, IconBuildingCommunity } from '@tabler/icons-react';
 import { createContext, Suspense, useCallback, useMemo } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
@@ -12,6 +13,7 @@ export default function Layout() {
   console.log(user, "nknk");
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const [drawerOpened, { toggle: toggleDrawer, close: closeDrawer }] = useDisclosure(false);
 
   // Get dynamic modules based on role
   const headerData = useMemo(() => ModuleJson(), []);
@@ -47,7 +49,8 @@ export default function Layout() {
     } else {
       navigate(header.path);
     }
-  }, [navigate, headerData]);
+    closeDrawer();
+  }, [navigate, headerData, closeDrawer]);
 
   const handleTabClick = useCallback((tabId) => {
     const tab = childTabs.find(t => String(t.id) === String(tabId));
@@ -66,70 +69,80 @@ export default function Layout() {
 
   return (
     <ActiveTabContext.Provider value={contextValue}>
-      <AppShell header={{ height: 50 }} padding="md">
-        <AppShell.Header className="nav-header-shell">
-          <nav className='nav-bar'>
-            <div style={{ display: 'flex', alignItems: 'center', height: '100%', gap: '1.5rem' }}>
-              <div className="logo-text" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+      <AppShell header={{ height: 50 }} padding={{ base: 'xs', sm: 'md' }}>
+        <AppShell.Header className="nav-header-shell" style={{ zIndex: 1001 }}>
+          <Group h="100%" px="md" justify="space-between" wrap="nowrap">
+            <Group gap="sm" wrap="nowrap">
+              <Burger opened={drawerOpened} onClick={toggleDrawer} hiddenFrom="md" size="sm" color="#022d46" />
+
+              <Group gap={6} wrap="nowrap" onClick={() => navigate('/dashboard')} style={{ cursor: 'pointer' }}>
                 <div style={{
                   background: 'linear-gradient(135deg, #3f92c5 0%, #296b92 100%)',
-                  borderRadius: '10px',
-                  padding: '6px',
+                  borderRadius: '6px',
+                  padding: '4px',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: '0 4px 12px rgba(63, 146, 197, 0.3)'
+                  justifyContent: 'center'
                 }}>
-                  <IconBuildingCommunity size={22} color="white" />
+                  <IconBuildingCommunity size={16} color="white" />
                 </div>
-                <span style={{
-                  fontWeight: 900,
-                  fontSize: '1.5rem',
-                  letterSpacing: '-0.5px',
-                  background: 'linear-gradient(to right, #3f92c5, #13415a)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent'
-                }}>
-                  STAYWOW
-                </span>
-              </div>
-              {topLevelNav.map((headernav) => (
-                <div
-                  key={headernav.id}
-                  className={`nav-item ${activeHeader?.id === headernav.id ? 'nav-item-active' : ''}`}
-                  onClick={() => handleHeaderClick(headernav)}
+                <Text
+                  fw={900}
+                  size="md"
+                  style={{
+                    color: '#022d46',
+                    letterSpacing: '-0.5px',
+                    display: 'block'
+                  }}
                 >
-                  <span>{headernav.name}</span>
-                  <span className={`active-indicator ${activeHeader?.id === headernav.id ? 'visible' : ''}`}></span>
-                </div>
-              ))}
-            </div>
-            <div className="user-section">
-              <Group gap="sm">
-                <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'right', gap: '2px' }}>
-                  <Text size="xs" fw={900} c="blue" style={{ lineHeight: 1 }}>{user?.role}</Text>
-                  <Text size="sm" fw={500} c="dimmed" style={{ lineHeight: 1 }}>
-                    Hi , {user?.name}
-                  </Text>
-                </div>
-                <Avatar size="md" color="blue">
-                  {user?.fullName?.charAt(0) || user?.username?.charAt(0)}
-                </Avatar>
-                <Button color="gray" variant="subtle" size="xs" onClick={handleLogout} leftSection={<IconLogout size={16} />}>
-                  Logout
-                </Button>
+                  STAYWOW
+                </Text>
               </Group>
-            </div>
-          </nav>
+
+              <Group visibleFrom="md" gap="xs" style={{ height: '100%' }}>
+                {topLevelNav.map((headernav) => (
+                  <div
+                    key={headernav.id}
+                    className={`nav-item ${activeHeader?.id === headernav.id ? 'nav-item-active' : ''}`}
+                    onClick={() => handleHeaderClick(headernav)}
+                  >
+                    <span>{headernav.name}</span>
+                    <span className={`active-indicator ${activeHeader?.id === headernav.id ? 'visible' : ''}`}></span>
+                  </div>
+                ))}
+              </Group>
+            </Group>
+
+            <Group gap="xs" wrap="nowrap">
+              <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'right', gap: '0px' }}>
+                <Text size="xs" fw={700} c="blue" style={{ lineHeight: 1 }}>{user?.role}</Text>
+                <Text size="xs" fw={500} c="dimmed" style={{ lineHeight: 1 }}>Hii,{user?.name}</Text>
+              </div>
+              <Avatar size="sm" color="blue" radius="xl">
+                {user?.fullName?.charAt(0) || user?.username?.charAt(0)}
+              </Avatar>
+              <ActionIcon variant="subtle" color="gray.7" onClick={handleLogout} size="sm" hiddenFrom="sm">
+                <IconLogout size={16} />
+              </ActionIcon>
+              <Button variant="subtle" color="gray.7" onClick={handleLogout} size="compact-sm" rightSection={<IconLogout size={16} />} visibleFrom="sm">
+                Logout
+              </Button>
+            </Group>
+          </Group>
         </AppShell.Header>
 
         <AppShell.Main>
           <div style={{ marginTop: '10px' }}>
             {childTabs.length > 0 && (
-              <Tabs value={activeTab ? String(activeTab.id) : null} onChange={handleTabClick} mb="xl">
-                <Tabs.List>
+              <Tabs
+                value={activeTab ? String(activeTab.id) : null}
+                onChange={handleTabClick}
+                mb="xl"
+                variant="default"
+              >
+                <Tabs.List style={{ flexWrap: 'nowrap', overflowX: 'auto', overflowY: 'hidden', whiteSpace: 'nowrap', paddingBottom: '2px' }}>
                   {childTabs.map(tab => (
-                    <Tabs.Tab key={tab.id} value={String(tab.id)}>{tab.name}</Tabs.Tab>
+                    <Tabs.Tab key={tab.id} value={String(tab.id)} style={{ flexShrink: 0 }}>{tab.name}</Tabs.Tab>
                   ))}
                 </Tabs.List>
               </Tabs>
@@ -140,6 +153,31 @@ export default function Layout() {
             </Suspense>
           </div>
         </AppShell.Main>
+
+        <Drawer
+          opened={drawerOpened}
+          onClose={closeDrawer}
+          size="sm"
+          title={<Text fw={700} size="lg">Menu</Text>}
+          hiddenFrom="md"
+          zIndex={1000000}
+        >
+          <Stack gap="sm">
+            {topLevelNav.map((headernav) => (
+              <Button
+                key={headernav.id}
+                variant={activeHeader?.id === headernav.id ? 'light' : 'subtle'}
+                color={activeHeader?.id === headernav.id ? 'blue' : 'gray'}
+                onClick={() => handleHeaderClick(headernav)}
+                fullWidth
+                justify="flex-start"
+                size="md"
+              >
+                {headernav.name}
+              </Button>
+            ))}
+          </Stack>
+        </Drawer>
       </AppShell>
     </ActiveTabContext.Provider>
   );

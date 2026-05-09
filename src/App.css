@@ -161,12 +161,77 @@ body {
   overflow-y: auto;
 }
 
+@media (max-width: 768px) {
+  .main-content {
+    padding: 1rem;
+  }
+}
+
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1.5rem;
   margin-top: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 1rem !important;
+  }
+
+  .page-header > div {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    width: 100%;
+    gap: 0.75rem !important;
+  }
+
+  .page-header > div > div {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    width: 100%;
+    gap: 0.5rem !important;
+  }
+
+  .page-header .mantine-Select-root,
+  .page-header .mantine-TextInput-root {
+    width: 100% !important;
+  }
+
+  .page-header > button {
+    width: 100% !important;
+    margin-top: 0.5rem;
+  }
+
+  .page-header h2 {
+    font-size: 1.5rem !important;
+    text-align: left;
+    margin-bottom: 0.25rem;
+  }
+
+  /* Make Tabs scrollable horizontally on mobile */
+  .mantine-Tabs-list {
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; 
+    border-bottom: 1px solid #e2e8f0;
+    margin-bottom: 0.5rem;
+  }
+  .mantine-Tabs-list::-webkit-scrollbar {
+    display: none; 
+  }
+  .mantine-Tabs-tab {
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+    padding: 10px 16px !important;
+    font-size: 14px !important;
+  }
 }
 
 .page-header h2 {
@@ -219,8 +284,6 @@ body {
 
 .data-card {
   background: var(--card);
-  border-radius: 1rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
   overflow: hidden;
   margin-bottom: 1.5rem;
   border: 1px solid var(--border);
@@ -228,7 +291,6 @@ body {
 
 .data-card-header {
   padding: 1rem 1.5rem;
-  border-bottom: 1px solid var(--border);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -237,6 +299,17 @@ body {
 .data-card-header h3 {
   font-size: 1rem;
   font-weight: 600;
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-responsive table {
+  min-width: 600px;
+  /* Ensures tables don't squash too much */
 }
 
 table {

@@ -1,5 +1,5 @@
-import React from 'react';
-import { Table, Loader, Text, TextInput, Group, Pagination, Select } from '@mantine/core';
+import React, { useState, useEffect, useRef } from 'react';
+import { Table, Loader, Text, TextInput, Group, Pagination, Select, Card, Stack, Divider, SimpleGrid, Center } from '@mantine/core';
 import { IconSearch } from '@tabler/icons-react';
 
 /**
@@ -16,102 +16,109 @@ import { IconSearch } from '@tabler/icons-react';
  * @param {number} pageSize - Rows per page (optional)
  * @param {function} onPageSizeChange - Rows per page change handler (optional)
  */
-const DataTable = ({ 
-  columns = [], 
-  data = [], 
-  loading, 
-  search, 
-  onSearch, 
-  title, 
-  totalCount, 
-  page = 1, 
-  totalPages = 0, 
+const DataTable = ({
+  columns = [],
+  data = [],
+  loading,
+  search,
+  onSearch,
+  title,
+  totalCount,
+  page = 1,
+  totalPages = 0,
   onPageChange,
   pageSize = 10,
   onPageSizeChange
 }) => {
   const safeData = Array.isArray(data) ? data : [];
   const safeColumns = Array.isArray(columns) ? columns : [];
-  const start = (page - 1) * pageSize + 1;
-  const end = Math.min(page * pageSize, totalCount || safeData.length);
+
+  const [accumulatedData, setAccumulatedData] = useState([]);
+  const prevSearchRef = useRef(search);
+
+  useEffect(() => {
+    // If search changes, force reset regardless of page number
+    if (search !== prevSearchRef.current) {
+      setAccumulatedData(safeData);
+      prevSearchRef.current = search;
+    } else if (page === 1 || !onPageChange) {
+      setAccumulatedData(safeData);
+    } else {
+      setAccumulatedData(prev => {
+        const existingItems = new Set(prev.map(p => p.id || p.paymentId || p.tenantId || JSON.stringify(p)));
+        const newData = safeData.filter(d => !existingItems.has(d.id || d.paymentId || d.tenantId || JSON.stringify(d)));
+        return [...prev, ...newData];
+      });
+    }
+  }, [safeData, page, onPageChange, search]);
+
+  const handleScroll = (e) => {
+    const bottom = e.target.scrollHeight - e.target.scrollTop <= e.target.clientHeight + 100;
+    if (bottom && !loading && accumulatedData.length < totalCount && onPageChange) {
+      onPageChange(page + 1);
+    }
+  };
 
   return (
-    <div className="data-card">
-      <div className="data-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h3 style={{ margin: 0 }}>{title} {totalCount !== undefined ? `(${totalCount})` : safeData.length > 0 ? `(${safeData.length})` : ''}</h3>
-        
-        <Group>
-          {onSearch && (
-            <TextInput
-              placeholder="Search..."
-              leftSection={<IconSearch size={16} />}
-              value={search}
-              onChange={(e) => onSearch(e.target.value)}
-              style={{ width: '280px' }}
-            />
-          )}
-          {onPageSizeChange && (
-            <Select
-              size="xs"
-              data={['5', '10', '20', '50']}
-              value={pageSize.toString()}
-              onChange={(val) => onPageSizeChange(parseInt(val))}
-              style={{ width: '70px' }}
-            />
-          )}
+    <div style={{ width: '100%' }}>
+      {onSearch && (
+        <Group justify="flex-start" mb="md" wrap="wrap">
+          <TextInput
+            placeholder="Search..."
+            leftSection={<IconSearch size={16} />}
+            value={search}
+            onChange={(e) => {
+              onSearch(e.target.value);
+              if (onPageChange && page !== 1) onPageChange(1);
+            }}
+            style={{ width: '280px', maxWidth: '100%' }}
+            radius="md"
+          />
         </Group>
-      </div>
+      )}
 
-      <div style={{ overflowX: 'auto' }}>
-        <Table verticalSpacing="md" horizontalSpacing="xl">
-          <Table.Thead>
-            <Table.Tr>
-              {safeColumns.map((col, i) => (
-                <Table.Th key={i} style={{ textAlign: 'center' }}>{col.header}</Table.Th>
-              ))}
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>
-            {safeData.length === 0 && !loading ? (
-              <Table.Tr>
-                <Table.Td colSpan={safeColumns.length} style={{ textAlign: 'center', padding: '60px', color: '#64748b' }}>
-                  No records found
-                </Table.Td>
-              </Table.Tr>
-            ) : (
-              safeData.map((row, rowIndex) => (
-                <Table.Tr key={row.id || rowIndex}>
+      <div style={{ maxHeight: '70vh', overflowY: 'auto', padding: '5px' }} onScroll={handleScroll}>
+        {accumulatedData.length === 0 && !loading ? (
+          <Text ta="center" py="xl" c="dimmed">No records found</Text>
+        ) : (
+          <SimpleGrid cols={{ base: 1, sm: 2, lg: 3, xl: 4 }} spacing="md">
+            {accumulatedData.map((row, rowIndex) => (
+              <Card key={row.id || rowIndex} shadow="sm" radius="md" withBorder p="md" style={{ background: '#fafafa', borderColor: '#e2e8f0', display: 'flex', flexDirection: 'column' }}>
+                <Stack gap="sm" style={{ flexGrow: 1 }}>
                   {safeColumns.map((col, colIndex) => (
-                    <Table.Td key={colIndex} style={{ textAlign: 'center' }}>
-                      {col.render ? col.render(row[col.key], row) : row[col.key]}
-                    </Table.Td>
+                    <React.Fragment key={colIndex}>
+                      <Group justify="space-between" align="flex-start" wrap="nowrap">
+                        <Text size="xs" c="dimmed" fw={700} tt="uppercase" style={{ flexShrink: 0, maxWidth: '40%' }}>
+                          {col.header}
+                        </Text>
+                        <div style={{ textAlign: 'right', flexGrow: 1, wordBreak: 'break-word', fontSize: '14px', fontWeight: 600, color: '#1e293b', display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+                          {col.render ? col.render(row[col.key], row) : (row[col.key] || '-')}
+                        </div>
+                      </Group>
+                      {colIndex < safeColumns.length - 1 && <Divider color="gray.2" />}
+                    </React.Fragment>
                   ))}
-                </Table.Tr>
-              ))
-            )}
-          </Table.Tbody>
-        </Table>
+                </Stack>
+              </Card>
+            ))}
+          </SimpleGrid>
+        )}
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px', padding: '0 10px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px', padding: '0 10px', flexWrap: 'wrap', gap: '10px' }}>
         <Text size="sm" c="dimmed">
-          {safeData.length > 0 ? (
-            <>Showing <b>{start}</b> to <b>{end}</b> of <b>{totalCount || safeData.length}</b> entries</>
+          {accumulatedData.length > 0 ? (
+            <>Showing <b>{accumulatedData.length}</b> of <b>{totalCount || accumulatedData.length}</b> entries</>
           ) : (
             'Showing 0 entries'
           )}
         </Text>
 
-        {totalPages > 0 && (
-          <Pagination 
-            total={totalPages} 
-            value={page} 
-            onChange={onPageChange} 
-            size="sm"
-            radius="xl"
-            withEdges
-            color="#3f92c5"
-          />
+        {loading && (
+          <Center>
+            <Loader size="sm" color="blue" />
+            <Text ml="sm" size="sm" c="dimmed">Loading more...</Text>
+          </Center>
         )}
       </div>
     </div>

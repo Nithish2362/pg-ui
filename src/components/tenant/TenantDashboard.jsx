@@ -172,7 +172,7 @@ const TenantDashboard = () => {
                 <Text size="sm" color="dimmed" mb="xl">
                     Choose your preferred payment method. Cash payments require warden approval.
                 </Text>
-                <Group grow>
+                <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
                     <Button
                         size="lg" color="orange" variant="light"
                         leftSection={<IconCash size={20} />}
@@ -189,7 +189,7 @@ const TenantDashboard = () => {
                     >
                         UPLOAD ONLINE RECEIPT
                     </Button>
-                </Group>
+                </SimpleGrid>
             </Card>
 
             <Card shadow="sm" padding="xl" radius="md" withBorder mt="xl">

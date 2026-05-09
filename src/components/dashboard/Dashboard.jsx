@@ -79,10 +79,10 @@ const Dashboard = () => {
 
   return (
     <div>
-      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h2>Business Overview</h2>
+      <Group justify="space-between" align="center" mb="md" wrap="wrap">
+        <h2 style={{ margin: 0 }}>Business Overview</h2>
         {!isStaff && (
-          <Group>
+          <Group gap="sm" wrap="wrap">
             <Select
               placeholder="All Locations"
               data={locations.map(l => ({ value: l.locationId, label: l.locationName }))}
@@ -104,7 +104,7 @@ const Dashboard = () => {
             />
           </Group>
         )}
-      </div>
+      </Group>
 
       {loading ? (
         <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="xl">
