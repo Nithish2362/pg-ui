@@ -104,7 +104,7 @@ export default function Layout() {
                     lineHeight: 1,
                   }}
                 >
-                  STAYWOW
+                  YHOMEE
                 </Text>
               </Group>
 
@@ -238,7 +238,7 @@ export default function Layout() {
                 <IconBuildingCommunity size={18} color="var(--gold)" />
               </div>
               <Text fw={900} style={{ fontFamily: 'var(--font-heading)', letterSpacing: '0.1em' }}>
-                STAYWOW
+                YHOMEE
               </Text>
             </Group>
           }

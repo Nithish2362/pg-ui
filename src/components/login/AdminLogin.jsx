@@ -333,7 +333,7 @@ const AdminLogin = () => {
               <IconBuildingCommunity size={32} />
             </div>
             <h2>Admin Portal</h2>
-            <p>Experience StayWow property management.</p>
+            <p>Experience YHOMEE property management.</p>
           </div>
 
           <div className="auth-tabs">
