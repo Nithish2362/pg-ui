@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Modal, Button, TextInput, Select, Text, Group, Badge, Textarea, Grid, ActionIcon, Tooltip } from "@mantine/core";
+import { Modal, Button, TextInput, Select, Text, Group, Badge, Textarea, Grid, ActionIcon, Tooltip, Stack, Avatar } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useNavigate, useLocation } from "react-router-dom";
 import { IconArrowLeft, IconPlus, IconEdit, IconTrash, IconUserShield, IconMapPin, IconBuilding, IconMail } from "@tabler/icons-react";
@@ -60,7 +60,7 @@ const Staff = () => {
       setTotalCount(staffRes.data?.count || 0);
       setLocations(locationRes.data?.response || locationRes.data?.data || []);
       setBuildings(buildingRes.data?.response || buildingRes.data?.data || []);
-      
+
       const allAssignedBuildingIds = allStaffRes.data?.response?.map(s => s.buildingId).filter(id => id) || [];
       setAssignedBuildings(allAssignedBuildingIds);
     } catch (err) {
@@ -127,31 +127,68 @@ const Staff = () => {
   };
 
   const columns = [
-    { header: "Staff NO", key: "staffNumber", render: (val) => <strong>{val}</strong> },
-    { header: "Name", key: "name" },
-    { header: "Mobile", key: "mobileNumber" },
-    { header: "Email", key: "email", render: (val) => val || "—" },
-    { header: "Building", key: "buildingName", render: (val) => val || "Not Assigned" },
-    { 
-      header: "Status", 
-      key: "status", 
-      render: (val) => <Badge color={val === "ACTIVE" ? "green" : "red"}>{val}</Badge> 
+    {
+      header: "Staff Info",
+      key: "name",
+      render: (val, row) => (
+        <Group gap="sm" wrap="nowrap">
+          <Avatar radius="xl" color="dark" size="sm">
+            {val?.charAt(0)}
+          </Avatar>
+          <div>
+            <Text size="sm" fw={800}>{val}</Text>
+            <Text size="xs" c="dimmed">{row.staffNumber}</Text>
+          </div>
+        </Group>
+      )
+    },
+    {
+      header: "Contact",
+      key: "mobileNumber",
+      render: (val, row) => (
+        <Stack gap={2}>
+          <Text size="xs" fw={700}>{val}</Text>
+          <Text size="xs" c="dimmed" style={{ fontSize: '0.65rem' }}>{row.email || 'No Email'}</Text>
+        </Stack>
+      )
+    },
+    {
+      header: "Assignment",
+      key: "buildingName",
+      render: (val) => (
+        <Badge
+          variant="light"
+          color={val ? "blue" : "gray"}
+          leftSection={<IconBuilding size={12} />}
+        >
+          {val || "Unassigned"}
+        </Badge>
+      )
+    },
+    {
+      header: "Status",
+      key: "status",
+      render: (val) => (
+        <Badge
+          color={val === "ACTIVE" ? "green" : "red"}
+          variant="dot"
+          size="sm"
+        >
+          {val}
+        </Badge>
+      )
     },
     {
       header: "Actions",
       key: "actions",
       render: (_, t) => (
-        <Group gap="xs" justify="center">
-          <Tooltip label="Edit">
-            <ActionIcon variant="light" color="yellow" size="sm" onClick={() => handleEdit(t)}>
-              <IconEdit size={16} />
-            </ActionIcon>
-          </Tooltip>
-          <Tooltip label="Remove">
-            <ActionIcon variant="light" color="red" size="sm" onClick={() => openDeleteModal(t)}>
-              <IconTrash size={16} />
-            </ActionIcon>
-          </Tooltip>
+        <Group gap={4} justify="center">
+          <ActionIcon variant="light" color="yellow" size="sm" onClick={() => handleEdit(t)}>
+            <IconEdit size={14} />
+          </ActionIcon>
+          <ActionIcon variant="light" color="red" size="sm" onClick={() => openDeleteModal(t)}>
+            <IconTrash size={14} />
+          </ActionIcon>
         </Group>
       )
     }
@@ -161,35 +198,37 @@ const Staff = () => {
     <div>
       <div className="page-header">
         <Group align="center" gap="xl">
-          <h2>Staff Management</h2>
+          <h2 style={{ margin: 0 }}>Staff Management</h2>
           {!isCreateMode && (
-            <Group gap="sm">
+            <Group gap="xs">
               <Select 
                 placeholder="Select Location" 
                 data={locations.map(l => ({ value: l.locationId, label: l.locationName }))} 
                 value={filterLoc} 
-                onChange={val => { setFilterLoc(val); setFilterBld(null); }} 
+                onChange={val => { setFilterLoc(val); setFilterBld(null); setPage(1); }} 
                 clearable 
                 size="md"
                 variant="filled"
+                style={{ width: '180px' }}
               />
               <Select 
                 placeholder="Select Building" 
                 data={buildings.filter(b => !filterLoc || b.locationId === filterLoc).map(b => ({ value: b.buildingId, label: b.buildingName }))} 
                 value={filterBld} 
-                onChange={setFilterBld} 
+                onChange={val => { setFilterBld(val); setPage(1); }} 
                 clearable 
                 disabled={!filterLoc} 
                 size="md"
                 variant="filled"
+                style={{ width: '180px' }}
               />
             </Group>
           )}
         </Group>
-        
+
         {!isCreateMode ? (
           <Button onClick={() => { resetForm(); navigate("/staff/create"); }} leftSection={<IconPlus size={18} />} size="sm">
-            Register New Staff
+            Register Staff
           </Button>
         ) : (
           <Button onClick={() => navigate("/staff")} variant="outline" leftSection={<IconArrowLeft size={18} />} size="sm">
@@ -207,22 +246,22 @@ const Staff = () => {
 
           <form onSubmit={save}>
             <Grid gutter="md">
-              <Grid.Col span={4}>
+              <Grid.Col span={{ base: 12, md: 4 }}>
                 <TextInput label="Full Name *" placeholder="Staff Name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required />
               </Grid.Col>
-              <Grid.Col span={4}>
+              <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
                 <TextInput label="Mobile Number *" placeholder="10 Digits" value={form.mobileNumber} onChange={e => setForm({ ...form, mobileNumber: e.target.value })} required />
               </Grid.Col>
-              <Grid.Col span={4}>
+              <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
                 <TextInput label="Email Address *" placeholder="staff@example.com" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} required />
               </Grid.Col>
-              <Grid.Col span={4}>
+              <Grid.Col span={{ base: 12, sm: 8, md: 4 }}>
                 <TextInput label="Date of Birth *" type="date" value={form.dob} onChange={e => setForm({ ...form, dob: e.target.value })} required />
               </Grid.Col>
-              <Grid.Col span={2}>
+              <Grid.Col span={{ base: 12, sm: 4, md: 2 }}>
                 <TextInput label="Age" type="number" placeholder="Years" value={form.age} onChange={e => setForm({ ...form, age: e.target.value })} />
               </Grid.Col>
-              <Grid.Col span={6}>
+              <Grid.Col span={{ base: 12, md: 6 }}>
                 <Textarea label="Address" placeholder="Full permanent address" value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} autosize minRows={1} />
               </Grid.Col>
 
@@ -232,7 +271,7 @@ const Staff = () => {
                   <Text fw={600} size="sm" c="brand.7">Work Assignment</Text>
                 </Group>
               </Grid.Col>
-              <Grid.Col span={6}>
+              <Grid.Col span={{ base: 12, md: 6 }}>
                 <Select
                   label="Select Location"
                   placeholder="Choose Location"
@@ -243,7 +282,7 @@ const Staff = () => {
                   clearable
                 />
               </Grid.Col>
-              <Grid.Col span={6}>
+              <Grid.Col span={{ base: 12, md: 6 }}>
                 <Select
                   label="Assign Building"
                   placeholder={form.locationId ? "Choose Building" : "Select location first"}

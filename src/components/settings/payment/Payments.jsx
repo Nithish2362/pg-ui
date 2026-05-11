@@ -3,7 +3,7 @@ import { useReactToPrint } from "react-to-print";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Modal, Button, TextInput, Select, Text, Group, Badge, Textarea, Tabs, ThemeIcon, Stack, Paper, Divider, Center, FileInput, ActionIcon } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconArrowLeft, IconPlus, IconHome, IconHeart, IconPrinter, IconCheck, IconQrcode, IconDeviceMobile, IconCash, IconUser, IconCurrencyRupee, IconNote, IconBuildingCommunity, IconUpload, IconEye } from "@tabler/icons-react";
+import { IconArrowLeft, IconPlus, IconHome, IconHeart, IconPrinter, IconCheck, IconQrcode, IconDeviceMobile, IconCash, IconUser, IconCurrencyRupee, IconNote, IconBuildingCommunity, IconUpload, IconEye, IconTrash } from "@tabler/icons-react";
 import api from "../../../api/Interceptor";
 import notify from "../../utils/Notification";
 import DataTable from "../../common/DataTable";
@@ -20,6 +20,7 @@ const PaymentReceipt = React.forwardRef(({ receipt }, ref) => {
       style={{
         fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif",
         color: "#1a1a1a",
+        padding: "40px",
         background: "#fff",
       }}
     >
@@ -43,9 +44,7 @@ const PaymentReceipt = React.forwardRef(({ receipt }, ref) => {
         </div>
         <div style={{ textAlign: "right" }}>
           {receipt.receiptNo && (
-            <>
-              <p style={{ margin: 0, fontWeight: "bold", fontSize: "16px" }}>{receipt.receiptNo}</p>
-            </>
+            <p style={{ margin: 0, fontWeight: "bold", fontSize: "16px" }}>{receipt.receiptNo}</p>
           )}
           <p style={{ margin: "4px 0 0", fontSize: "12px", color: "#94a3b8" }}>{receipt.paymentDate}</p>
         </div>
@@ -65,7 +64,7 @@ const PaymentReceipt = React.forwardRef(({ receipt }, ref) => {
               ["Received By", receipt.staffRole ? <><strong style={{ color: '#1e293b', textTransform: 'uppercase' }}>{receipt.staffRole}</strong> {receipt.staffUsername ? `(${receipt.staffUsername})` : ""}</> : "-"],
               ["Name", receipt.staffName || "-"],
               ["PG", receipt.staffBuildingName || "-"],
-            ].filter(Boolean).map(([label, value]) => (
+            ].map(([label, value]) => (
               <tr key={label}>
                 <td style={{ padding: "6px 0", color: "#64748b", width: "40%" }}>{label}</td>
                 <td style={{ padding: "6px 0", fontWeight: 500 }}>{value}</td>
@@ -76,7 +75,7 @@ const PaymentReceipt = React.forwardRef(({ receipt }, ref) => {
       </div>
 
       {/* Payment Details */}
-      <div style={{ background: "#f8fafc", borderRadius: "12px", marginBottom: "24px" }}>
+      <div style={{ background: "#f8fafc", borderRadius: "12px", padding: "20px", marginBottom: "24px" }}>
         <h3 style={{ fontSize: "14px", color: "#94a3b8", fontWeight: 600, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "12px" }}>Payment Details</h3>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <tbody>
@@ -84,8 +83,6 @@ const PaymentReceipt = React.forwardRef(({ receipt }, ref) => {
               ["Amount Paid", `₹${receipt.amount}`],
               ["Payment Mode", receipt.paymentMode],
               ["Status", receipt.status],
-
-              receipt.paymentTime && ["Time", receipt.paymentTime],
               receipt.transactionId && ["Transaction ID", receipt.transactionId],
               ["Remarks", receipt.remarks || "—"],
             ].filter(Boolean).map(([label, value]) => (
@@ -98,7 +95,7 @@ const PaymentReceipt = React.forwardRef(({ receipt }, ref) => {
         </table>
       </div>
 
-      <p style={{ textAlign: "center", color: "#94a3b8", fontSize: "13px", margin: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}>
+      <p style={{ textAlign: "center", color: "#94a3b8", fontSize: "13px", margin: 0 }}>
         Thank you for your payment !
       </p>
     </div>
@@ -134,7 +131,6 @@ const Payments = () => {
   const [buildings, setBuildings] = useState([]);
 
   const bldName = buildings.find(b => b.buildingId === currentUser?.buildingId)?.buildingName;
-  const receivedBy = currentUser ? `${currentUser.role} - ${currentUser.name || currentUser.fullName || ""}${currentUser.role === 'STAFF' && bldName ? ` (${bldName})` : ""}` : "-";
   const navigate = useNavigate();
   const locationState = useLocation();
   const isCreateMode = locationState.pathname === "/payments/create";
@@ -153,12 +149,11 @@ const Payments = () => {
 
   // Payment Flow State
   const [screenshotBase64, setScreenshotBase64] = useState("");
-  const [isVerifying, setIsVerifying] = useState(false);
   const [isPaid, setIsPaid] = useState(false);
 
   const [totalCount, setTotalCount] = useState(0);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(5);
+  const [pageSize, setPageSize] = useState(10);
   const [search, setSearch] = useState("");
   const [counts, setCounts] = useState({ PENDING: 0, UNAPPROVED: 0, APPROVED: 0, ADVANCE_PENDING: 0, RENT_PENDING: 0 });
   const debouncedSearch = useDebounce(search, 500);
@@ -222,7 +217,6 @@ const Payments = () => {
   useEffect(() => { loadMasters(); }, []);
   useEffect(() => { load(); }, [page, activeTab, debouncedSearch, pageSize, filterLoc, filterBld]);
 
-  // Handle auto-fill when navigating from "Pay Balance" or "Unpaid"
   useEffect(() => {
     if (isCreateMode && locationState.state) {
       const { paymentId, tenantId, amount, rent, paymentType } = locationState.state;
@@ -243,7 +237,6 @@ const Payments = () => {
     setForm(emptyForm);
     setSelectedTenantRent(null);
     setScreenshotBase64("");
-    setIsVerifying(false);
     setIsPaid(false);
     navigate("/payments");
   };
@@ -270,7 +263,7 @@ const Payments = () => {
       };
       if (form.paymentMode === 'ONLINE') {
         if (!form.transactionId || !screenshotBase64) {
-          notify({ title: 'Validation Error', message: 'Transaction ID and Screenshot are required for Online Payments', error: true });
+          notify({ title: 'Validation Error', message: 'Transaction ID and Screenshot are required', error: true });
           return;
         }
         payload.transactionId = form.transactionId;
@@ -282,11 +275,10 @@ const Payments = () => {
         : api.post(`/admin/payments?tenantId=${form.tenantId}`, payload));
 
       notify({ title: "Success", message: "Payment recorded successfully", success: true });
-      setIsPaid(true); // Show success screen
-      load(); // Refresh background data
+      setIsPaid(true);
+      load();
     } catch (err) {
       notify({ title: "Error", message: err?.response?.data?.message || "Unable to save payment", error: true });
-      setIsVerifying(false);
     }
   };
 
@@ -320,7 +312,6 @@ const Payments = () => {
   const handlePayBalance = (p) => {
     const tenant = tenants.find(t => String(t.id) === String(p.tenantId || p.tenant?.id));
     const rent = tenant?.monthlyRent || 0;
-
     navigate("/payments/create", {
       state: {
         paymentId: p.id,
@@ -337,23 +328,15 @@ const Payments = () => {
   const columns = [
     { header: "Tenant Name", key: "tenantName", render: (val) => <span style={{ fontWeight: 600 }}>{val}</span> },
     { header: "Tenant ID", key: "tenantPgNumber", render: (val) => <span style={{ color: "#64748b", fontSize: "12px" }}>{val}</span> },
-    { header: "Amount", key: "amount", render: (val) => <strong style={{ color: "#c5a059", fontSize: "16px", fontFamily: "'Outfit', sans-serif" }}>₹{val}</strong> },
-    { header: "Date", key: "paymentDate", render: (val) => <span style={{ fontSize: "13px" }}>{val}</span> },
+    { header: "Amount", key: "amount", render: (val) => <strong style={{ color: "#c5a059", fontSize: "16px" }}>₹{val}</strong> },
+    { header: "Date", key: "paymentDate" },
     {
       header: "Mode", key: "paymentMode", render: (val) => (
-        <span style={{ background: "#f5f5f5", color: "#1a1a1a", padding: "4px 10px", borderRadius: "8px", fontSize: "11px", fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" }}>
+        <span style={{ background: "#f5f5f5", color: "#1a1a1a", padding: "4px 10px", borderRadius: "8px", fontSize: "11px", fontWeight: 700 }}>
           {val}
         </span>
       )
     },
-    ...(activeTab === "UNAPPROVED" || activeTab === "APPROVED" ? [{
-      header: "Received By", key: "staffName", render: (val, p) => (
-        <div>
-          <div style={{ fontWeight: 600, fontSize: "13px" }}>{val || "-"}</div>
-          <div style={{ fontSize: "11px", color: "#94a3b8", textTransform: 'uppercase' }}>{p.staffRole}</div>
-        </div>
-      )
-    }] : []),
     {
       header: "Status", key: "status", render: (val) => {
         const cfg = STATUS_CONFIG[val] || { bg: "#f1f5f9", color: "#64748b", label: val };
@@ -369,26 +352,12 @@ const Payments = () => {
         <Group gap="xs" justify="center">
           {activeTab === "UNAPPROVED" && (
             <>
-              <ActionIcon variant="light" color="brand" title="View Details" onClick={() => openReceipt(p)}>
-                <IconEye size={18} />
-              </ActionIcon>
-              <Button variant="filled" color="green" size="compact-xs" onClick={() => approvePayment(p)}>
-                Approve
-              </Button>
+              <ActionIcon variant="light" color="brand" onClick={() => openReceipt(p)}><IconEye size={18} /></ActionIcon>
+              <Button variant="filled" color="green" size="compact-xs" onClick={() => approvePayment(p)}>Approve</Button>
             </>
           )}
-          {activeTab === "PENDING" && (
-            <Button variant="filled" color="yellow" size="compact-xs" onClick={() => handlePayBalance(p)}>
-              Pay Now
-            </Button>
-          )}
-          {activeTab === "APPROVED" && (
-            <>
-              <ActionIcon variant="light" color="brand" title="View Details" onClick={() => openReceipt(p)}>
-                <IconEye size={18} />
-              </ActionIcon>
-            </>
-          )}
+          {activeTab === "PENDING" && <Button variant="filled" color="yellow" size="compact-xs" onClick={() => handlePayBalance(p)}>Pay Now</Button>}
+          {activeTab === "APPROVED" && <ActionIcon variant="light" color="brand" onClick={() => openReceipt(p)}><IconEye size={18} /></ActionIcon>}
         </Group>
       )
     }
@@ -396,92 +365,53 @@ const Payments = () => {
 
   return (
     <div>
-      {/* HEADER */}
       <div className="page-header">
         <Group align="center" gap="xl">
           <Group gap="sm">
             <IconCurrencyRupee size={32} color="var(--gold)" />
-            <h2>Financial Ledger</h2>
+            <h2 style={{ margin: 0 }}>Financial Ledger</h2>
           </Group>
           {!isCreateMode && (
-            <Group gap="sm">
+            <Group gap="xs">
               <Select
                 placeholder="Select Location"
                 data={locations.map(l => ({ value: l.locationId, label: l.locationName }))}
                 value={filterLoc}
-                onChange={val => { setFilterLoc(val); setFilterBld(null); }}
+                onChange={val => { setFilterLoc(val); setFilterBld(null); setPage(1); }}
                 clearable
                 size="md"
                 variant="filled"
+                style={{ width: '180px' }}
               />
               <Select
                 placeholder="Select Building"
                 data={buildings.filter(b => !filterLoc || b.locationId === filterLoc).map(b => ({ value: b.buildingId, label: b.buildingName }))}
                 value={filterBld}
-                onChange={setFilterBld}
+                onChange={val => { setFilterBld(val); setPage(1); }}
                 clearable
                 disabled={!filterLoc}
                 size="md"
                 variant="filled"
+                style={{ width: '180px' }}
               />
             </Group>
           )}
         </Group>
-
-        {!isCreateMode && (
-          <Button leftSection={<IconPlus size={18} />} onClick={() => navigate("/payments/create")} size="sm">
-            Record Payment
-          </Button>
-        )}
+        <Button leftSection={<IconPlus size={18} />} onClick={() => navigate("/payments/create")} size="sm">Record Payment</Button>
       </div>
 
-      {/* TABS & TABLE */}
-      <Tabs
-        value={activeTab}
-        onChange={setActiveTab}
-        mb="md"
-      >
+      <Tabs value={activeTab} onChange={setActiveTab} mb="md">
         <Tabs.List>
-          <Tabs.Tab value="PENDING" color="brand">
-            <Group gap={8}>
-              <span>Pending</span>
-              <Badge variant="filled" color="brand" size="sm">{counts.PENDING || 0}</Badge>
-            </Group>
-          </Tabs.Tab>
-          <Tabs.Tab value="UNAPPROVED" color="brand">
-            <Group gap={8}>
-              <span>Unapproved</span>
-              <Badge variant="filled" color="brand" size="sm">{counts.UNAPPROVED || 0}</Badge>
-            </Group>
-          </Tabs.Tab>
-          <Tabs.Tab value="APPROVED" color="brand">
-            <Group gap={8}>
-              <span>Approved</span>
-              <Badge variant="filled" color="brand" size="sm">{counts.APPROVED || 0}</Badge>
-            </Group>
-          </Tabs.Tab>
+          <Tabs.Tab value="PENDING" color="brand">Pending <Badge variant="filled" ml={5} size="sm">{counts.PENDING || 0}</Badge></Tabs.Tab>
+          <Tabs.Tab value="UNAPPROVED" color="brand">Unapproved <Badge variant="filled" ml={5} size="sm">{counts.UNAPPROVED || 0}</Badge></Tabs.Tab>
+          <Tabs.Tab value="APPROVED" color="brand">Approved <Badge variant="filled" ml={5} size="sm">{counts.APPROVED || 0}</Badge></Tabs.Tab>
         </Tabs.List>
       </Tabs>
 
-      <Tabs
-        value={activeSection}
-        onChange={setActiveSection}
-        variant="default"
-        mb="xl"
-      >
+      <Tabs value={activeSection} onChange={setActiveSection} mb="xl">
         <Tabs.List>
-          <Tabs.Tab value="ADVANCE">
-            <Group gap={8}>
-              <span>Advance Payments</span>
-              <Badge variant="filled" color="brand" size="sm">{counts[`ADVANCE_${activeTab}`] || 0}</Badge>
-            </Group>
-          </Tabs.Tab>
-          <Tabs.Tab value="RENT">
-            <Group gap={8}>
-              <span>Rent Payments</span>
-              <Badge variant="filled" color="brand" size="sm">{counts[`RENT_${activeTab}`] || 0}</Badge>
-            </Group>
-          </Tabs.Tab>
+          <Tabs.Tab value="ADVANCE">Advance Payments</Tabs.Tab>
+          <Tabs.Tab value="RENT">Rent Payments</Tabs.Tab>
         </Tabs.List>
       </Tabs>
 
@@ -500,235 +430,142 @@ const Payments = () => {
         onPageSizeChange={setPageSize}
       />
 
-      {/* RECORD PAYMENT MODAL */}
-      <Modal
-        opened={isCreateMode}
-        onClose={handleCloseCreateModal}
-        title={<Text fw={700} size="lg">Record New Payment</Text>}
-        size="lg"
-        centered
-        padding="xl"
-        radius="md"
-        overlayProps={{ backgroundOpacity: 0.55, blur: 3 }}
-      >
-        <div style={{ minHeight: '400px' }}>
-          {!isPaid ? (
-            <Stack gap="lg">
-              {selectedTenantRent && (
-                <Paper p="md" radius="md" withBorder bg="indigo.0">
-                  <Group justify="space-between">
-                    <Group gap="sm">
-                      <ThemeIcon variant="light" color="indigo" radius="md">
-                        <IconHome size={18} />
-                      </ThemeIcon>
-                      <Text size="sm" fw={600}>Monthly Rent Information</Text>
-                    </Group>
-                    <Text fw={700} color="indigo" size="lg">₹{selectedTenantRent}</Text>
-                  </Group>
-                </Paper>
-              )}
+      <Modal opened={isCreateMode} onClose={handleCloseCreateModal} title="Record New Payment" size="lg" centered padding="xl">
+        {!isPaid ? (
+          <Stack gap="lg">
+            {selectedTenantRent && (
+              <Paper p="md" radius="md" withBorder bg="indigo.0">
+                <Group justify="space-between">
+                  <Text size="sm" fw={600}>Monthly Rent Information</Text>
+                  <Text fw={700} color="indigo">₹{selectedTenantRent}</Text>
+                </Group>
+              </Paper>
+            )}
 
+            <Select
+              label="Select Tenant"
+              placeholder="Search by name or PG ID"
+              leftSection={<IconUser size={18} />}
+              leftSectionPointerEvents="none"
+              data={tenants
+                .filter(t => locationState.state?.tenantId ? String(t.id) === String(locationState.state.tenantId) : true)
+                .map(t => ({ value: String(t.id), label: `${t.pgNumber} – ${t.studentName}` }))}
+              value={form.tenantId}
+              onChange={(val) => {
+                setForm({ ...form, tenantId: val });
+                const tenant = tenants.find(t => String(t.id) === val);
+                setSelectedTenantRent(tenant?.monthlyRent || null);
+              }}
+              searchable
+              required
+              disabled={!!locationState.state?.tenantId}
+              comboboxProps={{ withinPortal: true, zIndex: 10000 }}
+              styles={{ input: { paddingLeft: '40px' } }}
+            />
+
+            <Group grow>
               <Select
-                label="Select Tenant"
-                placeholder="Search by name or PG ID"
-                leftSection={<IconUser size={18} />}
-                data={tenants
-                  .filter(t => locationState.state?.tenantId ? String(t.id) === String(locationState.state.tenantId) : true)
-                  .map(t => ({ value: String(t.id), label: `${t.pgNumber} – ${t.studentName}` }))}
-                value={form.tenantId}
-                onChange={(val) => {
-                  setForm({ ...form, tenantId: val });
-                  const tenant = tenants.find(t => String(t.id) === val);
-                  setSelectedTenantRent(tenant?.monthlyRent || null);
-                }}
-                searchable
+                label="Payment Mode"
+                leftSection={form.paymentMode === 'CASH' ? <IconCash size={18} /> : <IconQrcode size={18} />}
+                leftSectionPointerEvents="none"
+                data={[{ value: 'CASH', label: 'Cash' }, { value: 'ONLINE', label: 'Online' }]}
+                value={form.paymentMode}
+                onChange={(val) => setForm({ ...form, paymentMode: val })}
                 required
-                disabled={!!locationState.state?.tenantId}
-                styles={!!locationState.state?.tenantId ? { input: { opacity: 1, color: 'inherit', WebkitTextFillColor: 'inherit', cursor: 'not-allowed', backgroundColor: '#f8f9fa' } } : undefined}
+                comboboxProps={{ withinPortal: true, zIndex: 10000 }}
+                styles={{ input: { paddingLeft: '40px' } }}
               />
+              <Select
+                label="Payment Type"
+                data={[{ value: 'MONTHLY_RENT', label: 'Monthly Rent' }, { value: 'SECURITY_ADVANCE', label: 'Security Advance' }]}
+                value={form.paymentType}
+                onChange={(val) => setForm({ ...form, paymentType: val })}
+                required
+                disabled
+                styles={{ input: { opacity: 1, backgroundColor: '#f8f9fa' } }}
+              />
+            </Group>
 
-              <Group grow>
-                <Select
-                  label="Payment Mode"
-                  leftSection={form.paymentMode === 'CASH' ? <IconCash size={18} /> : <IconQrcode size={18} />}
-                  data={[
-                    { value: 'CASH', label: 'Cash Payment' },
-                    { value: 'ONLINE', label: 'Online Payment' }
-                  ]}
-                  value={form.paymentMode}
-                  onChange={(val) => setForm({ ...form, paymentMode: val })}
+            <TextInput
+              label="Amount (₹)"
+              placeholder="Enter amount"
+              leftSection={<IconCurrencyRupee size={18} />}
+              leftSectionPointerEvents="none"
+              type="number"
+              value={form.amount}
+              onChange={(e) => setForm({ ...form, amount: e.target.value })}
+              required
+              disabled={!!form.paymentId || (form.paymentType === 'MONTHLY_RENT' && !!selectedTenantRent)}
+              styles={{ input: { paddingLeft: '40px' } }}
+            />
+
+            {form.paymentMode === 'ONLINE' && (
+              <>
+                <TextInput
+                  label="UPI Transaction ID"
+                  placeholder="Enter 12-digit ID"
+                  leftSection={<IconDeviceMobile size={18} />}
+                  leftSectionPointerEvents="none"
+                  value={form.transactionId || ''}
+                  onChange={(e) => setForm({ ...form, transactionId: e.target.value })}
                   required
+                  styles={{ input: { paddingLeft: '40px' } }}
                 />
-                <Select
-                  label="Payment Type"
-                  data={[
-                    { value: 'MONTHLY_RENT', label: 'Monthly Rent' },
-                    { value: 'SECURITY_ADVANCE', label: 'Security Advance' }
-                  ]}
-                  value={form.paymentType}
-                  onChange={(val) => {
-                    const newForm = { ...form, paymentType: val };
-                    if (val === 'MONTHLY_RENT' && selectedTenantRent) {
-                      newForm.amount = selectedTenantRent;
-                    }
-                    setForm(newForm);
+                <FileInput
+                  label="Upload Screenshot"
+                  placeholder="Select image"
+                  leftSection={<IconUpload size={18} />}
+                  leftSectionPointerEvents="none"
+                  onChange={(file) => {
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.readAsDataURL(file);
+                    reader.onload = () => setScreenshotBase64(reader.result);
                   }}
                   required
-                  disabled
-                  styles={{ input: { opacity: 1, color: 'inherit', WebkitTextFillColor: 'inherit', cursor: 'not-allowed', backgroundColor: '#f8f9fa' } }}
+                  styles={{ input: { paddingLeft: '40px' } }}
                 />
-              </Group>
+              </>
+            )}
 
-              <TextInput
-                label="Amount (₹)"
-                placeholder="Enter amount"
-                leftSection={<IconCurrencyRupee size={18} />}
-                type="number"
-                value={form.amount}
-                onChange={(e) => setForm({ ...form, amount: e.target.value })}
-                required
-                disabled={!!form.paymentId || (form.paymentType === 'MONTHLY_RENT' && !!selectedTenantRent)}
-              />
+            <Textarea
+              label="Remarks (Optional)"
+              placeholder="Add any notes..."
+              leftSection={<IconNote size={18} />}
+              leftSectionPointerEvents="none"
+              value={form.remarks}
+              onChange={(e) => setForm({ ...form, remarks: e.target.value })}
+              styles={{ input: { paddingLeft: '40px' } }}
+            />
 
-              {form.paymentMode === 'ONLINE' && (
-                <>
-                  <TextInput
-                    label="UPI Transaction ID"
-                    placeholder="Enter 12-digit transaction ID"
-                    leftSection={<IconDeviceMobile size={18} />}
-                    value={form.transactionId || ''}
-                    onChange={(e) => setForm({ ...form, transactionId: e.target.value })}
-                    required
-                    mt="md"
-                  />
-                  <FileInput
-                    label="Upload Payment Screenshot"
-                    placeholder="Select image"
-                    accept="image/png,image/jpeg,image/jpg"
-                    leftSection={<IconUpload size={18} />}
-                    onChange={(file) => {
-                      if (!file) {
-                        setScreenshotBase64('');
-                        return;
-                      }
-                      const reader = new FileReader();
-                      reader.readAsDataURL(file);
-                      reader.onload = () => setScreenshotBase64(reader.result);
-                    }}
-                    required
-                    mt="md"
-                  />
-                </>
-              )}
-
-              <Textarea
-                label="Remarks (Optional)"
-                placeholder="Add any notes..."
-                leftSection={<IconNote size={18} />}
-                value={form.remarks}
-                onChange={(e) => setForm({ ...form, remarks: e.target.value })}
-              />
-
-              <Divider mt="md" />
-
-              <Group justify="flex-end">
-                <Button variant="outline" color="gray" onClick={handleCloseCreateModal}>Cancel</Button>
-                {form.paymentMode === 'ONLINE' ? (
-                  <Button size="md" onClick={() => save()} disabled={!form.amount || !form.tenantId || !form.transactionId || !screenshotBase64} leftSection={<IconCheck size={18} />}>
-                    Record Online Payment
-                  </Button>
-                ) : (
-                  <Button size="md" onClick={() => save()} disabled={!form.amount || !form.tenantId} leftSection={<IconCheck size={18} />}>
-                    Confirm Cash Payment
-                  </Button>
-                )}
-              </Group>
-            </Stack>
-          ) : isPaid ? (
-            <Center style={{ flexDirection: 'column', height: '400px' }}>
-              <ThemeIcon size={80} radius="xl" color="green" variant="light" mb="xl">
-                <IconCheck size={40} />
-              </ThemeIcon>
-              <Text fw={800} size="xl">Payment Successful!</Text>
-              <Text c="dimmed" size="sm" mt="sm" ta="center" maw={300}>
-                The payment of ₹{form.amount} has been recorded and is now awaiting approval.
-              </Text>
-              <Button mt="xl" size="lg" onClick={handleCloseCreateModal}>Close & Refresh</Button>
-            </Center>
-          ) : (
-            <Stack align="center" gap="xl" py="xl">
-              <Paper p="xl" radius="xl" withBorder shadow="md" style={{ background: '#fff' }}>
-                {isVerifying ? (
-                  <Stack align="center" py="xl">
-                    <div className="loading-dots">Verifying...</div>
-                  </Stack>
-                ) : (
-                  <Stack align="center">
-                    <img
-                      src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(`upi://pay?pa=${upiId}&pn=PG_ADMIN&am=${form.amount}&cu=INR`)}`}
-                      alt="UPI QR Code"
-                      style={{ width: '220px', height: '220px' }}
-                    />
-                    <Badge size="xl" variant="dot" color="indigo">₹{form.amount}</Badge>
-                  </Stack>
-                )}
-              </Paper>
-
-              {!isVerifying && (
-                <Stack w="100%" gap="md">
-                  <TextInput
-                    label="Transaction ID / UTR"
-                    placeholder="Enter 12-digit Ref No"
-                    description="Enter the reference number from your UPI app"
-                    value={utr}
-                    onChange={(e) => setUtr(e.target.value)}
-                    required
-                  />
-                  <Group grow>
-                    <Button variant="light" color="gray" onClick={() => setShowQr(false)}>Edit Details</Button>
-                    <Button
-                      onClick={() => {
-                        setIsVerifying(true);
-                        setTimeout(() => save(), 2000);
-                      }}
-                      disabled={utr.length < 6}
-                    >
-                      Verify & Confirm
-                    </Button>
-                  </Group>
-                </Stack>
-              )}
-            </Stack>
-          )}
-        </div>
+            <Group justify="flex-end" mt="md">
+              <Button variant="outline" color="gray" onClick={handleCloseCreateModal}>Cancel</Button>
+              <Button onClick={() => save()} disabled={!form.amount || !form.tenantId}>Confirm Payment</Button>
+            </Group>
+          </Stack>
+        ) : (
+          <Center style={{ flexDirection: 'column', height: '300px' }}>
+            <ThemeIcon size={80} radius="xl" color="green" variant="light" mb="xl"><IconCheck size={40} /></ThemeIcon>
+            <Text fw={800} size="xl">Payment Successful!</Text>
+            <Button mt="xl" onClick={handleCloseCreateModal}>Close</Button>
+          </Center>
+        )}
       </Modal>
 
-      {/* Delete Confirmation Modal */}
-      <Modal opened={opened} onClose={close} title="Delete Payment" styles={{
-        title: { fontSize: "18px", fontWeight: 600, color: "#fa5252" },
-      }} centered>
-        <Text size="sm">
-          Are you sure you want to delete the payment of <strong>₹{selectedItem?.amount}</strong> for <strong>{selectedItem?.tenantName}</strong>? This action cannot be undone.
-        </Text>
+      <Modal opened={opened} onClose={close} title="Delete Payment" centered>
+        <Text size="sm">Are you sure you want to delete this payment record?</Text>
         <Group justify="flex-end" mt="xl">
           <Button variant="outline" color="gray" onClick={close}>Cancel</Button>
           <Button color="red" onClick={confirmDelete}>Delete</Button>
         </Group>
       </Modal>
 
-      {/* Receipt Modal */}
-      <Modal opened={showReceipt} onClose={() => setShowReceipt(false)}>
+      <Modal opened={showReceipt} onClose={() => setShowReceipt(false)} size="lg">
         <Stack>
-          <Paper>
-            <PaymentReceipt receipt={selectedReceipt} ref={receiptRef} />
-          </Paper>
+          <PaymentReceipt receipt={selectedReceipt} ref={receiptRef} />
           <Group justify="center" mt="md">
-            {selectedReceipt?.status === 'APPROVED' && (
-              <Button size="sm" leftSection={<IconPrinter size={20} />} onClick={printReceipt}>Print Receipt</Button>
-            )}
-            {selectedReceipt?.screenshotUrl && (
-              <Button size="sm" color="teal" onClick={() => window.open(selectedReceipt.screenshotUrl, '_blank')}>View Screenshot</Button>
-            )}
+            {selectedReceipt?.status === 'APPROVED' && <Button size="sm" leftSection={<IconPrinter size={20} />} onClick={printReceipt}>Print</Button>}
+            {selectedReceipt?.screenshotUrl && <Button size="sm" color="teal" onClick={() => window.open(selectedReceipt.screenshotUrl, '_blank')}>View Screenshot</Button>}
           </Group>
         </Stack>
       </Modal>

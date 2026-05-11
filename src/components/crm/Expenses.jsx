@@ -31,13 +31,14 @@ const Expenses = () => {
   const [editingId, setEditingId] = useState(null);
 
   const categories = [
-    { value: 'Electricity', label: 'Electricity Bill' },
-    { value: 'Water', label: 'Water Bill' },
-    { value: 'Salary', label: 'Staff Salary' },
-    { value: 'Maintenance', label: 'Maintenance' },
-    { value: 'Repair', label: 'Repairs' },
-    { value: 'Internet', label: 'Internet' },
-    { value: 'Others', label: 'Others' }
+    "Electricity Bill",
+    "Water Bill",
+    "Staff Salary",
+    "Maintenance",
+    "Repairs",
+    "Internet",
+    "Food/Catering",
+    "Others"
   ];
 
   const [form, setForm] = useState({
@@ -142,6 +143,10 @@ const Expenses = () => {
             setEditingId(t.id);
             setModalOpened(true);
           }}><IconEdit size={16} /></ActionIcon>
+          <ActionIcon variant="light" color="red" onClick={() => {
+            setSelectedItem(t);
+            open();
+          }}><IconTrash size={16} /></ActionIcon>
         </Group>
       )
     }
@@ -151,27 +156,29 @@ const Expenses = () => {
     <div>
       <div className="page-header">
         <Group align="center" gap="xl">
-          <h2>{isStaff ? "Building Expenses" : "Global Expense Management"}</h2>
+          <h2 style={{ margin: 0 }}>{isStaff ? "Building Expenses" : "Expense Management"}</h2>
           {!isStaff && (
-            <Group gap="sm">
+            <Group gap="xs">
               <Select
                 placeholder="Select Location"
                 data={locations.map(l => ({ value: l.locationId, label: l.locationName }))}
                 value={filterLoc}
-                onChange={val => { setFilterLoc(val); setFilterBld(null); }}
+                onChange={val => { setFilterLoc(val); setFilterBld(null); setPage(1); }}
                 clearable
                 size="md"
                 variant="filled"
+                style={{ width: '180px' }}
               />
               <Select
                 placeholder="Select Building"
                 data={buildings.filter(b => !filterLoc || b.locationId === filterLoc).map(b => ({ value: b.buildingId, label: b.buildingName }))}
                 value={filterBld}
-                onChange={setFilterBld}
+                onChange={val => { setFilterBld(val); setPage(1); }}
                 clearable
                 disabled={!filterLoc}
                 size="md"
                 variant="filled"
+                style={{ width: '180px' }}
               />
             </Group>
           )}
@@ -199,23 +206,108 @@ const Expenses = () => {
       <Modal opened={modalOpened} onClose={() => setModalOpened(false)} title={editingId ? "Edit Expense Entry" : "Record New Expense"} size="lg" centered>
         <form onSubmit={save}>
           <Grid>
-            <Grid.Col span={12}><TextInput label="Expense Title" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} required /></Grid.Col>
-            <Grid.Col span={6}><NumberInput label="Amount (₹)" value={form.amount} onChange={val => setForm({ ...form, amount: val })} required min={0} /></Grid.Col>
-            <Grid.Col span={6}><TextInput label="Expense Date" type="date" value={form.expenseDate} onChange={e => setForm({ ...form, expenseDate: e.target.value })} required /></Grid.Col>
-            <Grid.Col span={12}><Select label="Category" data={categories} value={form.category} onChange={val => setForm({ ...form, category: val })} required /></Grid.Col>
+            <Grid.Col span={12}>
+              <TextInput 
+                label="Expense Title" 
+                placeholder="e.g. Electricity Bill"
+                leftSection={<IconReceipt size={18} />}
+                leftSectionPointerEvents="none"
+                leftSectionWidth={40}
+                value={form.title} 
+                onChange={e => setForm({ ...form, title: e.target.value })} 
+                required 
+              />
+            </Grid.Col>
+            <Grid.Col span={6}>
+              <NumberInput 
+                label="Amount (₹)" 
+                leftSection={<IconCurrencyRupee size={18} />}
+                leftSectionPointerEvents="none"
+                leftSectionWidth={40}
+                value={form.amount} 
+                onChange={val => setForm({ ...form, amount: val })} 
+                required 
+                min={0} 
+              />
+            </Grid.Col>
+            <Grid.Col span={6}>
+              <TextInput 
+                label="Expense Date" 
+                type="date" 
+                leftSection={<IconCalendar size={18} />}
+                leftSectionPointerEvents="none"
+                leftSectionWidth={40}
+                value={form.expenseDate} 
+                onChange={e => setForm({ ...form, expenseDate: e.target.value })} 
+                required 
+              />
+            </Grid.Col>
+            <Grid.Col span={12}>
+              <Select 
+                label="Expense Category" 
+                placeholder="Choose a category"
+                leftSection={<IconFilter size={18} />}
+                leftSectionPointerEvents="none"
+                leftSectionWidth={40}
+                data={categories} 
+                value={form.category} 
+                onChange={val => setForm({ ...form, category: val })} 
+                required 
+                searchable 
+                clearable
+                comboboxProps={{ withinPortal: true, zIndex: 10000 }}
+              />
+            </Grid.Col>
 
             {!isStaff && (
               <>
                 <Grid.Col span={6}>
-                  <Select label="Location" data={locations.map(l => ({ value: l.locationId, label: l.locationName }))} value={form.locationId} onChange={val => setForm({ ...form, locationId: val, buildingId: "" })} searchable clearable />
+                  <Select 
+                    label="Location" 
+                    placeholder="Select Location"
+                    leftSection={<IconBuildingCommunity size={18} />}
+                    leftSectionPointerEvents="none"
+                    leftSectionWidth={40}
+                    data={locations.map(l => ({ value: l.locationId, label: l.locationName }))} 
+                    value={form.locationId} 
+                    onChange={val => setForm({ ...form, locationId: val, buildingId: "" })} 
+                    searchable 
+                    clearable 
+                    comboboxProps={{ withinPortal: true, zIndex: 10000 }}
+                  />
                 </Grid.Col>
                 <Grid.Col span={6}>
-                  <Select label="Building" data={buildings.filter(b => b.locationId === form.locationId).map(b => ({ value: b.buildingId, label: b.buildingName }))} value={form.buildingId} onChange={val => setForm({ ...form, buildingId: val })} searchable clearable disabled={!form.locationId} />
+                  <Select 
+                    label="Building" 
+                    placeholder="Select Building"
+                    leftSection={<IconHome size={18} />}
+                    leftSectionPointerEvents="none"
+                    leftSectionWidth={40}
+                    data={buildings.filter(b => b.locationId === form.locationId).map(b => ({ value: b.buildingId, label: b.buildingName }))} 
+                    value={form.buildingId} 
+                    onChange={val => setForm({ ...form, buildingId: val })} 
+                    searchable 
+                    clearable 
+                    disabled={!form.locationId} 
+                    comboboxProps={{ withinPortal: true, zIndex: 10000 }}
+                  />
                 </Grid.Col>
               </>
             )}
 
-            <Grid.Col span={12}><Textarea label="Remarks" value={form.remarks} onChange={e => setForm({ ...form, remarks: e.target.value })} autosize minRows={2} /></Grid.Col>
+            <Grid.Col span={12}>
+              <Textarea 
+                label="Remarks" 
+                placeholder="Add notes..."
+                leftSection={<IconNote size={18} />}
+                leftSectionPointerEvents="none"
+                leftSectionWidth={40}
+                value={form.remarks} 
+                onChange={e => setForm({ ...form, remarks: e.target.value })} 
+                autosize 
+                minRows={2} 
+              />
+            </Grid.Col>
           </Grid>
           <Group justify="flex-end" mt="xl">
             <Button variant="outline" color="gray" onClick={() => setModalOpened(false)}>Cancel</Button>

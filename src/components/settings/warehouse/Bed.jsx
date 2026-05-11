@@ -178,47 +178,51 @@ const Beds = () => {
     <div>
       <div className="page-header">
         <Group align="center" gap="xl">
-          <h2>Bed Registry</h2>
+          <h2 style={{ margin: 0 }}>Bed Registry</h2>
           {!isCreateMode && (
-            <Group gap="sm">
-              <Select 
-                placeholder="Select Location" 
-                data={locations.map(l => ({ value: l.locationId, label: l.locationName }))} 
-                value={filterLoc} 
-                onChange={val => { setFilterLoc(val); setFilterBld(null); setFilterFlr(null); setFilterRom(null); }} 
-                clearable 
+            <Group gap="xs">
+              <Select
+                placeholder="Select Location"
+                data={locations.map(l => ({ value: l.locationId, label: l.locationName }))}
+                value={filterLoc}
+                onChange={val => { setFilterLoc(val); setFilterBld(null); setFilterFlr(null); setFilterRom(null); setPage(1); }}
+                clearable
                 size="md"
                 variant="filled"
+                style={{ width: '180px' }}
               />
-              <Select 
-                placeholder="Select Building" 
-                data={buildings.filter(b => !filterLoc || b.locationId === filterLoc).map(b => ({ value: b.buildingId, label: b.buildingName }))} 
-                value={filterBld} 
-                onChange={val => { setFilterBld(val); setFilterFlr(null); setFilterRom(null); }} 
-                clearable 
-                disabled={!filterLoc} 
+              <Select
+                placeholder="Select Building"
+                data={buildings.filter(b => !filterLoc || b.locationId === filterLoc).map(b => ({ value: b.buildingId, label: b.buildingName }))}
+                value={filterBld}
+                onChange={val => { setFilterBld(val); setFilterFlr(null); setFilterRom(null); setPage(1); }}
+                clearable
+                disabled={!filterLoc}
                 size="md"
                 variant="filled"
+                style={{ width: '180px' }}
               />
-              <Select 
-                placeholder="Select Floor" 
-                data={floors.filter(f => !filterBld || f.buildingId === filterBld).map(f => ({ value: f.floorId, label: f.floorName }))} 
-                value={filterFlr} 
-                onChange={val => { setFilterFlr(val); setFilterRom(null); }} 
-                clearable 
-                disabled={!filterBld} 
+              <Select
+                placeholder="Select Floor"
+                data={floors.filter(f => !filterBld || f.buildingId === filterBld).map(f => ({ value: f.floorId, label: f.floorName }))}
+                value={filterFlr}
+                onChange={val => { setFilterFlr(val); setFilterRom(null); setPage(1); }}
+                clearable
+                disabled={!filterBld}
                 size="md"
                 variant="filled"
+                style={{ width: '180px' }}
               />
-              <Select 
-                placeholder="Select Room" 
-                data={rooms.filter(r => !filterFlr || r.floorId === filterFlr).map(r => ({ value: r.roomId, label: `Room ${r.roomNumber}` }))} 
-                value={filterRom} 
-                onChange={setFilterRom} 
-                clearable 
-                disabled={!filterFlr} 
+              <Select
+                placeholder="Select Room"
+                data={rooms.filter(r => !filterFlr || r.floorId === filterFlr).map(r => ({ value: r.roomId, label: `Room ${r.roomNumber}` }))}
+                value={filterRom}
+                onChange={val => { setFilterRom(val); setPage(1); }}
+                clearable
+                disabled={!filterFlr}
                 size="md"
                 variant="filled"
+                style={{ width: '180px' }}
               />
             </Group>
           )}

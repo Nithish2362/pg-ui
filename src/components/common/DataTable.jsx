@@ -23,15 +23,15 @@ const DataTable = ({
   const prevSearchRef = useRef(search);
 
   useEffect(() => {
-    if (search !== prevSearchRef.current) {
+    // Reset if search changed OR if we are back to page 1
+    if (search !== prevSearchRef.current || page === 1) {
       setAccumulatedData(safeData);
       prevSearchRef.current = search;
-    } else if (page === 1 || !onPageChange) {
-      setAccumulatedData(safeData);
-    } else {
+    } else if (onPageChange) {
+      // Append only if it's a subsequent page
       setAccumulatedData(prev => {
-        const existingItems = new Set(prev.map(p => p.id || p.paymentId || p.tenantId || JSON.stringify(p)));
-        const newData = safeData.filter(d => !existingItems.has(d.id || d.paymentId || d.tenantId || JSON.stringify(d)));
+        const existingIds = new Set(prev.map(p => p.id || p.paymentId || p.tenantId || p.staffId || p.roomId || p.visitorId || JSON.stringify(p)));
+        const newData = safeData.filter(d => !existingIds.has(d.id || d.paymentId || d.tenantId || d.staffId || d.roomId || d.visitorId || JSON.stringify(d)));
         return [...prev, ...newData];
       });
     }
@@ -49,16 +49,14 @@ const DataTable = ({
       {onSearch && (
         <Group justify="flex-start" mb="xl" wrap="wrap">
           <TextInput
-            placeholder="Quick Search Registry..."
-            leftSection={<IconSearch size={18} color="var(--accent-gold)" />}
+            placeholder="Search"
+            rightSection={<IconSearch size={18} color="var(--accent-gold)" />}
             value={search}
             onChange={(e) => {
               onSearch(e.target.value);
               if (onPageChange && page !== 1) onPageChange(1);
             }}
-            className="search-input"
             radius="md"
-            size="sm"
           />
         </Group>
       )}
@@ -72,18 +70,18 @@ const DataTable = ({
         ) : (
           <SimpleGrid cols={{ base: 1, sm: 2, lg: 3, xl: 4 }} spacing="lg">
             {accumulatedData.map((row, rowIndex) => (
-              <Card 
-                key={row.id || rowIndex} 
-                radius="24px" 
-                withBorder 
-                p="xl" 
-                style={{ 
-                    background: '#ffffff', 
-                    borderColor: 'rgba(0,0,0,0.05)', 
-                    display: 'flex', 
-                    flexDirection: 'column',
-                    boxShadow: '0 4px 20px rgba(0,0,0,0.02)',
-                    transition: 'all 0.3s ease'
+              <Card
+                key={row.id || rowIndex}
+                radius="24px"
+                withBorder
+                p="xl"
+                style={{
+                  background: '#ffffff',
+                  borderColor: 'rgba(0,0,0,0.05)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.02)',
+                  transition: 'all 0.3s ease'
                 }}
                 className="data-row-card"
               >
@@ -94,16 +92,16 @@ const DataTable = ({
                         <Text size="xs" c="dimmed" fw={800} tt="uppercase" style={{ flexShrink: 0, maxWidth: '40%', letterSpacing: '0.05em' }}>
                           {col.header}
                         </Text>
-                        <div style={{ 
-                            textAlign: 'right', 
-                            flexGrow: 1, 
-                            wordBreak: 'break-word', 
-                            fontSize: '14px', 
-                            fontWeight: 700, 
-                            color: 'var(--primary)', 
-                            display: 'flex', 
-                            justifyContent: 'flex-end', 
-                            alignItems: 'center' 
+                        <div style={{
+                          textAlign: 'right',
+                          flexGrow: 1,
+                          wordBreak: 'break-word',
+                          fontSize: '14px',
+                          fontWeight: 700,
+                          color: 'var(--primary)',
+                          display: 'flex',
+                          justifyContent: 'flex-end',
+                          alignItems: 'center'
                         }}>
                           {col.render ? col.render(row[col.key], row) : (row[col.key] || '-')}
                         </div>

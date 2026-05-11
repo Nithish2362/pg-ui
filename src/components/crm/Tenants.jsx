@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button, TextInput, Select, Text, Group, Badge, Modal, ActionIcon, Tooltip, Tabs } from '@mantine/core';
+import { Button, TextInput, Select, Text, Group, Badge, Modal, ActionIcon, Tooltip, Tabs, Stack } from '@mantine/core';
 import { useNavigate } from 'react-router-dom';
 import { IconX, IconUserPlus, IconCurrencyRupee, IconLogout, IconUsers } from '@tabler/icons-react';
 import api from '../../api/Interceptor';
@@ -170,29 +170,31 @@ const Tenants = () => {
       <div className="page-header">
         <Group align="center" gap="xl">
           <Group gap="sm">
-            <IconUsers size={32} color="var(--gold)" />
-            <h2>Resident Registry</h2>
+            <IconUsers size={28} color="var(--gold)" />
+            <h2 style={{ margin: 0 }}>Residents</h2>
           </Group>
           {!isStaff && (
-            <Group gap="sm">
+            <Group gap="xs">
               <Select
                 placeholder="Select Location"
                 data={locations.map(l => ({ value: l.locationId, label: l.locationName }))}
                 value={filterLoc}
-                onChange={val => { setFilterLoc(val); setFilterBld(null); }}
+                onChange={val => { setFilterLoc(val); setFilterBld(null); setPage(1); }}
                 clearable
                 size="md"
                 variant="filled"
+                style={{ width: '200px' }}
               />
               <Select
                 placeholder="Select Building"
                 data={buildings.filter(b => !filterLoc || b.locationId === filterLoc).map(b => ({ value: b.buildingId, label: b.buildingName }))}
                 value={filterBld}
-                onChange={setFilterBld}
+                onChange={val => { setFilterBld(val); setPage(1); }}
                 clearable
                 disabled={!filterLoc}
                 size="md"
                 variant="filled"
+                style={{ width: '200px' }}
               />
             </Group>
           )}
@@ -202,7 +204,7 @@ const Tenants = () => {
 
       <Tabs
         value={activeTab}
-        onChange={setActiveTab}
+        onChange={(val) => { setActiveTab(val); setPage(1); }}
         mb="xl"
         styles={{
           tab: { padding: '12px 20px', fontWeight: 600 },

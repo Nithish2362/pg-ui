@@ -120,7 +120,7 @@ const Visitors = () => {
         data={items}
         loading={loading}
         search={search}
-        onSearch={setSearch}
+        onSearch={(val) => { setSearch(val); setPage(1); }}
         totalCount={totalCount}
         page={page}
         totalPages={Math.ceil(totalCount / pageSize)}

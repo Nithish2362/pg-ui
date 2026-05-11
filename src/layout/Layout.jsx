@@ -159,17 +159,16 @@ export default function Layout() {
               </div>
 
               <Button
-                variant="subtle"
-                color="gray"
+                color="white"
                 onClick={handleLogout}
                 size="compact-sm"
                 rightSection={<IconLogout size={15} />}
                 visibleFrom="sm"
                 style={{
-                  color: 'var(--muted)',
+                  color: 'white',
                   fontSize: '0.7rem',
-                  fontWeight: 700,
-                  letterSpacing: '0.05em',
+                  fontWeight: 900,
+                  backgroundColor: 'var(--gold)',
                   textTransform: 'uppercase',
                   height: 32,
                 }}

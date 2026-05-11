@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Modal, Button, TextInput, Select, Text, Group, Badge, NumberInput, ActionIcon, Tooltip } from "@mantine/core";
+import { Modal, Button, TextInput, Select, Text, Group, Badge, NumberInput, ActionIcon, Tooltip, Stack } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useNavigate, useLocation } from "react-router-dom";
 import { IconArrowRight, IconArrowLeft, IconEdit, IconTrash, IconPlus } from "@tabler/icons-react";
@@ -195,46 +195,53 @@ const Rooms = () => {
     <div>
       <div className="page-header">
         <Group align="center" gap="xl">
-          <h2>Room Inventory</h2>
+          <h2 style={{ margin: 0 }}>Room Registry</h2>
           {!isCreateMode && (
-            <Group gap="sm">
-              <Select 
-                placeholder="Select Location" 
-                data={locations.map(l => ({ value: l.locationId, label: l.locationName }))} 
-                value={filterLoc} 
-                onChange={val => { setFilterLoc(val); setFilterBld(null); setFilterFlr(null); }} 
-                clearable 
+            <Group gap="xs">
+              <Select
+                placeholder="Select Location"
+                data={locations.map(l => ({ value: l.locationId, label: l.locationName }))}
+                value={filterLoc}
+                onChange={val => { setFilterLoc(val); setFilterBld(null); setFilterFlr(null); setPage(1); }}
+                clearable
                 size="md"
                 variant="filled"
+                style={{ width: '180px' }}
               />
-              <Select 
-                placeholder="Select Building" 
-                data={buildings.filter(b => !filterLoc || b.locationId === filterLoc).map(b => ({ value: b.buildingId, label: b.buildingName }))} 
-                value={filterBld} 
-                onChange={val => { setFilterBld(val); setFilterFlr(null); }} 
-                clearable 
-                disabled={!filterLoc} 
+              <Select
+                placeholder="Select Building"
+                data={buildings.filter(b => !filterLoc || b.locationId === filterLoc).map(b => ({ value: b.buildingId, label: b.buildingName }))}
+                value={filterBld}
+                onChange={val => { setFilterBld(val); setFilterFlr(null); setPage(1); }}
+                clearable
+                disabled={!filterLoc}
                 size="md"
                 variant="filled"
+                style={{ width: '180px' }}
               />
-              <Select 
-                placeholder="Select Floor" 
-                data={floors.filter(f => !filterBld || f.buildingId === filterBld).map(f => ({ value: f.floorId, label: f.floorName }))} 
-                value={filterFlr} 
-                onChange={setFilterFlr} 
-                clearable 
-                disabled={!filterBld} 
+              <Select
+                placeholder="Select Floor"
+                data={floors.filter(f => !filterBld || f.buildingId === filterBld).map(f => ({ value: f.floorId, label: f.floorName }))}
+                value={filterFlr}
+                onChange={val => { setFilterFlr(val); setPage(1); }}
+                clearable
+                disabled={!filterBld}
                 size="md"
                 variant="filled"
+                style={{ width: '180px' }}
               />
             </Group>
           )}
         </Group>
 
         {!isCreateMode ? (
-          <Button onClick={() => navigate("/rooms/create")} leftSection={<IconPlus size={18} />} size="sm">Create Room</Button>
+          <Button onClick={() => navigate("/rooms/create")} leftSection={<IconPlus size={18} />} size="sm">
+            Create Room
+          </Button>
         ) : (
-          <Button onClick={() => navigate("/rooms")} variant="outline" leftSection={<IconArrowLeft size={18} />} size="sm">Back</Button>
+          <Button onClick={() => navigate("/rooms")} variant="outline" leftSection={<IconArrowLeft size={18} />} size="sm">
+            Back
+          </Button>
         )}
       </div>
 

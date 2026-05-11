@@ -8,15 +8,15 @@ const notify = ({
   id,
   success = false,
   error = false,
-  color = "teal",
+  color = "#c5a059",
   icon,
   autoClose = 3000,
 }) => {
   const notificationColor = success
-    ? "teal"
+    ? "#c5a059"
     : error
-    ? "red"
-    : color;
+      ? "red"
+      : color;
 
   const notificationIcon =
     icon ||
