@@ -104,7 +104,7 @@ export default function Layout() {
                     lineHeight: 1,
                   }}
                 >
-                  YHOMEE
+                  STAYWOW
                 </Text>
               </Group>
 
