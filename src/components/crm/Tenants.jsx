@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button, TextInput, Select, Text, Group, Badge, Modal, ActionIcon, Tooltip, Tabs } from '@mantine/core';
 import { useNavigate } from 'react-router-dom';
-import { IconX, IconUserPlus, IconCurrencyRupee, IconLogout } from '@tabler/icons-react';
+import { IconX, IconUserPlus, IconCurrencyRupee, IconLogout, IconUsers } from '@tabler/icons-react';
 import api from '../../api/Interceptor';
 import notify from '../utils/Notification';
 import useDebounce from '../../common/useDebounce';
@@ -136,14 +136,14 @@ const Tenants = () => {
               </Button>
             );
           } else {
-            return <Badge color="green" variant="light">PAID</Badge>;
+            return <Badge color="brand" variant="filled">PAID</Badge>;
           }
         }
         return <Text c="dimmed" size="xs">-</Text>;
       }
     },
     {
-      header: "Actions", key: "actions", render: (_, t) => (
+      header: "Manage", key: "actions", render: (_, t) => (
         <Group gap="xs" justify="center">
           {t.status === 'ACTIVE' && (
             <Tooltip label="Checkout Resident">
@@ -167,9 +167,12 @@ const Tenants = () => {
 
   return (
     <div>
-      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 'md' }}>
+      <div className="page-header">
         <Group align="center" gap="xl">
-          <h2>Resident Management</h2>
+          <Group gap="sm">
+            <IconUsers size={32} color="var(--gold)" />
+            <h2>Resident Registry</h2>
+          </Group>
           {!isStaff && (
             <Group gap="sm">
               <Select
@@ -179,7 +182,6 @@ const Tenants = () => {
                 onChange={val => { setFilterLoc(val); setFilterBld(null); }}
                 clearable
                 size="md"
-                style={{ width: '220px' }}
                 variant="filled"
               />
               <Select
@@ -190,13 +192,12 @@ const Tenants = () => {
                 clearable
                 disabled={!filterLoc}
                 size="md"
-                style={{ width: '220px' }}
                 variant="filled"
               />
             </Group>
           )}
         </Group>
-        <Button leftSection={<IconUserPlus size={18} />} onClick={() => navigate('/tenants/create')} size="sm">Register Tenant</Button>
+        <Button leftSection={<IconUserPlus size={18} />} onClick={() => navigate('/tenants/create')} size="sm">Register Resident</Button>
       </div>
 
       <Tabs
@@ -209,22 +210,22 @@ const Tenants = () => {
         }}
       >
         <Tabs.List>
-          <Tabs.Tab value="ACTIVE" color="blue">
+          <Tabs.Tab value="ACTIVE" color="brand">
             <Group gap={8}>
               <span>Active</span>
-              <Badge variant="filled" color="blue" size="sm">{counts.active}</Badge>
+              <Badge variant="filled" color="brand" size="sm">{counts.active}</Badge>
             </Group>
           </Tabs.Tab>
           <Tabs.Tab value="NOT_APPROVED" color="yellow">
             <Group gap={8}>
               <span>Pending Approval</span>
-              <Badge variant="filled" color="yellow" size="sm">{counts.awaiting}</Badge>
+              <Badge variant="filled" color="brand" size="sm">{counts.awaiting}</Badge>
             </Group>
           </Tabs.Tab>
           <Tabs.Tab value="INACTIVE" color="gray">
             <Group gap={8}>
               <span>Vacated</span>
-              <Badge variant="filled" color="gray" size="sm">{counts.history}</Badge>
+              <Badge variant="filled" color="brand" size="sm">{counts.history}</Badge>
             </Group>
           </Tabs.Tab>
         </Tabs.List>

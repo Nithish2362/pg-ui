@@ -97,11 +97,11 @@ const Notices = () => {
   return (
     <div>
       <div className="page-header">
-        <Group gap="xs">
-          <IconSpeakerphone size={24} color="#3f92c5" />
-          <h2 style={{ margin: 0 }}>Notice Board</h2>
+        <Group align="center" gap="sm">
+          <IconSpeakerphone size={32} color="var(--gold)" />
+          <h2>Notice Board</h2>
         </Group>
-        <Button onClick={() => setModalOpen(true)} leftSection={<IconPlus size={16} />}>
+        <Button onClick={() => setModalOpen(true)} leftSection={<IconPlus size={16} />} size="sm">
           Create Notice
         </Button>
       </div>

@@ -2,20 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Table, Loader, Text, TextInput, Group, Pagination, Select, Card, Stack, Divider, SimpleGrid, Center } from '@mantine/core';
 import { IconSearch } from '@tabler/icons-react';
 
-/**
- * Common DataTable Component
- * @param {Array} columns - [{ header: 'Name', key: 'name', render: (val, row) => ... }]
- * @param {Array} data - Data to display
- * @param {boolean} loading - Loading state
- * @param {string} search - Search value
- * @param {function} onSearch - Search change handler
- * @param {number} totalCount - Total number of records (optional)
- * @param {number} page - Current page (optional)
- * @param {number} totalPages - Total pages (optional)
- * @param {function} onPageChange - Page change handler (optional)
- * @param {number} pageSize - Rows per page (optional)
- * @param {function} onPageSizeChange - Rows per page change handler (optional)
- */
 const DataTable = ({
   columns = [],
   data = [],
@@ -37,7 +23,6 @@ const DataTable = ({
   const prevSearchRef = useRef(search);
 
   useEffect(() => {
-    // If search changes, force reset regardless of page number
     if (search !== prevSearchRef.current) {
       setAccumulatedData(safeData);
       prevSearchRef.current = search;
@@ -60,42 +45,70 @@ const DataTable = ({
   };
 
   return (
-    <div style={{ width: '100%' }}>
+    <div style={{ width: '100%', animation: 'fadeIn 0.5s ease' }}>
       {onSearch && (
-        <Group justify="flex-start" mb="md" wrap="wrap">
+        <Group justify="flex-start" mb="xl" wrap="wrap">
           <TextInput
-            placeholder="Search..."
-            leftSection={<IconSearch size={16} />}
+            placeholder="Quick Search Registry..."
+            leftSection={<IconSearch size={18} color="var(--accent-gold)" />}
             value={search}
             onChange={(e) => {
               onSearch(e.target.value);
               if (onPageChange && page !== 1) onPageChange(1);
             }}
-            style={{ width: '280px', maxWidth: '100%' }}
+            className="search-input"
             radius="md"
+            size="sm"
           />
         </Group>
       )}
 
-      <div style={{ maxHeight: '70vh', overflowY: 'auto', padding: '5px' }} onScroll={handleScroll}>
+      <div style={{ maxHeight: '72vh', overflowY: 'auto', padding: '10px 5px' }} onScroll={handleScroll}>
         {accumulatedData.length === 0 && !loading ? (
-          <Text ta="center" py="xl" c="dimmed">No records found</Text>
+          <Center py="100px" style={{ flexDirection: 'column', opacity: 0.5 }}>
+            <IconSearch size={48} stroke={1} />
+            <Text ta="center" mt="md" fw={600}>No entries found in registry</Text>
+          </Center>
         ) : (
-          <SimpleGrid cols={{ base: 1, sm: 2, lg: 3, xl: 4 }} spacing="md">
+          <SimpleGrid cols={{ base: 1, sm: 2, lg: 3, xl: 4 }} spacing="lg">
             {accumulatedData.map((row, rowIndex) => (
-              <Card key={row.id || rowIndex} shadow="sm" radius="md" withBorder p="md" style={{ background: '#fafafa', borderColor: '#e2e8f0', display: 'flex', flexDirection: 'column' }}>
+              <Card 
+                key={row.id || rowIndex} 
+                radius="24px" 
+                withBorder 
+                p="xl" 
+                style={{ 
+                    background: '#ffffff', 
+                    borderColor: 'rgba(0,0,0,0.05)', 
+                    display: 'flex', 
+                    flexDirection: 'column',
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.02)',
+                    transition: 'all 0.3s ease'
+                }}
+                className="data-row-card"
+              >
                 <Stack gap="sm" style={{ flexGrow: 1 }}>
                   {safeColumns.map((col, colIndex) => (
                     <React.Fragment key={colIndex}>
                       <Group justify="space-between" align="flex-start" wrap="nowrap">
-                        <Text size="xs" c="dimmed" fw={700} tt="uppercase" style={{ flexShrink: 0, maxWidth: '40%' }}>
+                        <Text size="xs" c="dimmed" fw={800} tt="uppercase" style={{ flexShrink: 0, maxWidth: '40%', letterSpacing: '0.05em' }}>
                           {col.header}
                         </Text>
-                        <div style={{ textAlign: 'right', flexGrow: 1, wordBreak: 'break-word', fontSize: '14px', fontWeight: 600, color: '#1e293b', display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+                        <div style={{ 
+                            textAlign: 'right', 
+                            flexGrow: 1, 
+                            wordBreak: 'break-word', 
+                            fontSize: '14px', 
+                            fontWeight: 700, 
+                            color: 'var(--primary)', 
+                            display: 'flex', 
+                            justifyContent: 'flex-end', 
+                            alignItems: 'center' 
+                        }}>
                           {col.render ? col.render(row[col.key], row) : (row[col.key] || '-')}
                         </div>
                       </Group>
-                      {colIndex < safeColumns.length - 1 && <Divider color="gray.2" />}
+                      {colIndex < safeColumns.length - 1 && <Divider color="rgba(0,0,0,0.03)" />}
                     </React.Fragment>
                   ))}
                 </Stack>
@@ -105,19 +118,19 @@ const DataTable = ({
         )}
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px', padding: '0 10px', flexWrap: 'wrap', gap: '10px' }}>
-        <Text size="sm" c="dimmed">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '24px', padding: '0 10px', flexWrap: 'wrap', gap: '10px' }}>
+        <Text size="xs" fw={700} c="dimmed" tt="uppercase">
           {accumulatedData.length > 0 ? (
-            <>Showing <b>{accumulatedData.length}</b> of <b>{totalCount || accumulatedData.length}</b> entries</>
+            <>Displaying <b style={{ color: 'var(--accent-gold)' }}>{accumulatedData.length}</b> of <b style={{ color: 'var(--primary)' }}>{totalCount || accumulatedData.length}</b> total records</>
           ) : (
-            'Showing 0 entries'
+            'Registry empty'
           )}
         </Text>
 
         {loading && (
           <Center>
-            <Loader size="sm" color="blue" />
-            <Text ml="sm" size="sm" c="dimmed">Loading more...</Text>
+            <Loader size="xs" color="brand" />
+            <Text ml="sm" size="xs" fw={700} c="dimmed">FETCHING MORE DATA...</Text>
           </Center>
         )}
       </div>

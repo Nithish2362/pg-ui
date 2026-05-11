@@ -53,7 +53,7 @@ const TenantLogs = () => {
     <div>
       <div className="page-header">
         <Group gap="xs">
-          <IconClock size={24} color="#3f92c5" />
+          <IconClock size={24} color="#c5a059" />
           <h2 style={{ margin: 0 }}>In/Out Logs</h2>
         </Group>
       </div>

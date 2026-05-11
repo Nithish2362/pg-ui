@@ -141,7 +141,7 @@ const Floors = () => {
         <Group gap="xs" justify="center" wrap="nowrap">
           <Tooltip label="Edit Floor"><ActionIcon variant="light" color="yellow" size="sm" onClick={() => handleEdit(f)}><IconEdit size={16} /></ActionIcon></Tooltip>
           <Tooltip label="Delete Floor"><ActionIcon variant="light" color="red" size="sm" onClick={() => openDeleteModal(f)}><IconTrash size={16} /></ActionIcon></Tooltip>
-          <Tooltip label="Go To Rooms"><ActionIcon variant="light" color="blue" size="sm" onClick={() => navigate(`/rooms?floorId=${f.floorId}`)}><IconArrowRight size={16} /></ActionIcon></Tooltip>
+          <Tooltip label="Go To Rooms"><ActionIcon variant="light" color="brand" size="sm" onClick={() => navigate(`/rooms?floorId=${f.floorId}`)}><IconArrowRight size={16} /></ActionIcon></Tooltip>
         </Group>
       )
     }
@@ -149,9 +149,9 @@ const Floors = () => {
 
   return (
     <div>
-      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 'md' }}>
+      <div className="page-header">
         <Group align="center" gap="xl">
-          <h2>Floor Management</h2>
+          <h2>Floor Logistics</h2>
           {!isCreateMode && (
             <Group gap="sm">
               <Select
@@ -161,7 +161,6 @@ const Floors = () => {
                 onChange={val => { setFilterLoc(val); setFilterBld(null); }}
                 clearable
                 size="md"
-                style={{ width: '220px' }}
                 variant="filled"
               />
               <Select
@@ -172,7 +171,6 @@ const Floors = () => {
                 clearable
                 disabled={!filterLoc}
                 size="md"
-                style={{ width: '220px' }}
                 variant="filled"
               />
             </Group>

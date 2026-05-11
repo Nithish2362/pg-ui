@@ -159,7 +159,7 @@ const Staff = () => {
 
   return (
     <div>
-      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 'md' }}>
+      <div className="page-header">
         <Group align="center" gap="xl">
           <h2>Staff Management</h2>
           {!isCreateMode && (
@@ -171,7 +171,6 @@ const Staff = () => {
                 onChange={val => { setFilterLoc(val); setFilterBld(null); }} 
                 clearable 
                 size="md"
-                style={{ width: '220px' }}
                 variant="filled"
               />
               <Select 
@@ -182,7 +181,6 @@ const Staff = () => {
                 clearable 
                 disabled={!filterLoc} 
                 size="md"
-                style={{ width: '220px' }}
                 variant="filled"
               />
             </Group>
@@ -203,7 +201,7 @@ const Staff = () => {
       {isCreateMode ? (
         <div className="form-card">
           <Group gap="sm" mb="xl">
-            <IconUserShield size={24} color="#3f92c5" />
+            <IconUserShield size={24} color="#c5a059" />
             <h3 style={{ margin: 0 }}>{editingId ? "Edit Staff" : "Register New Staff"}</h3>
           </Group>
 
@@ -230,8 +228,8 @@ const Staff = () => {
 
               <Grid.Col span={12} mt="sm">
                 <Group gap={8}>
-                  <IconBuilding size={20} color="#3f92c5" />
-                  <Text fw={600} size="sm" c="blue">Work Assignment</Text>
+                  <IconBuilding size={20} color="#c5a059" />
+                  <Text fw={600} size="sm" c="brand.7">Work Assignment</Text>
                 </Group>
               </Grid.Col>
               <Grid.Col span={6}>

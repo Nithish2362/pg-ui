@@ -173,7 +173,7 @@ const Rooms = () => {
     { header: "Floor", key: "floorName" },
     {
       header: "Type", key: "roomType", render: (val) => (
-        <Badge color={val === "AC" ? "blue" : "orange"} variant="light">
+        <Badge color={val === "AC" ? "brand" : "gray"} variant="light">
           {val}
         </Badge>
       )
@@ -185,7 +185,7 @@ const Rooms = () => {
         <Group gap="xs" justify="center" wrap="nowrap">
           <Tooltip label="Edit Room"><ActionIcon variant="light" color="yellow" size="sm" onClick={() => handleEdit(r)}><IconEdit size={16} /></ActionIcon></Tooltip>
           <Tooltip label="Delete Room"><ActionIcon variant="light" color="red" size="sm" onClick={() => openDeleteModal(r)}><IconTrash size={16} /></ActionIcon></Tooltip>
-          <Tooltip label="Go To Beds"><ActionIcon variant="light" color="blue" size="sm" onClick={() => navigate(`/beds?roomId=${r.roomId}`)}><IconArrowRight size={16} /></ActionIcon></Tooltip>
+          <Tooltip label="Go To Beds"><ActionIcon variant="light" color="brand" size="sm" onClick={() => navigate(`/beds?roomId=${r.roomId}`)}><IconArrowRight size={16} /></ActionIcon></Tooltip>
         </Group>
       )
     }
@@ -193,9 +193,9 @@ const Rooms = () => {
 
   return (
     <div>
-      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 'md' }}>
+      <div className="page-header">
         <Group align="center" gap="xl">
-          <h2>Room Management</h2>
+          <h2>Room Inventory</h2>
           {!isCreateMode && (
             <Group gap="sm">
               <Select 
@@ -205,7 +205,6 @@ const Rooms = () => {
                 onChange={val => { setFilterLoc(val); setFilterBld(null); setFilterFlr(null); }} 
                 clearable 
                 size="md"
-                style={{ width: '200px' }}
                 variant="filled"
               />
               <Select 
@@ -216,7 +215,6 @@ const Rooms = () => {
                 clearable 
                 disabled={!filterLoc} 
                 size="md"
-                style={{ width: '200px' }}
                 variant="filled"
               />
               <Select 
@@ -227,7 +225,6 @@ const Rooms = () => {
                 clearable 
                 disabled={!filterBld} 
                 size="md"
-                style={{ width: '200px' }}
                 variant="filled"
               />
             </Group>

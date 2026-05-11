@@ -109,7 +109,7 @@ const Visitors = () => {
     <div>
       <div className="page-header">
         <Group gap="xs">
-          <IconDoorEnter size={24} color="#3f92c5" />
+          <IconDoorEnter size={24} color="#c5a059" />
           <h2 style={{ margin: 0 }}>Visitor Management</h2>
         </Group>
       </div>

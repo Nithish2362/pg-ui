@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Tabs, Paper, Text, Group, Button, TextInput, Textarea, Stack, Card, Alert, Modal, Badge, Select } from '@mantine/core';
-import { IconSend, IconInfoCircle, IconUsers, IconUser } from '@tabler/icons-react';
+import { IconSend, IconInfoCircle, IconUsers, IconUser, IconSpeakerphone } from '@tabler/icons-react';
 import api from '../../api/Interceptor';
 import notify from '../utils/Notification';
 import DataTable from '../common/DataTable';
@@ -114,96 +114,130 @@ const NotificationsHub = () => {
         }
     };
 
-    // No client-side filtering needed with backend pagination
-    const filteredTenants = tenants;
-
     const columns = [
-        { header: 'PG Number', key: 'pgNumber' },
-        { header: 'Name', key: 'studentName' },
-        { header: 'Room/Bed', key: 'roomName', render: (val, t) => `${val || 'N/A'} - ${t.bedNumber || 'N/A'}` },
-        { header: 'Status', key: 'status', render: (val) => <Badge color={val === 'ACTIVE' ? 'green' : 'gray'}>{val}</Badge> },
+        { header: 'PG ID', key: 'pgNumber', render: (val) => <Text fw={700}>{val}</Text> },
+        { header: 'Resident Name', key: 'studentName', render: (val) => <Text fw={600}>{val}</Text> },
+        { header: 'Allocation', key: 'roomName', render: (val, t) => `${val || 'N/A'} • Bed ${t.bedNumber || 'N/A'}` },
+        { header: 'Status', key: 'status', render: (val) => <Badge variant="light" color={val === 'ACTIVE' ? 'green' : 'gray'}>{val}</Badge> },
         {
             header: 'Actions',
             key: 'actions',
             render: (_, t) => (
-                <Button variant="light" size="compact-xs" onClick={() => openNotifyModal(t)} leftSection={<IconSend size={14} />}>
-                    Notify
+                <Button
+                    variant="light"
+                    color="brand"
+                    size="compact-sm"
+                    radius="md"
+                    onClick={() => openNotifyModal(t)}
+                    leftSection={<IconSend size={14} />}
+                >
+                    Notify Parent
                 </Button>
             )
         }
     ];
 
     return (
-        <div>
-            <div className="page-header" style={{ marginBottom: '30px' }}>
-                <h2>Notifications Hub</h2>
+        <div style={{ padding: '10px' }}>
+            <div className="page-header">
+                <Group align="center" gap="sm">
+                    <IconSpeakerphone size={32} color="var(--gold)" />
+                    <h2>Communications Center</h2>
+                </Group>
+
+                <Group mb="30px" justify="center">
+                    <Button
+                        variant={activeTab === 'holiday' ? 'filled' : 'light'}
+                        color={activeTab === 'holiday' ? 'dark' : 'gray'}
+                        size="lg"
+                        radius="xl"
+                        leftSection={<IconSpeakerphone size={22} />}
+                        onClick={() => setActiveTab('holiday')}
+                        style={{ transition: 'all 0.3s ease' }}
+                    >
+                        Holiday Broadcast
+                    </Button>
+                    <Button
+                        variant={activeTab === 'individual' ? 'filled' : 'light'}
+                        color={activeTab === 'individual' ? 'dark' : 'gray'}
+                        size="lg"
+                        radius="xl"
+                        leftSection={<IconUser size={22} />}
+                        onClick={() => setActiveTab('individual')}
+                        style={{ transition: 'all 0.3s ease' }}
+                    >
+                        Individual Notices
+                    </Button>
+                </Group>
             </div>
-
-            <Group mb="xl" style={{ marginTop: "20px", display: "flex", justifyContent: "center" }}>
-                <Button
-                    variant={activeTab === 'holiday' ? 'filled' : 'light'}
-                    size="md"
-                    leftSection={<IconUsers size={20} />}
-                    onClick={() => setActiveTab('holiday')}
-                >
-                    Holiday Broadcast (All Parents)
-                </Button>
-                <Button
-                    variant={activeTab === 'individual' ? 'filled' : 'light'}
-                    size="md"
-                    leftSection={<IconUser size={20} />}
-                    onClick={() => setActiveTab('individual')}
-                >
-                    Individual / Leave Notices
-                </Button>
-            </Group>
-
             {activeTab === 'holiday' && (
-                <div style={{ display: "flex", justifyContent: "center", marginTop: "20px" }}>
-                    <Card shadow="sm" p="xl" radius="md" withBorder style={{ width: '100%', maxWidth: '900px' }}>
-                        <Alert icon={<IconInfoCircle size={16} />} title="Broadcast Alert" color="blue" style={{ backgroundColor: "#dfdfdf" }} mb="xl">
-                            Sending this will notify the parents of <b>ALL ACTIVE</b> tenants in the system via SMS and Email.
+                <div style={{ display: "flex", justifyContent: "center" }}>
+                    <Card p="40px" radius="40px" withBorder style={{
+                        width: '100%',
+                        maxWidth: "100%",
+                        boxShadow: 'var(--shadow-lg)',
+                        border: '1px solid rgba(0,0,0,0.05)'
+                    }}>
+                        <Alert
+                            icon={<IconInfoCircle size={20} />}
+                            title="Global Broadcast Protocol"
+                            color="brand"
+                            variant="light"
+                            radius="lg"
+                            mb="30px"
+                        >
+                            This action will transmit an automated SMS and Email alert to the parents of <b>ALL ACTIVE</b> residents.
                         </Alert>
+
                         <form onSubmit={handleBroadcastSend}>
-                            <Stack>
+                            <Stack gap="xl" justify="center">
                                 <Group grow>
                                     <TextInput
                                         type="date"
-                                        label="Holiday Start Date"
+                                        label="Commencement Date"
                                         value={holidayStart}
                                         onChange={(e) => setHolidayStart(e.target.value)}
                                         required
+                                        size="md"
+                                        radius="md"
                                     />
                                     <TextInput
                                         type="date"
-                                        label="Holiday End Date"
+                                        label="Conclusion Date"
                                         value={holidayEnd}
                                         onChange={(e) => setHolidayEnd(e.target.value)}
                                         required
+                                        size="md"
+                                        radius="md"
                                     />
                                 </Group>
                                 <TextInput
-                                    label="Holiday Reason / Event Name"
-                                    placeholder="e.g. Diwali, Summer Vacation, Eid"
+                                    label="Occasion / Context"
+                                    placeholder="e.g. Annual Break, Festival Holiday"
                                     value={holidayReason}
                                     onChange={(e) => setHolidayReason(e.target.value)}
                                     required
+                                    size="md"
+                                    radius="md"
                                 />
-                                <Paper p="md" bg="gray.0" radius="md" withBorder>
-                                    <Text size="sm" fw={600} mb={5}>Message Preview:</Text>
-                                    <Text size="sm" color="dimmed" italic>
-                                        "Dear Parent, We would like to inform you that the hostel will remain closed from {holidayStart || '[Start]'} to {holidayEnd || '[End]'} due to {holidayReason || 'holidays'}. Kindly ensure your son/daughter reaches home safely. Thank you."
+
+                                <Paper p="xl" bg="gray.0" radius="24px" withBorder>
+                                    <Text size="xs" fw={800} tt="uppercase" c="dimmed" mb="sm" style={{ letterSpacing: '0.05em' }}>Communication Preview</Text>
+                                    <Text size="sm" c="dark" italic lh={1.6}>
+                                        "Dear Parent, We would like to inform you that the hostel will remain closed from <b>{holidayStart || '[Start Date]'}</b> to <b>{holidayEnd || '[End Date]'}</b> due to <b>{holidayReason || '[Context]'}</b>. Kindly ensure your ward reaches home safely. Best regards, StayWow Management."
                                     </Text>
                                 </Paper>
+
                                 <Button
                                     type="submit"
-                                    size="lg"
+                                    size="xl"
+                                    radius="xl"
                                     loading={broadcastLoading}
                                     leftSection={<IconSend size={20} />}
-                                    w="fit-content"
-                                    style={{ marginLeft: "auto", marginRight: "auto" }}
+                                    className="btn-premium"
+                                    w="100%"
                                 >
-                                    Send Broadcast to All Parents
+                                    Authorize Global Broadcast
                                 </Button>
                             </Stack>
                         </form>
@@ -212,66 +246,78 @@ const NotificationsHub = () => {
             )}
 
             {activeTab === 'individual' && (
-                <DataTable
-                    title="Select Tenant to Notify"
-                    columns={columns}
-                    data={filteredTenants}
-                    loading={loadingTenants}
-                    search={search}
-                    onSearch={setSearch}
-                    totalCount={totalCount}
-                    page={page}
-                    totalPages={Math.ceil(totalCount / pageSize)}
-                    onPageChange={setPage}
-                    pageSize={pageSize}
-                    onPageSizeChange={setPageSize}
-                />
+                <div style={{ animation: 'fadeIn 0.5s ease' }}>
+                    <DataTable
+                        title="Resident Registry"
+                        columns={columns}
+                        data={tenants}
+                        loading={loadingTenants}
+                        search={search}
+                        onSearch={setSearch}
+                        totalCount={totalCount}
+                        page={page}
+                        totalPages={Math.ceil(totalCount / pageSize)}
+                        onPageChange={setPage}
+                        pageSize={pageSize}
+                        onPageSizeChange={setPageSize}
+                    />
+                </div>
             )}
 
             <Modal
                 opened={modalOpened}
                 onClose={() => setModalOpened(false)}
-                title={`Leave Request Notification - ${selectedTenant?.studentName}`}
+                title={<Text fw={900} size="xl">Leave Authorization</Text>}
                 centered
                 size="lg"
+                radius="32px"
+                padding="30px"
             >
                 <form onSubmit={handleIndividualSend}>
-                    <Stack>
+                    <Stack gap="xl">
+                        <Text size="sm" c="dimmed">Drafting leave notification for <b>{selectedTenant?.studentName}</b>.</Text>
+
                         <TextInput
-                            label="Reason for Leave"
-                            placeholder="e.g. Going home for festival, Family function"
+                            label="Reason for Absence"
+                            placeholder="Briefly state the context"
                             value={leaveReason}
                             onChange={(e) => setLeaveReason(e.target.value)}
                             required
+                            size="md"
+                            radius="md"
                         />
 
                         <Group grow>
                             <TextInput
                                 type="date"
-                                label="From Date"
+                                label="From"
                                 value={startDate}
                                 onChange={(e) => setStartDate(e.target.value)}
                                 required
+                                size="md"
+                                radius="md"
                             />
                             <TextInput
                                 type="date"
-                                label="To Date"
+                                label="To"
                                 value={endDate}
                                 onChange={(e) => setEndDate(e.target.value)}
                                 required
+                                size="md"
+                                radius="md"
                             />
                         </Group>
 
-                        <Paper p="sm" bg="gray.0" radius="md" withBorder>
-                            <Text size="xs" fw={600}>Message Preview:</Text>
-                            <Text size="xs" color="dimmed" italic>
-                                Dear Parent, this is to inform you that <b>{selectedTenant?.studentName}</b> has requested leave for <b>{leaveReason || "[Reason]"}</b> from <b>{startDate || "[Start]"}</b> to <b>{endDate || "[End]"}</b>. Please take note of this request. Thank you.
+                        <Paper p="lg" bg="gray.0" radius="20px" withBorder>
+                            <Text size="xs" fw={800} tt="uppercase" c="dimmed" mb={5}>Message Preview</Text>
+                            <Text size="sm" c="dark" italic>
+                                Dear Parent, this is to inform you that <b>{selectedTenant?.studentName}</b> has requested leave for <b>{leaveReason || "[Reason]"}</b> from <b>{startDate || "[Start]"}</b> to <b>{endDate || "[End]"}</b>. Please acknowledge. Thank you.
                             </Text>
                         </Paper>
 
-                        <Group justify="flex-end">
-                            <Button variant="outline" color="gray" onClick={() => setModalOpened(false)}>Cancel</Button>
-                            <Button type="submit" loading={sending} leftSection={<IconSend size={16} />}>Send Notification</Button>
+                        <Group justify="flex-end" mt="md">
+                            <Button variant="subtle" color="gray" onClick={() => setModalOpened(false)} radius="md">Cancel</Button>
+                            <Button type="submit" loading={sending} radius="xl" className="btn-premium" leftSection={<IconSend size={18} />}>Send Notification</Button>
                         </Group>
                     </Stack>
                 </form>

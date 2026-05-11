@@ -196,7 +196,7 @@ const Locations = () => {
             </ActionIcon>
           </Tooltip>
           <Tooltip label="Go To Buildings">
-            <ActionIcon variant="light" color="blue" size="sm" onClick={() => navigate(`/buildings?locationId=${item.locationId}`)}>
+            <ActionIcon variant="light" color="brand" size="sm" onClick={() => navigate(`/buildings?locationId=${item.locationId}`)}>
               <IconArrowRight size={16} />
             </ActionIcon>
           </Tooltip>
@@ -208,14 +208,14 @@ const Locations = () => {
   return (
     <div>
       {/* Header */}
-      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h2>Location Management</h2>
+      <div className="page-header">
+        <h2>Location Infrastructure</h2>
         {!isCreateMode ? (
-          <Button onClick={() => navigate("/locations/create")}>
-            <IconPlus size={18} style={{ marginRight: "5px" }} /> Create Location
+          <Button onClick={() => navigate("/locations/create")} leftSection={<IconPlus size={18} />} size="sm">
+            Create Location
           </Button>
         ) : (
-          <Button onClick={() => navigate("/locations")} variant="outline" leftSection={<IconArrowLeft size={18} />}>
+          <Button onClick={() => navigate("/locations")} variant="outline" leftSection={<IconArrowLeft size={18} />} size="sm">
             Back
           </Button>
         )}

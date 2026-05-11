@@ -133,7 +133,7 @@ const Buildings = () => {
               <Tooltip label="Delete Building"><ActionIcon variant="light" color="red" size="sm" onClick={() => openDeleteModal(b)}><IconTrash size={16} /></ActionIcon></Tooltip>
             </>
           )}
-          <Tooltip label="Go To Floors"><ActionIcon variant="light" color="blue" size="sm" onClick={() => navigate(`/floors?buildingId=${b.buildingId}`)}><IconArrowRight size={16} /></ActionIcon></Tooltip>
+          <Tooltip label="Go To Floors"><ActionIcon variant="light" color="brand" size="sm" onClick={() => navigate(`/floors?buildingId=${b.buildingId}`)}><IconArrowRight size={16} /></ActionIcon></Tooltip>
         </Group>
       )
     }
@@ -141,18 +141,17 @@ const Buildings = () => {
 
   return (
     <div>
-      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 'md' }}>
+      <div className="page-header">
         <Group align="center" gap="xl">
-          <h2>Building Management</h2>
+          <h2>Building Infrastructure</h2>
           {!isCreateMode && (
             <Select 
-              placeholder="Select Location" 
+              placeholder="Filter by Location" 
               data={locations.map(loc => ({ value: loc.locationId, label: loc.locationName }))} 
               value={filterLoc} 
               onChange={setFilterLoc} 
               clearable 
               size="md"
-              style={{ width: '220px' }}
               variant="filled"
             />
           )}

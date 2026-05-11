@@ -176,9 +176,9 @@ const Beds = () => {
 
   return (
     <div>
-      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 'md' }}>
+      <div className="page-header">
         <Group align="center" gap="xl">
-          <h2>Bed Management</h2>
+          <h2>Bed Registry</h2>
           {!isCreateMode && (
             <Group gap="sm">
               <Select 
@@ -188,7 +188,6 @@ const Beds = () => {
                 onChange={val => { setFilterLoc(val); setFilterBld(null); setFilterFlr(null); setFilterRom(null); }} 
                 clearable 
                 size="md"
-                style={{ width: '180px' }}
                 variant="filled"
               />
               <Select 
@@ -199,7 +198,6 @@ const Beds = () => {
                 clearable 
                 disabled={!filterLoc} 
                 size="md"
-                style={{ width: '180px' }}
                 variant="filled"
               />
               <Select 
@@ -210,7 +208,6 @@ const Beds = () => {
                 clearable 
                 disabled={!filterBld} 
                 size="md"
-                style={{ width: '180px' }}
                 variant="filled"
               />
               <Select 
@@ -221,7 +218,6 @@ const Beds = () => {
                 clearable 
                 disabled={!filterFlr} 
                 size="md"
-                style={{ width: '180px' }}
                 variant="filled"
               />
             </Group>

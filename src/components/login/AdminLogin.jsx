@@ -187,14 +187,14 @@ const AdminLogin = () => {
               <h2>Security Update</h2>
               <p>Please set a new password for your administrator account.</p>
             </div>
-            {error && <div className="alert alert-error" style={{ marginBottom: '20px', background: '#fef2f2', color: '#dc2626', padding: '12px', borderRadius: '12px', fontSize: '0.9rem' }}>{error}</div>}
+            {error && <div className="alert alert-error">{error}</div>}
             <form onSubmit={handlePasswordChange}>
               <div className="admin-form-group">
                 <label>Current Password</label>
                 <div className="admin-input-wrapper">
                   <IconLock className="admin-input-icon" size={20} />
                   <input type={showPassword ? "text" : "password"} className="admin-input" required value={passwords.oldPassword} onChange={e => setPasswords({ ...passwords, oldPassword: e.target.value })} />
-                  <div onClick={() => setShowPassword(!showPassword)} style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', cursor: 'pointer', opacity: 0.5 }}>
+                  <div className="password-toggle" onClick={() => setShowPassword(!showPassword)}>
                     {showPassword ? <IconEyeOff size={18} /> : <IconEye size={18} />}
                   </div>
                 </div>
@@ -235,7 +235,7 @@ const AdminLogin = () => {
               <h2>{step === 1 ? 'Forgot Password' : 'Verify Identity'}</h2>
               <p>{step === 1 ? 'Enter your credentials to receive a recovery OTP.' : 'Check your email and enter the OTP below.'}</p>
             </div>
-            {error && <div className="alert alert-error" style={{ marginBottom: '20px', background: '#fef2f2', color: '#dc2626', padding: '12px', borderRadius: '12px', fontSize: '0.9rem' }}>{error}</div>}
+            {error && <div className="alert alert-error">{error}</div>}
             {step === 1 ? (
               <form onSubmit={handleForgotPassword}>
                 <div className="admin-form-group">
@@ -263,7 +263,7 @@ const AdminLogin = () => {
                   <div className="admin-input-wrapper">
                     <IconLock className="admin-input-icon" size={20} />
                     <input type={showPassword ? "text" : "password"} className="admin-input" required value={passwords.newPassword} onChange={e => setPasswords({ ...passwords, newPassword: e.target.value })} />
-                    <div onClick={() => setShowPassword(!showPassword)} style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', cursor: 'pointer', opacity: 0.5 }}>
+                    <div className="password-toggle" onClick={() => setShowPassword(!showPassword)}>
                       {showPassword ? <IconEyeOff size={18} /> : <IconEye size={18} />}
                     </div>
                   </div>
@@ -291,33 +291,33 @@ const AdminLogin = () => {
       {/* Left Section - Hero */}
       <div className="admin-left-section">
         <img
-          src="/home/ssb/.gemini/antigravity/brain/99f2f62b-c360-450e-8678-9fcc534296ed/admin_management_login_bg_1777471795985.png"
+          src="/home/ssb/.gemini/antigravity/brain/5e97ad27-685c-4b4f-8888-0975b7e27c5e/modern_luxury_apartment_lobby_1778490706486.png"
           alt="Admin Hero"
           className="admin-bg-image"
         />
         <div className="admin-left-overlay"></div>
         <div className="admin-left-content">
           <h1>Master Your <br /> Property Portfolio.</h1>
-          <p>The ultimate control center for premium hostel management. Monitor, automate, and scale with ease.</p>
+          <p>The ultimate luxury control center for premium property management. Monitor, automate, and scale with effortless precision.</p>
 
           <div className="admin-feature-grid">
             <div className="admin-feature-card">
-              <IconChartBar size={24} color="#3b82f6" />
+              <IconChartBar size={24} color="var(--accent-gold)" />
               <h3>Real-time Analytics</h3>
               <p>Live occupancy & revenue tracking</p>
             </div>
             <div className="admin-feature-card">
-              <IconUsers size={24} color="#3b82f6" />
+              <IconUsers size={24} color="var(--accent-gold)" />
               <h3>Tenant Hub</h3>
               <p>Automated onboarding & logs</p>
             </div>
             <div className="admin-feature-card">
-              <IconBuildingCommunity size={24} color="#3b82f6" />
+              <IconBuildingCommunity size={24} color="var(--accent-gold)" />
               <h3>Asset Management</h3>
               <p>Inventory & room control</p>
             </div>
             <div className="admin-feature-card">
-              <IconSettings size={24} color="#3b82f6" />
+              <IconSettings size={24} color="var(--accent-gold)" />
               <h3>Global Controls</h3>
               <p>Multi-property configuration</p>
             </div>
@@ -332,8 +332,8 @@ const AdminLogin = () => {
             <div className="admin-logo-box">
               <IconBuildingCommunity size={32} />
             </div>
-            <h2>Admin Login</h2>
-            <p>Access the StayPro control center.</p>
+            <h2>Admin Portal</h2>
+            <p>Experience StayWow property management.</p>
           </div>
 
           <div className="auth-tabs">
@@ -341,11 +341,11 @@ const AdminLogin = () => {
             <button className={`auth-tab ${mode === 'signup' ? 'active' : ''}`} onClick={() => setMode('signup')}>Sign Up</button>
           </div>
 
-          {error && <div className="alert alert-error" style={{ marginBottom: '20px', background: '#fef2f2', color: '#dc2626', padding: '12px', borderRadius: '12px', fontSize: '0.9rem' }}>{error}</div>}
+          {error && <div className="alert alert-error">{error}</div>}
 
           <form onSubmit={mode === 'login' ? handleLogin : handleRegister}>
             <div className="admin-form-group">
-              <label>User Name /Mobile No / Email</label>
+              <label>Identity</label>
               <div className="admin-input-wrapper">
                 <IconUser className="admin-input-icon" size={20} />
                 <input className="admin-input" name="username" value={formData.username} onChange={handleInputChange} required placeholder="Username, Email or Mobile" />
@@ -387,17 +387,17 @@ const AdminLogin = () => {
             {mode === 'login' && (
               <>
                 <div className="admin-form-group">
-                  <label>PASSWORD</label>
+                  <label>Password</label>
                   <div className="admin-input-wrapper">
                     <IconLock className="admin-input-icon" size={20} />
                     <input type={showPassword ? "text" : "password"} className="admin-input" name="password" value={formData.password} onChange={handleInputChange} required placeholder="••••••••" />
-                    <div onClick={() => setShowPassword(!showPassword)} style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', cursor: 'pointer', opacity: 0.5 }}>
+                    <div className="password-toggle" onClick={() => setShowPassword(!showPassword)}>
                       {showPassword ? <IconEyeOff size={18} /> : <IconEye size={18} />}
                     </div>
                   </div>
                 </div>
-                <div style={{ textAlign: 'right', marginTop: '-10px', marginBottom: '20px' }}>
-                  <span style={{ color: '#2563eb', fontSize: '0.85rem', cursor: 'pointer', fontWeight: 600 }} onClick={() => setMode('forgot')}>Forgot Password?</span>
+                <div className="forgot-password-link">
+                  <span onClick={() => setMode('forgot')}>Forgot Password?</span>
                 </div>
               </>
             )}

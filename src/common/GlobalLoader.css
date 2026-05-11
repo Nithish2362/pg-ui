@@ -1,20 +1,19 @@
 .loader {
-  width: 90px;
-  height: 12px;
-  --c: #3f92c5 50%, #0000 0;
-  background: 
-    linear-gradient( 90deg, var(--c)) 0 0,
-    linear-gradient(-90deg, var(--c)) 0 0;
-  background-size: 20px 100%;
-  background-repeat: repeat-x;
-  animation: l10 1s infinite linear;
-}
-@keyframes l10 {
-    100% {background-position: -20px 0, 20px 0}
+  width: 50px;
+  --b: 8px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  padding: 1px;
+  background: conic-gradient(#0000 10%, #c5a059) content-box;
+  -webkit-mask: repeating-conic-gradient(#0000 0deg, #000 1deg 20deg, #0000 21deg 36deg),
+    radial-gradient(farthest-side, #0000 calc(100% - var(--b) - 1px), #000 calc(100% - var(--b)));
+  -webkit-mask-composite: destination-in;
+  mask-composite: intersect;
+  animation: l4 1s infinite steps(10);
 }
 
-/* Fix for layout shift when overlay is active */
-body.loading-active {
-    overflow: hidden !important;
-    padding-right: 0px !important; /* Adjust if scrollbar width is known, or use scrollbar-gutter */
+@keyframes l4 {
+  to {
+    transform: rotate(1turn);
+  }
 }

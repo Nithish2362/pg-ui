@@ -54,7 +54,10 @@ const Expenses = () => {
     try {
       setLoading(true);
       let url = `/admin/expenses/view?page=${page - 1}&pageSize=${pageSize}&searchTerm=${debouncedSearch}`;
-      if (!isStaff && filterBld) url += `&buildingId=${filterBld}`;
+      if (!isStaff) {
+        if (filterLoc) url += `&locationId=${filterLoc}`;
+        if (filterBld) url += `&buildingId=${filterBld}`;
+      }
 
       const [expenseRes, locationRes, buildingRes] = await Promise.all([
         api.get(url),
@@ -72,7 +75,7 @@ const Expenses = () => {
     }
   };
 
-  useEffect(() => { load(); }, [page, debouncedSearch, pageSize, filterBld]);
+  useEffect(() => { load(); }, [page, debouncedSearch, pageSize, filterLoc, filterBld]);
 
   const save = async (e) => {
     e.preventDefault();
@@ -146,7 +149,7 @@ const Expenses = () => {
 
   return (
     <div>
-      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 'md' }}>
+      <div className="page-header">
         <Group align="center" gap="xl">
           <h2>{isStaff ? "Building Expenses" : "Global Expense Management"}</h2>
           {!isStaff && (
@@ -158,7 +161,6 @@ const Expenses = () => {
                 onChange={val => { setFilterLoc(val); setFilterBld(null); }}
                 clearable
                 size="md"
-                style={{ width: '220px' }}
                 variant="filled"
               />
               <Select
@@ -169,7 +171,6 @@ const Expenses = () => {
                 clearable
                 disabled={!filterLoc}
                 size="md"
-                style={{ width: '220px' }}
                 variant="filled"
               />
             </Group>

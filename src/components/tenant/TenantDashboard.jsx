@@ -111,7 +111,7 @@ const TenantDashboard = () => {
     if (loading) return <div style={{ padding: '2rem' }}><Skeleton height={200} mb="xl" /><SimpleGrid cols={2}><Skeleton height={150} /><Skeleton height={150} /></SimpleGrid></div>;
 
     return (
-        <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '20px' }}>
+        <div style={{ maxWidth: "100%", margin: '0 auto', padding: '20px' }}>
             <div className="page-header" style={{ marginBottom: '30px' }}>
                 <h2>Welcome, {data?.studentName} 👋</h2>
                 <Text color="dimmed">Portal for PG Management & Notifications</Text>
@@ -141,7 +141,7 @@ const TenantDashboard = () => {
                 <Card shadow="sm" padding="xl" radius="md" withBorder>
                     <Group justify="space-between" mb="md">
                         <Text fw={700} size="lg">My Stay Details</Text>
-                        <ThemeIcon color="blue" variant="light" size="xl" radius="md">
+                        <ThemeIcon color="brand" variant="light" size="xl" radius="md">
                             <IconUser size={24} />
                         </ThemeIcon>
                     </Group>
@@ -174,7 +174,7 @@ const TenantDashboard = () => {
                 </Text>
                 <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
                     <Button
-                        size="lg" color="orange" variant="light"
+                        size="lg" color="brand" variant="light"
                         leftSection={<IconCash size={20} />}
                         onClick={handlePayCash} loading={paying}
                         style={{ height: '60px', fontSize: '1.1rem' }}
@@ -204,7 +204,7 @@ const TenantDashboard = () => {
                             <Paper key={i} p="md" withBorder radius="md">
                                 <Group justify="space-between">
                                     <Group>
-                                        <ThemeIcon color={p.paymentMode === 'CASH' ? 'orange' : 'teal'} variant="light">
+                                        <ThemeIcon color={p.paymentMode === 'CASH' ? 'brand' : 'teal'} variant="light">
                                             {p.paymentMode === 'CASH' ? <IconCash size={16} /> : <IconCreditCard size={16} />}
                                         </ThemeIcon>
                                         <div>

@@ -133,7 +133,7 @@ const CreateTenant = () => {
   ));
 
   return (
-    <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
+    <div style={{ padding: '20px', maxWidth: "100%", margin: '0 auto' }}>
       <Group justify="space-between" mb="lg">
         <div>
           <Breadcrumbs mb="xs">{breadcrumbs}</Breadcrumbs>
@@ -159,7 +159,7 @@ const CreateTenant = () => {
           <Grid.Col span={{ base: 12, lg: 8 }}>
             <Card withBorder padding="xl" radius="md" shadow="sm">
               <Group mb="xl">
-                <IconUserPlus size={24} color="var(--mantine-color-blue-6)" />
+                <IconUserPlus size={24} color="var(--gold)" />
                 <Title order={4}>Resident Details</Title>
               </Group>
 
@@ -216,7 +216,7 @@ const CreateTenant = () => {
             <div style={{ position: 'sticky', top: '20px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
               <Card withBorder padding="xl" radius="md" shadow="sm">
                 <Group mb="xl">
-                  <IconHome size={24} color="var(--mantine-color-blue-6)" />
+                  <IconHome size={24} color="var(--gold)" />
                   <Title order={4}>Room Assignment</Title>
                 </Group>
 
@@ -235,7 +235,7 @@ const CreateTenant = () => {
 
               <Card withBorder padding="xl" radius="md" shadow="sm">
                 <Group mb="xl">
-                  <IconBed size={24} color="var(--mantine-color-blue-6)" />
+                  <IconBed size={24} color="var(--gold)" />
                   <Title order={4}>Payment Details</Title>
                 </Group>
 

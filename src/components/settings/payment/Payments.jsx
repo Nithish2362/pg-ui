@@ -18,21 +18,21 @@ const PaymentReceipt = React.forwardRef(({ receipt }, ref) => {
     <div
       ref={ref}
       style={{
-        fontFamily: "'Segoe UI', sans-serif",
-        color: "#1e293b",
+        fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif",
+        color: "#1a1a1a",
         background: "#fff",
       }}
     >
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
         <div>
-          <h1 style={{ margin: 0, fontSize: "28px", color: "#3f92c5", display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <IconBuildingCommunity size={32} color="#3f92c5" />
+          <h1 style={{ margin: 0, fontSize: "28px", color: "#c5a059", display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <IconBuildingCommunity size={32} color="#c5a059" />
             <span style={{
               fontWeight: 900,
               fontSize: '1.5rem',
               letterSpacing: '-0.5px',
-              background: 'linear-gradient(to right, #3f92c5, #13415a)',
+              background: 'linear-gradient(to right, #c5a059, #1a1a1a)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent'
             }}>
@@ -91,7 +91,7 @@ const PaymentReceipt = React.forwardRef(({ receipt }, ref) => {
             ].filter(Boolean).map(([label, value]) => (
               <tr key={label}>
                 <td style={{ padding: "6px 0", color: "#64748b", width: "40%" }}>{label}</td>
-                <td style={{ padding: "6px 0", fontWeight: label === "Amount Paid" ? "bold" : 500, fontSize: label === "Amount Paid" ? "18px" : "14px", color: label === "Amount Paid" ? "#6366f1" : "#1e293b" }}>{value}</td>
+                <td style={{ padding: "6px 0", fontWeight: label === "Amount Paid" ? "bold" : 500, fontSize: label === "Amount Paid" ? "18px" : "14px", color: label === "Amount Paid" ? "#c5a059" : "#1a1a1a" }}>{value}</td>
               </tr>
             ))}
           </tbody>
@@ -337,11 +337,11 @@ const Payments = () => {
   const columns = [
     { header: "Tenant Name", key: "tenantName", render: (val) => <span style={{ fontWeight: 600 }}>{val}</span> },
     { header: "Tenant ID", key: "tenantPgNumber", render: (val) => <span style={{ color: "#64748b", fontSize: "12px" }}>{val}</span> },
-    { header: "Amount", key: "amount", render: (val) => <strong style={{ color: "#6366f1", fontSize: "16px" }}>₹{val}</strong> },
+    { header: "Amount", key: "amount", render: (val) => <strong style={{ color: "#c5a059", fontSize: "16px", fontFamily: "'Outfit', sans-serif" }}>₹{val}</strong> },
     { header: "Date", key: "paymentDate", render: (val) => <span style={{ fontSize: "13px" }}>{val}</span> },
     {
       header: "Mode", key: "paymentMode", render: (val) => (
-        <span style={{ background: "#f1f5f9", padding: "4px 10px", borderRadius: "20px", fontSize: "12px", fontWeight: 600 }}>
+        <span style={{ background: "#f5f5f5", color: "#1a1a1a", padding: "4px 10px", borderRadius: "8px", fontSize: "11px", fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" }}>
           {val}
         </span>
       )
@@ -369,7 +369,7 @@ const Payments = () => {
         <Group gap="xs" justify="center">
           {activeTab === "UNAPPROVED" && (
             <>
-              <ActionIcon variant="light" color="blue" title="View Details" onClick={() => openReceipt(p)}>
+              <ActionIcon variant="light" color="brand" title="View Details" onClick={() => openReceipt(p)}>
                 <IconEye size={18} />
               </ActionIcon>
               <Button variant="filled" color="green" size="compact-xs" onClick={() => approvePayment(p)}>
@@ -384,7 +384,7 @@ const Payments = () => {
           )}
           {activeTab === "APPROVED" && (
             <>
-              <ActionIcon variant="light" color="blue" title="View Details" onClick={() => openReceipt(p)}>
+              <ActionIcon variant="light" color="brand" title="View Details" onClick={() => openReceipt(p)}>
                 <IconEye size={18} />
               </ActionIcon>
             </>
@@ -397,9 +397,12 @@ const Payments = () => {
   return (
     <div>
       {/* HEADER */}
-      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 'md' }}>
+      <div className="page-header">
         <Group align="center" gap="xl">
-          <h2>Payment Management</h2>
+          <Group gap="sm">
+            <IconCurrencyRupee size={32} color="var(--gold)" />
+            <h2>Financial Ledger</h2>
+          </Group>
           {!isCreateMode && (
             <Group gap="sm">
               <Select
@@ -409,7 +412,6 @@ const Payments = () => {
                 onChange={val => { setFilterLoc(val); setFilterBld(null); }}
                 clearable
                 size="md"
-                style={{ width: '220px' }}
                 variant="filled"
               />
               <Select
@@ -420,7 +422,6 @@ const Payments = () => {
                 clearable
                 disabled={!filterLoc}
                 size="md"
-                style={{ width: '220px' }}
                 variant="filled"
               />
             </Group>
@@ -428,8 +429,8 @@ const Payments = () => {
         </Group>
 
         {!isCreateMode && (
-          <Button onClick={() => navigate("/payments/create")} size="sm">
-            <IconPlus size={18} style={{ marginRight: "5px" }} /> Record Payment
+          <Button leftSection={<IconPlus size={18} />} onClick={() => navigate("/payments/create")} size="sm">
+            Record Payment
           </Button>
         )}
       </div>
@@ -438,29 +439,25 @@ const Payments = () => {
       <Tabs
         value={activeTab}
         onChange={setActiveTab}
-        mb={0}
-        styles={{
-          tab: { padding: '12px 20px', fontWeight: 600 },
-          list: { borderBottom: 'none' }
-        }}
+        mb="md"
       >
         <Tabs.List>
-          <Tabs.Tab value="PENDING" color="yellow">
+          <Tabs.Tab value="PENDING" color="brand">
             <Group gap={8}>
               <span>Pending</span>
-              <Badge variant="filled" color="yellow" size="sm">{counts.PENDING || 0}</Badge>
+              <Badge variant="filled" color="brand" size="sm">{counts.PENDING || 0}</Badge>
             </Group>
           </Tabs.Tab>
-          <Tabs.Tab value="UNAPPROVED" color="blue">
+          <Tabs.Tab value="UNAPPROVED" color="brand">
             <Group gap={8}>
               <span>Unapproved</span>
-              <Badge variant="filled" color="blue" size="sm">{counts.UNAPPROVED || 0}</Badge>
+              <Badge variant="filled" color="brand" size="sm">{counts.UNAPPROVED || 0}</Badge>
             </Group>
           </Tabs.Tab>
-          <Tabs.Tab value="APPROVED" color="teal">
+          <Tabs.Tab value="APPROVED" color="brand">
             <Group gap={8}>
               <span>Approved</span>
-              <Badge variant="filled" color="teal" size="sm">{counts.APPROVED || 0}</Badge>
+              <Badge variant="filled" color="brand" size="sm">{counts.APPROVED || 0}</Badge>
             </Group>
           </Tabs.Tab>
         </Tabs.List>
@@ -476,13 +473,13 @@ const Payments = () => {
           <Tabs.Tab value="ADVANCE">
             <Group gap={8}>
               <span>Advance Payments</span>
-              <Badge variant="light" color="violet" size="sm">{counts[`ADVANCE_${activeTab}`] || 0}</Badge>
+              <Badge variant="filled" color="brand" size="sm">{counts[`ADVANCE_${activeTab}`] || 0}</Badge>
             </Group>
           </Tabs.Tab>
           <Tabs.Tab value="RENT">
             <Group gap={8}>
               <span>Rent Payments</span>
-              <Badge variant="light" color="cyan" size="sm">{counts[`RENT_${activeTab}`] || 0}</Badge>
+              <Badge variant="filled" color="brand" size="sm">{counts[`RENT_${activeTab}`] || 0}</Badge>
             </Group>
           </Tabs.Tab>
         </Tabs.List>
@@ -727,10 +724,10 @@ const Payments = () => {
           </Paper>
           <Group justify="center" mt="md">
             {selectedReceipt?.status === 'APPROVED' && (
-              <Button size="sm" styles={{ width: "150px" }} leftSection={<IconPrinter size={20} />} onClick={printReceipt}>Print Receipt</Button>
+              <Button size="sm" leftSection={<IconPrinter size={20} />} onClick={printReceipt}>Print Receipt</Button>
             )}
             {selectedReceipt?.screenshotUrl && (
-              <Button size="sm" color="teal" styles={{ width: "180px" }} onClick={() => window.open(selectedReceipt.screenshotUrl, '_blank')}>View Screenshot</Button>
+              <Button size="sm" color="teal" onClick={() => window.open(selectedReceipt.screenshotUrl, '_blank')}>View Screenshot</Button>
             )}
           </Group>
         </Stack>

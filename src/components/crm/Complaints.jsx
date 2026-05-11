@@ -82,9 +82,9 @@ const Complaints = () => {
   return (
     <div>
       <div className="page-header">
-        <Group gap="xs">
-          <IconAlertTriangle size={24} color="#fa5252" />
-          <h2 style={{ margin: 0 }}>Complaints Management</h2>
+        <Group align="center" gap="sm">
+          <IconAlertTriangle size={32} color="#fa5252" />
+          <h2>Complaints Registry</h2>
         </Group>
       </div>
 
