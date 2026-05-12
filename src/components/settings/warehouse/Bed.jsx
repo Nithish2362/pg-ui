@@ -177,13 +177,13 @@ const Beds = () => {
   return (
     <div>
       <div className="page-header">
-        <Group align="center" gap="xl" wrap="nowrap" style={{ overflowX: 'auto', overflowY: 'hidden', flex: 1, paddingBottom: '5px', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-          <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', whiteSpace: 'nowrap', flexShrink: 0 }}>
+        <Group align="center" gap="xl">
+          <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <IconBed size={28} color="var(--gold)" />
             Bed Registry
           </h2>
           {!isCreateMode && (
-            <Group gap="xs" wrap="nowrap">
+            <Group gap="xs">
               <Select
                 placeholder="Select Location"
                 data={locations.map(l => ({ value: l.locationId, label: l.locationName }))}
@@ -192,7 +192,7 @@ const Beds = () => {
                 clearable
                 size="md"
                 variant="filled"
-                style={{ width: '180px', flexShrink: 0 }}
+                style={{ width: '180px' }}
               />
               <Select
                 placeholder="Select Building"
@@ -203,7 +203,7 @@ const Beds = () => {
                 disabled={!filterLoc}
                 size="md"
                 variant="filled"
-                style={{ width: '180px', flexShrink: 0 }}
+                style={{ width: '180px' }}
               />
               <Select
                 placeholder="Select Floor"
@@ -214,7 +214,7 @@ const Beds = () => {
                 disabled={!filterBld}
                 size="md"
                 variant="filled"
-                style={{ width: '180px', flexShrink: 0 }}
+                style={{ width: '180px' }}
               />
               <Select
                 placeholder="Select Room"
@@ -225,7 +225,7 @@ const Beds = () => {
                 disabled={!filterFlr}
                 size="md"
                 variant="filled"
-                style={{ width: '180px', flexShrink: 0 }}
+                style={{ width: '180px' }}
               />
             </Group>
           )}

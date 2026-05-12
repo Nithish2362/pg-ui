@@ -209,12 +209,10 @@ const Locations = () => {
     <div>
       {/* Header */}
       <div className="page-header">
-        <Group align="center" gap="xl" wrap="nowrap" style={{ overflowX: 'auto', overflowY: 'hidden', flex: 1, paddingBottom: '5px', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-          <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', whiteSpace: 'nowrap', flexShrink: 0 }}>
-            <IconMapPin size={28} color="var(--gold)" />
-            Location Infrastructure
-          </h2>
-        </Group>
+        <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <IconMapPin size={28} color="var(--gold)" />
+          Location Infrastructure
+        </h2>
         {!isCreateMode ? (
           <Button onClick={() => navigate("/locations/create")} leftSection={<IconPlus size={18} />} size="sm">
             Create Location

@@ -79,11 +79,11 @@ const Dashboard = () => {
   return (
     <>
       <div className="page-header">
-        <Group align="center" gap="sm">
-          <IconSpeakerphone size={32} color="var(--gold)" />
-          <h2>Business Intelligence</h2>
-        </Group>
 
+        <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <IconSpeakerphone size={28} color="var(--gold)" />
+          Business Intelligence
+        </h2>
         {!isStaff && (
           <Group gap="sm">
             <Select

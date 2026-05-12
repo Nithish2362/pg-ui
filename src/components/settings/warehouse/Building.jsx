@@ -142,21 +142,20 @@ const Buildings = () => {
   return (
     <div>
       <div className="page-header">
-        <Group align="center" gap="xl" wrap="nowrap" style={{ overflowX: 'auto', overflowY: 'hidden', flex: 1, paddingBottom: '5px', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-          <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', whiteSpace: 'nowrap', flexShrink: 0 }}>
+        <Group align="center" gap="xl">
+          <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <IconBuilding size={28} color="var(--gold)" />
             Building Infrastructure
           </h2>
           {!isCreateMode && (
-            <Select
-              placeholder="Filter by Location"
-              data={locations.map(loc => ({ value: loc.locationId, label: loc.locationName }))}
-              value={filterLoc}
-              onChange={setFilterLoc}
-              clearable
+            <Select 
+              placeholder="Filter by Location" 
+              data={locations.map(loc => ({ value: loc.locationId, label: loc.locationName }))} 
+              value={filterLoc} 
+              onChange={setFilterLoc} 
+              clearable 
               size="md"
               variant="filled"
-              style={{ flexShrink: 0 }}
             />
           )}
         </Group>

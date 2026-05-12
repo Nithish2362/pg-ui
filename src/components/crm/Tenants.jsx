@@ -168,13 +168,13 @@ const Tenants = () => {
   return (
     <div>
       <div className="page-header">
-        <Group align="center" gap="xl" wrap="nowrap" style={{ overflowX: 'auto', overflowY: 'hidden', flex: 1, paddingBottom: '5px', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-          <Group gap="sm" wrap="nowrap" style={{ flexShrink: 0 }}>
+        <Group align="center" gap="xl">
+          <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <IconUsers size={28} color="var(--gold)" />
-            <h2 style={{ margin: 0, whiteSpace: 'nowrap' }}>Residents</h2>
-          </Group>
+            Residents
+          </h2>
           {!isStaff && (
-            <Group gap="xs" wrap="nowrap">
+            <Group gap="xs">
               <Select
                 placeholder="Select Location"
                 data={locations.map(l => ({ value: l.locationId, label: l.locationName }))}
@@ -183,7 +183,7 @@ const Tenants = () => {
                 clearable
                 size="md"
                 variant="filled"
-                style={{ width: '200px', flexShrink: 0 }}
+                style={{ width: '200px' }}
               />
               <Select
                 placeholder="Select Building"
@@ -194,7 +194,7 @@ const Tenants = () => {
                 disabled={!filterLoc}
                 size="md"
                 variant="filled"
-                style={{ width: '200px', flexShrink: 0 }}
+                style={{ width: '200px' }}
               />
             </Group>
           )}

@@ -150,13 +150,13 @@ const Floors = () => {
   return (
     <div>
       <div className="page-header">
-        <Group align="center" gap="xl" wrap="nowrap" style={{ overflowX: 'auto', overflowY: 'hidden', flex: 1, paddingBottom: '5px', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-          <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', whiteSpace: 'nowrap', flexShrink: 0 }}>
+        <Group align="center" gap="xl">
+          <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <IconStack size={28} color="var(--gold)" />
             Floor Logistics
           </h2>
           {!isCreateMode && (
-            <Group gap="sm" wrap="nowrap">
+            <Group gap="sm">
               <Select
                 placeholder="Select Location"
                 data={locations.map(l => ({ value: l.locationId, label: l.locationName }))}
@@ -165,7 +165,6 @@ const Floors = () => {
                 clearable
                 size="md"
                 variant="filled"
-                style={{ flexShrink: 0 }}
               />
               <Select
                 placeholder="Select Building"
@@ -176,7 +175,6 @@ const Floors = () => {
                 disabled={!filterLoc}
                 size="md"
                 variant="filled"
-                style={{ flexShrink: 0 }}
               />
             </Group>
           )}

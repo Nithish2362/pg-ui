@@ -367,10 +367,10 @@ const Payments = () => {
     <div>
       <div className="page-header">
         <Group align="center" gap="xl">
-          <Group gap="sm">
-            <IconCurrencyRupee size={32} color="var(--gold)" />
-            <h2 style={{ margin: 0 }}>Financial Ledger</h2>
-          </Group>
+          <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <IconCurrencyRupee size={28} color="var(--gold)" />
+            Financial Ledger
+          </h2>
           {!isCreateMode && (
             <Group gap="xs">
               <Select
@@ -410,8 +410,12 @@ const Payments = () => {
 
       <Tabs value={activeSection} onChange={setActiveSection} mb="xl">
         <Tabs.List>
-          <Tabs.Tab value="ADVANCE">Advance Payments</Tabs.Tab>
-          <Tabs.Tab value="RENT">Rent Payments</Tabs.Tab>
+          <Tabs.Tab value="ADVANCE">
+            Advance Payments <Badge variant="filled" ml={5} size="sm" color="brand">{activeTab === 'PENDING' ? counts.ADVANCE_PENDING : activeTab === 'UNAPPROVED' ? counts.ADVANCE_UNAPPROVED : counts.ADVANCE_APPROVED || 0}</Badge>
+          </Tabs.Tab>
+          <Tabs.Tab value="RENT">
+            Rent Payments <Badge variant="filled" ml={5} size="sm" color="brand">{activeTab === 'PENDING' ? counts.RENT_PENDING : activeTab === 'UNAPPROVED' ? counts.RENT_UNAPPROVED : counts.RENT_APPROVED || 0}</Badge>
+          </Tabs.Tab>
         </Tabs.List>
       </Tabs>
 
