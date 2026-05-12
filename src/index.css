@@ -134,11 +134,17 @@ h4 {
     padding: 0 10px;
   }
 
-  .page-header .mantine-Group-root {
+  .page-header .mantine-Group-root:not(.keep-row) {
     width: 100%;
     justify-content: center;
-    flex-direction: column;
     gap: 10px;
+  }
+
+  /* Specific fix for title + icon to always stay as a row */
+  .page-header .mantine-Group-root {
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    justify-content: flex-start !important;
   }
 
   .page-header .mantine-Select-root,

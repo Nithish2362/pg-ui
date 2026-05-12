@@ -140,9 +140,11 @@ const NotificationsHub = () => {
     return (
         <div style={{ padding: '10px' }}>
             <div className="page-header">
-                <Group align="center" gap="sm">
-                    <IconSpeakerphone size={32} color="var(--gold)" />
-                    <h2>Communications Center</h2>
+                <Group align="center" gap="xl" wrap="nowrap" style={{ overflowX: 'auto', overflowY: 'hidden', flex: 1, paddingBottom: '5px', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                    <Group gap="sm" wrap="nowrap" style={{ flexShrink: 0 }}>
+                        <IconSpeakerphone size={32} color="var(--gold)" />
+                        <h2 style={{ margin: 0, whiteSpace: 'nowrap' }}>Communications Center</h2>
+                    </Group>
                 </Group>
 
                 <Group justify="center">
