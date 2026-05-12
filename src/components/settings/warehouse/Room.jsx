@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Modal, Button, TextInput, Select, Text, Group, Badge, NumberInput, ActionIcon, Tooltip, Stack } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useNavigate, useLocation } from "react-router-dom";
-import { IconArrowRight, IconArrowLeft, IconEdit, IconTrash, IconPlus } from "@tabler/icons-react";
+import { IconArrowRight, IconArrowLeft, IconEdit, IconTrash, IconPlus, IconDoorEnter } from "@tabler/icons-react";
 import api from "../../../api/Interceptor";
 import notify from "../../utils/Notification";
 import useDebounce from "../../../common/useDebounce";
@@ -194,10 +194,13 @@ const Rooms = () => {
   return (
     <div>
       <div className="page-header">
-        <Group align="center" gap="xl">
-          <h2 style={{ margin: 0 }}>Room Registry</h2>
+        <Group align="center" gap="xl" wrap="nowrap" style={{ overflowX: 'auto', overflowY: 'hidden', flex: 1, paddingBottom: '5px', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', whiteSpace: 'nowrap', flexShrink: 0 }}>
+            <IconDoorEnter size={28} color="var(--gold)" />
+            Room Registry
+          </h2>
           {!isCreateMode && (
-            <Group gap="xs">
+            <Group gap="xs" wrap="nowrap">
               <Select
                 placeholder="Select Location"
                 data={locations.map(l => ({ value: l.locationId, label: l.locationName }))}
@@ -206,7 +209,7 @@ const Rooms = () => {
                 clearable
                 size="md"
                 variant="filled"
-                style={{ width: '180px' }}
+                style={{ width: '180px', flexShrink: 0 }}
               />
               <Select
                 placeholder="Select Building"
@@ -217,7 +220,7 @@ const Rooms = () => {
                 disabled={!filterLoc}
                 size="md"
                 variant="filled"
-                style={{ width: '180px' }}
+                style={{ width: '180px', flexShrink: 0 }}
               />
               <Select
                 placeholder="Select Floor"
@@ -228,7 +231,7 @@ const Rooms = () => {
                 disabled={!filterBld}
                 size="md"
                 variant="filled"
-                style={{ width: '180px' }}
+                style={{ width: '180px', flexShrink: 0 }}
               />
             </Group>
           )}

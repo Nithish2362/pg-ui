@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Modal, Button, ActionIcon, Tooltip, Group } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useNavigate, useLocation } from "react-router-dom";
-import { IconArrowRight, IconArrowLeft, IconEdit, IconTrash, IconPlus } from "@tabler/icons-react";
+import { IconPlus, IconSearch, IconEdit, IconTrash, IconArrowLeft, IconArrowRight, IconMapPin } from "@tabler/icons-react";
 import api from "../../../api/Interceptor";
 import indiaLocations from "./StatesAndDistricts.json";
 import notify from "../../utils/Notification";
@@ -209,7 +209,10 @@ const Locations = () => {
     <div>
       {/* Header */}
       <div className="page-header">
-        <h2>Location Infrastructure</h2>
+        <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <IconMapPin size={28} color="var(--gold)" />
+          Location Infrastructure
+        </h2>
         {!isCreateMode ? (
           <Button onClick={() => navigate("/locations/create")} leftSection={<IconPlus size={18} />} size="sm">
             Create Location

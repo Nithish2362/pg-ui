@@ -8,4 +8,6 @@ export const END_POINTS = {
   ADMIN_TENANTS: '/admin/tenants',
   ADMIN_PAYMENTS: '/admin/payments',
   ADMIN_BEDS: '/admin/beds',
+  USER_PROFILE: '/user/profile',
+  USER_UPDATE_PROFILE: '/user/update-profile',
 };

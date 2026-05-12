@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Modal, Button, TextInput, Select, Text, Group, Badge, Switch, ActionIcon, Tooltip } from "@mantine/core";
-import { IconArrowLeft, IconEdit, IconTrash, IconPlus } from "@tabler/icons-react";
+import { IconArrowLeft, IconEdit, IconTrash, IconPlus, IconBed } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
 import { useLocation, useNavigate } from "react-router-dom";
 import api from "../../../api/Interceptor";
@@ -177,10 +177,13 @@ const Beds = () => {
   return (
     <div>
       <div className="page-header">
-        <Group align="center" gap="xl">
-          <h2 style={{ margin: 0 }}>Bed Registry</h2>
+        <Group align="center" gap="xl" wrap="nowrap" style={{ overflowX: 'auto', overflowY: 'hidden', flex: 1, paddingBottom: '5px', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', whiteSpace: 'nowrap', flexShrink: 0 }}>
+            <IconBed size={28} color="var(--gold)" />
+            Bed Registry
+          </h2>
           {!isCreateMode && (
-            <Group gap="xs">
+            <Group gap="xs" wrap="nowrap">
               <Select
                 placeholder="Select Location"
                 data={locations.map(l => ({ value: l.locationId, label: l.locationName }))}
@@ -189,7 +192,7 @@ const Beds = () => {
                 clearable
                 size="md"
                 variant="filled"
-                style={{ width: '180px' }}
+                style={{ width: '180px', flexShrink: 0 }}
               />
               <Select
                 placeholder="Select Building"
@@ -200,7 +203,7 @@ const Beds = () => {
                 disabled={!filterLoc}
                 size="md"
                 variant="filled"
-                style={{ width: '180px' }}
+                style={{ width: '180px', flexShrink: 0 }}
               />
               <Select
                 placeholder="Select Floor"
@@ -211,7 +214,7 @@ const Beds = () => {
                 disabled={!filterBld}
                 size="md"
                 variant="filled"
-                style={{ width: '180px' }}
+                style={{ width: '180px', flexShrink: 0 }}
               />
               <Select
                 placeholder="Select Room"
@@ -222,7 +225,7 @@ const Beds = () => {
                 disabled={!filterFlr}
                 size="md"
                 variant="filled"
-                style={{ width: '180px' }}
+                style={{ width: '180px', flexShrink: 0 }}
               />
             </Group>
           )}

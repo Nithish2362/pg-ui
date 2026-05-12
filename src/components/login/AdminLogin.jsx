@@ -25,7 +25,8 @@ import {
 
 const AdminLogin = () => {
   const [mode, setMode] = useState('login'); // 'login', 'signup', or 'forgot'
-  const [step, setStep] = useState(1); // 1: Request OTP, 2: Reset
+  const [loginType, setLoginType] = useState('password'); // 'password' or 'otp'
+  const [step, setStep] = useState(1); // 1: Request OTP, 2: Reset / Verify
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     username: '',
@@ -46,7 +47,18 @@ const AdminLogin = () => {
   const [loading, setLoading] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [tempUsername, setTempUsername] = useState('');
+  const [resendTimer, setResendTimer] = useState(0);
   const navigate = useNavigate();
+
+  React.useEffect(() => {
+    let interval;
+    if (resendTimer > 0) {
+      interval = setInterval(() => {
+        setResendTimer((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [resendTimer]);
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -76,6 +88,11 @@ const AdminLogin = () => {
           navigate('/dashboard');
         }
       }
+      notify({
+        title: 'Login Successful',
+        message: `Welcome back, ${loginData.name || loginData.username}!`,
+        success: true
+      });
     } catch (err) {
       setError(err.response?.data?.message || 'Invalid credentials');
     } finally {
@@ -113,6 +130,7 @@ const AdminLogin = () => {
     try {
       await api.post('/auth/forgot-password', { loginId: formData.loginId });
       setStep(2);
+      setResendTimer(30);
       notify({
         title: 'OTP Sent',
         message: 'OTP sent to your registered email.',
@@ -148,6 +166,85 @@ const AdminLogin = () => {
       setStep(1);
     } catch (err) {
       setError(err.response?.data?.message || 'Reset failed.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSendLoginOtp = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+    try {
+      await api.post('/auth/send-login-otp', { loginId: formData.username });
+      setStep(2);
+      setResendTimer(30);
+      notify({
+        title: 'OTP Sent',
+        message: 'Login OTP sent to your registered email/mobile.',
+        success: true
+      });
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to send OTP.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (resendTimer > 0) return;
+    setError('');
+    try {
+      setLoading(true);
+      if (mode === 'forgot') {
+        await api.post('/auth/forgot-password', { loginId: formData.loginId });
+      } else {
+        await api.post('/auth/send-login-otp', { loginId: formData.username });
+      }
+      setResendTimer(30);
+      notify({
+        title: 'OTP Resent',
+        message: 'A new OTP has been sent successfully.',
+        success: true
+      });
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to resend OTP.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyLoginOtp = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+    try {
+      const res = await api.post('/auth/verify-login-otp', {
+        username: formData.username,
+        otp: formData.otp
+      });
+      const loginData = res.data.response;
+
+      localStorage.setItem('token', loginData.token);
+      localStorage.setItem('user', JSON.stringify(loginData));
+
+      if (loginData.isFirstLogin) {
+        setTempUsername(loginData.username);
+        setShowChangePassword(true);
+      } else {
+        if (loginData.role === 'ROLE_TENANT' || loginData.role === 'TENANT') {
+          navigate('/tenant/dashboard');
+        } else {
+          navigate('/dashboard');
+        }
+      }
+      notify({
+        title: 'Login Successful',
+        message: `Welcome back, ${loginData.name || loginData.username}!`,
+        success: true
+      });
+    } catch (err) {
+      setError(err.response?.data?.message || 'Invalid OTP.');
     } finally {
       setLoading(false);
     }
@@ -229,7 +326,7 @@ const AdminLogin = () => {
         <div className="admin-right-section" style={{ flex: 1 }}>
           <div className="admin-login-card">
             <div className="admin-header">
-              <div className="admin-logo-box" onClick={() => setMode('login')} style={{ cursor: 'pointer' }}>
+              <div className="admin-logo-box" onClick={() => { setMode('login'); setStep(1); }} style={{ cursor: 'pointer' }}>
                 <IconArrowLeft size={24} />
               </div>
               <h2>{step === 1 ? 'Forgot Password' : 'Verify Identity'}</h2>
@@ -274,6 +371,13 @@ const AdminLogin = () => {
                     <IconLock className="admin-input-icon" size={20} />
                     <input type={showPassword ? "text" : "password"} className="admin-input" required value={passwords.confirmPassword} onChange={e => setPasswords({ ...passwords, confirmPassword: e.target.value })} />
                   </div>
+                </div>
+                <div className="resend-wrapper" style={{ marginTop: '10px', textAlign: 'right' }}>
+                  {resendTimer > 0 ? (
+                    <span style={{ fontSize: '0.85rem', color: '#888' }}>Resend OTP in {resendTimer}s</span>
+                  ) : (
+                    <span onClick={handleResendOtp} style={{ fontSize: '0.85rem', color: 'var(--gold)', cursor: 'pointer', fontWeight: 'bold' }}>Resend OTP</span>
+                  )}
                 </div>
                 <button type="submit" className="admin-btn" disabled={loading}>
                   {loading ? 'Resetting...' : 'Verify & Reset Password'}
@@ -337,20 +441,35 @@ const AdminLogin = () => {
           </div>
 
           <div className="auth-tabs">
-            <button className={`auth-tab ${mode === 'login' ? 'active' : ''}`} onClick={() => setMode('login')}>Sign In</button>
-            <button className={`auth-tab ${mode === 'signup' ? 'active' : ''}`} onClick={() => setMode('signup')}>Sign Up</button>
+            <button className={`auth-tab ${mode === 'login' ? 'active' : ''}`} onClick={() => { setMode('login'); setStep(1); }}>Sign In</button>
+            <button className={`auth-tab ${mode === 'signup' ? 'active' : ''}`} onClick={() => { setMode('signup'); setStep(1); }}>Sign Up</button>
           </div>
 
           {error && <div className="alert alert-error">{error}</div>}
 
-          <form onSubmit={mode === 'login' ? handleLogin : handleRegister}>
+          <form onSubmit={
+            mode === 'signup' ? handleRegister :
+              loginType === 'password' ? handleLogin :
+                (step === 1 ? handleSendLoginOtp : handleVerifyLoginOtp)
+          }>
             <div className="admin-form-group">
               <label>Identity</label>
               <div className="admin-input-wrapper">
                 <IconUser className="admin-input-icon" size={20} />
-                <input className="admin-input" name="username" value={formData.username} onChange={handleInputChange} required placeholder="Username, Email or Mobile" />
+                <input className="admin-input" name="username" value={formData.username} onChange={handleInputChange} required placeholder="Email or Mobile" disabled={mode === 'login' && loginType === 'otp' && step === 2} />
               </div>
             </div>
+
+            {mode === 'login' && (
+              <div style={{ display: 'flex', gap: '20px', marginBottom: '20px', fontSize: '0.9rem', color: 'var(--ink)' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                  <input type="radio" checked={loginType === 'password'} onChange={() => { setLoginType('password'); setStep(1); setFormData(prev => ({...prev, password: '', otp: ''})); }} style={{ accentColor: 'var(--gold)' }} /> Password
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                  <input type="radio" checked={loginType === 'otp'} onChange={() => { setLoginType('otp'); setStep(1); setFormData(prev => ({...prev, password: '', otp: ''})); }} style={{ accentColor: 'var(--gold)' }} /> OTP
+                </label>
+              </div>
+            )}
 
             {mode === 'signup' && (
               <>
@@ -384,7 +503,7 @@ const AdminLogin = () => {
                 </div>
               </>
             )}
-            {mode === 'login' && (
+            {mode === 'login' && loginType === 'password' && (
               <>
                 <div className="admin-form-group">
                   <label>Password</label>
@@ -397,12 +516,36 @@ const AdminLogin = () => {
                   </div>
                 </div>
                 <div className="forgot-password-link">
-                  <span onClick={() => setMode('forgot')}>Forgot Password?</span>
+                  <span onClick={() => { setMode('forgot'); setStep(1); }}>Forgot Password?</span>
                 </div>
               </>
             )}
+
+            {mode === 'login' && loginType === 'otp' && step === 2 && (
+              <>
+                <div className="admin-form-group">
+                  <label>Verification OTP</label>
+                  <div className="admin-input-wrapper">
+                    <IconLock className="admin-input-icon" size={20} />
+                    <input className="admin-input" name="otp" value={formData.otp} onChange={handleInputChange} required maxLength="6" placeholder="Enter 6-digit OTP" />
+                  </div>
+                </div>
+                <div className="resend-wrapper" style={{ marginTop: '-10px', marginBottom: '20px', textAlign: 'right' }}>
+                  {resendTimer > 0 ? (
+                    <span style={{ fontSize: '0.85rem', color: '#888' }}>Resend OTP in {resendTimer}s</span>
+                  ) : (
+                    <span onClick={handleResendOtp} style={{ fontSize: '0.85rem', color: 'var(--gold)', cursor: 'pointer', fontWeight: 'bold' }}>Resend OTP</span>
+                  )}
+                </div>
+              </>
+            )}
+
             <button type="submit" className="admin-btn" disabled={loading}>
-              {loading ? 'Creating...' : (mode === 'login' ? <><IconLogin size={20} /> Sign In</> : <><IconUserPlus size={20} /> Create Admin</>)}
+              {loading ? 'Processing...' : (
+                mode === 'signup' ? <><IconUserPlus size={20} /> Create Admin</> :
+                  loginType === 'password' ? <><IconLogin size={20} /> Sign In</> :
+                    (step === 1 ? <><IconRefresh size={20} /> Send OTP</> : <><IconLogin size={20} /> Verify & Login</>)
+              )}
             </button>
           </form>
         </div>

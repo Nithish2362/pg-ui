@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Modal, Button, TextInput, Select, Text, Group, ActionIcon, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useNavigate, useLocation } from "react-router-dom";
-import { IconArrowRight, IconArrowLeft, IconEdit, IconTrash, IconPlus } from "@tabler/icons-react";
+import { IconArrowRight, IconArrowLeft, IconEdit, IconTrash, IconPlus, IconStack } from "@tabler/icons-react";
 import api from "../../../api/Interceptor";
 import notify from "../../utils/Notification";
 import useDebounce from "../../../common/useDebounce";
@@ -150,10 +150,13 @@ const Floors = () => {
   return (
     <div>
       <div className="page-header">
-        <Group align="center" gap="xl">
-          <h2>Floor Logistics</h2>
+        <Group align="center" gap="xl" wrap="nowrap" style={{ overflowX: 'auto', overflowY: 'hidden', flex: 1, paddingBottom: '5px', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', whiteSpace: 'nowrap', flexShrink: 0 }}>
+            <IconStack size={28} color="var(--gold)" />
+            Floor Logistics
+          </h2>
           {!isCreateMode && (
-            <Group gap="sm">
+            <Group gap="sm" wrap="nowrap">
               <Select
                 placeholder="Select Location"
                 data={locations.map(l => ({ value: l.locationId, label: l.locationName }))}
@@ -162,6 +165,7 @@ const Floors = () => {
                 clearable
                 size="md"
                 variant="filled"
+                style={{ flexShrink: 0 }}
               />
               <Select
                 placeholder="Select Building"
@@ -172,6 +176,7 @@ const Floors = () => {
                 disabled={!filterLoc}
                 size="md"
                 variant="filled"
+                style={{ flexShrink: 0 }}
               />
             </Group>
           )}

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Button, TextInput, Select, Text, Group, Badge, Textarea, Grid, ActionIcon, Tooltip, Modal, NumberInput } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconPlus, IconEdit, IconTrash, IconReceipt, IconCalendar, IconFilter } from "@tabler/icons-react";
+import { IconPlus, IconEdit, IconTrash, IconReceipt, IconCalendar, IconFilter, IconCurrencyRupee, IconBuildingCommunity, IconHome, IconNote, IconCash } from "@tabler/icons-react";
 import api from "../../api/Interceptor";
 import notify from "../utils/Notification";
 import useDebounce from "../../common/useDebounce";
@@ -155,10 +155,13 @@ const Expenses = () => {
   return (
     <div>
       <div className="page-header">
-        <Group align="center" gap="xl">
-          <h2 style={{ margin: 0 }}>{isStaff ? "Building Expenses" : "Expense Management"}</h2>
+        <Group align="center" gap="xl" wrap="nowrap" style={{ overflowX: 'auto', overflowY: 'hidden', flex: 1, paddingBottom: '5px', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          <Group gap="sm" wrap="nowrap" style={{ flexShrink: 0 }}>
+            <IconCash size={28} color="var(--gold)" />
+            <h2 style={{ margin: 0, whiteSpace: 'nowrap' }}>{isStaff ? "Building Expenses" : "Expense Management"}</h2>
+          </Group>
           {!isStaff && (
-            <Group gap="xs">
+            <Group gap="xs" wrap="nowrap">
               <Select
                 placeholder="Select Location"
                 data={locations.map(l => ({ value: l.locationId, label: l.locationName }))}
@@ -167,7 +170,7 @@ const Expenses = () => {
                 clearable
                 size="md"
                 variant="filled"
-                style={{ width: '180px' }}
+                style={{ width: '180px', flexShrink: 0 }}
               />
               <Select
                 placeholder="Select Building"
@@ -178,7 +181,7 @@ const Expenses = () => {
                 disabled={!filterLoc}
                 size="md"
                 variant="filled"
-                style={{ width: '180px' }}
+                style={{ width: '180px', flexShrink: 0 }}
               />
             </Group>
           )}
@@ -207,53 +210,53 @@ const Expenses = () => {
         <form onSubmit={save}>
           <Grid>
             <Grid.Col span={12}>
-              <TextInput 
-                label="Expense Title" 
+              <TextInput
+                label="Expense Title"
                 placeholder="e.g. Electricity Bill"
                 leftSection={<IconReceipt size={18} />}
                 leftSectionPointerEvents="none"
                 leftSectionWidth={40}
-                value={form.title} 
-                onChange={e => setForm({ ...form, title: e.target.value })} 
-                required 
+                value={form.title}
+                onChange={e => setForm({ ...form, title: e.target.value })}
+                required
               />
             </Grid.Col>
             <Grid.Col span={6}>
-              <NumberInput 
-                label="Amount (₹)" 
+              <NumberInput
+                label="Amount (₹)"
                 leftSection={<IconCurrencyRupee size={18} />}
                 leftSectionPointerEvents="none"
                 leftSectionWidth={40}
-                value={form.amount} 
-                onChange={val => setForm({ ...form, amount: val })} 
-                required 
-                min={0} 
+                value={form.amount}
+                onChange={val => setForm({ ...form, amount: val })}
+                required
+                min={0}
               />
             </Grid.Col>
             <Grid.Col span={6}>
-              <TextInput 
-                label="Expense Date" 
-                type="date" 
+              <TextInput
+                label="Expense Date"
+                type="date"
                 leftSection={<IconCalendar size={18} />}
                 leftSectionPointerEvents="none"
                 leftSectionWidth={40}
-                value={form.expenseDate} 
-                onChange={e => setForm({ ...form, expenseDate: e.target.value })} 
-                required 
+                value={form.expenseDate}
+                onChange={e => setForm({ ...form, expenseDate: e.target.value })}
+                required
               />
             </Grid.Col>
             <Grid.Col span={12}>
-              <Select 
-                label="Expense Category" 
+              <Select
+                label="Expense Category"
                 placeholder="Choose a category"
                 leftSection={<IconFilter size={18} />}
                 leftSectionPointerEvents="none"
                 leftSectionWidth={40}
-                data={categories} 
-                value={form.category} 
-                onChange={val => setForm({ ...form, category: val })} 
-                required 
-                searchable 
+                data={categories}
+                value={form.category}
+                onChange={val => setForm({ ...form, category: val })}
+                required
+                searchable
                 clearable
                 comboboxProps={{ withinPortal: true, zIndex: 10000 }}
               />
@@ -262,33 +265,33 @@ const Expenses = () => {
             {!isStaff && (
               <>
                 <Grid.Col span={6}>
-                  <Select 
-                    label="Location" 
+                  <Select
+                    label="Location"
                     placeholder="Select Location"
                     leftSection={<IconBuildingCommunity size={18} />}
                     leftSectionPointerEvents="none"
                     leftSectionWidth={40}
-                    data={locations.map(l => ({ value: l.locationId, label: l.locationName }))} 
-                    value={form.locationId} 
-                    onChange={val => setForm({ ...form, locationId: val, buildingId: "" })} 
-                    searchable 
-                    clearable 
+                    data={locations.map(l => ({ value: l.locationId, label: l.locationName }))}
+                    value={form.locationId}
+                    onChange={val => setForm({ ...form, locationId: val, buildingId: "" })}
+                    searchable
+                    clearable
                     comboboxProps={{ withinPortal: true, zIndex: 10000 }}
                   />
                 </Grid.Col>
                 <Grid.Col span={6}>
-                  <Select 
-                    label="Building" 
+                  <Select
+                    label="Building"
                     placeholder="Select Building"
                     leftSection={<IconHome size={18} />}
                     leftSectionPointerEvents="none"
                     leftSectionWidth={40}
-                    data={buildings.filter(b => b.locationId === form.locationId).map(b => ({ value: b.buildingId, label: b.buildingName }))} 
-                    value={form.buildingId} 
-                    onChange={val => setForm({ ...form, buildingId: val })} 
-                    searchable 
-                    clearable 
-                    disabled={!form.locationId} 
+                    data={buildings.filter(b => b.locationId === form.locationId).map(b => ({ value: b.buildingId, label: b.buildingName }))}
+                    value={form.buildingId}
+                    onChange={val => setForm({ ...form, buildingId: val })}
+                    searchable
+                    clearable
+                    disabled={!form.locationId}
                     comboboxProps={{ withinPortal: true, zIndex: 10000 }}
                   />
                 </Grid.Col>
@@ -296,16 +299,16 @@ const Expenses = () => {
             )}
 
             <Grid.Col span={12}>
-              <Textarea 
-                label="Remarks" 
+              <Textarea
+                label="Remarks"
                 placeholder="Add notes..."
                 leftSection={<IconNote size={18} />}
                 leftSectionPointerEvents="none"
                 leftSectionWidth={40}
-                value={form.remarks} 
-                onChange={e => setForm({ ...form, remarks: e.target.value })} 
-                autosize 
-                minRows={2} 
+                value={form.remarks}
+                onChange={e => setForm({ ...form, remarks: e.target.value })}
+                autosize
+                minRows={2}
               />
             </Grid.Col>
           </Grid>

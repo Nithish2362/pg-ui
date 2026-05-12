@@ -145,7 +145,7 @@ const NotificationsHub = () => {
                     <h2>Communications Center</h2>
                 </Group>
 
-                <Group mb="30px" justify="center">
+                <Group justify="center">
                     <Button
                         variant={activeTab === 'holiday' ? 'filled' : 'light'}
                         color={activeTab === 'holiday' ? 'dark' : 'gray'}

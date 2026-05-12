@@ -3,7 +3,7 @@
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   border-bottom: 1px solid var(--border) !important;
-  box-shadow: 0 1px 0 rgba(0,0,0,0.04);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04);
   transition: var(--t);
 }
 
@@ -25,7 +25,11 @@
   transition: var(--t);
   text-decoration: none;
 }
-.logo-section:hover { opacity: 0.8; transform: scale(1.01); }
+
+.logo-section:hover {
+  opacity: 0.8;
+  transform: scale(1.01);
+}
 
 /* Nav items */
 .nav-item {
@@ -43,8 +47,14 @@
   transition: var(--t);
   white-space: nowrap;
 }
-.nav-item:hover { color: var(--ink); }
-.nav-item-active { color: var(--ink) !important; }
+
+.nav-item:hover {
+  color: var(--ink);
+}
+
+.nav-item-active {
+  color: var(--ink) !important;
+}
 
 /* Gold underline indicator */
 .active-indicator {
@@ -58,7 +68,10 @@
   border-radius: 2px 2px 0 0;
   transition: width 0.4s var(--ease);
 }
-.active-indicator.visible { width: 70%; }
+
+.active-indicator.visible {
+  width: 70%;
+}
 
 /* Right user area */
 .user-section {
@@ -78,6 +91,7 @@
   cursor: pointer;
   transition: var(--t);
 }
+
 .user-badge:hover {
   border-color: var(--gold);
   background: var(--white);
@@ -86,17 +100,23 @@
 
 /* Mobile */
 @media (max-width: 768px) {
-  .nav-bar { padding: 0 16px; }
-  .nav-item { padding: 0 10px; font-size: 0.68rem; }
-  
+  .nav-bar {
+    padding: 0 8px;
+  }
+
+  .nav-item {
+    padding: 0 10px;
+    font-size: 0.68rem;
+  }
+
   .user-badge {
     padding: 4px 10px 4px 6px;
     gap: 6px;
   }
-  
+
   .user-badge .mantine-Avatar-root {
     width: 24px !important;
-    height: 24px !important;
+    height: 20px !important;
     min-width: 24px !important;
     font-size: 0.65rem !important;
   }

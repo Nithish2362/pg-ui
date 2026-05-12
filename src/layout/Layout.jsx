@@ -1,9 +1,10 @@
-import { AppShell, Avatar, Button, Group, Tabs, Text, Burger, Drawer, Stack, ActionIcon, Divider } from '@mantine/core';
+import { AppShell, Avatar, Button, Group, Tabs, Text, Burger, Drawer, Stack, ActionIcon, Divider, Modal } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { IconLogout, IconBuildingCommunity } from '@tabler/icons-react';
-import { createContext, Suspense, useCallback, useMemo } from 'react';
+import { IconLogout, IconBuildingCommunity, IconUser, IconAlertTriangle } from '@tabler/icons-react';
+import { createContext, Suspense, useCallback, useMemo, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import ModuleJson from '../moduleData/ModuleJson';
+import notify from '../components/utils/Notification';
 import '../css/Header.css';
 
 export const ActiveTabContext = createContext();
@@ -14,7 +15,7 @@ export default function Layout() {
   const { pathname } = useLocation();
   const [drawerOpened, { toggle: toggleDrawer, close: closeDrawer }] = useDisclosure(false);
 
-  const headerData = useMemo(() => ModuleJson(), []);
+  const headerData = useMemo(() => ModuleJson(), [user]);
 
   const activeHeader = useMemo(() => {
     const currentModule = headerData.find(m => m.path === pathname || pathname.startsWith(m.path + '/'));
@@ -51,8 +52,16 @@ export default function Layout() {
 
   const handleLogout = () => {
     localStorage.clear();
+    notify({
+      title: 'Logged Out',
+      message: 'You have been successfully logged out.',
+      success: true
+    });
     navigate('/login');
+    setLogoutModalOpened(false);
   };
+
+  const [logoutModalOpened, setLogoutModalOpened] = useState(false);
 
   const contextValue = { user, activeHeader, activeTab, childTabs };
   const topLevelNav = headerData.filter(m => m.parent_id === null);
@@ -124,8 +133,8 @@ export default function Layout() {
             </Group>
 
             {/* Right: User + Logout */}
-            <Group gap="sm" wrap="nowrap">
-              <div className="user-badge">
+            <Group wrap="nowrap">
+              <div className="user-badge" onClick={() => navigate('/profile')} style={{ cursor: 'pointer' }}>
                 <Avatar
                   size={30}
                   radius="xl"
@@ -158,31 +167,15 @@ export default function Layout() {
                 </div>
               </div>
 
-              <Button
-                color="white"
-                onClick={handleLogout}
-                size="compact-sm"
-                rightSection={<IconLogout size={15} />}
-                visibleFrom="sm"
-                style={{
-                  color: 'white',
-                  fontSize: '0.7rem',
-                  fontWeight: 900,
-                  backgroundColor: 'var(--gold)',
-                  textTransform: 'uppercase',
-                  height: 32,
-                }}
-              >
-                Logout
-              </Button>
               <ActionIcon
                 variant="subtle"
-                color="gray"
-                onClick={handleLogout}
-                size="sm"
-                hiddenFrom="sm"
+                color="#c5a059"
+                size="lg"
+                onClick={() => setLogoutModalOpened(true)}
+                className="logout-icon"
+                visibleFrom="md"
               >
-                <IconLogout size={16} />
+                <IconLogout size={20} />
               </ActionIcon>
             </Group>
           </div>
@@ -237,7 +230,7 @@ export default function Layout() {
                 <IconBuildingCommunity size={18} color="var(--gold)" />
               </div>
               <Text fw={900} style={{ fontFamily: 'var(--font-heading)', letterSpacing: '0.1em' }}>
-                YHOMEE
+                STAYWOW
               </Text>
             </Group>
           }
@@ -253,7 +246,7 @@ export default function Layout() {
           }}
         >
           <Stack gap={4}>
-            {topLevelNav.map((headernav) => (
+            {topLevelNav.filter(m => m.id !== 'PROFILE' && m.id !== 'TENANT_PROFILE').map((headernav) => (
               <Button
                 key={headernav.id}
                 variant={activeHeader?.id === headernav.id ? 'filled' : 'subtle'}
@@ -262,6 +255,7 @@ export default function Layout() {
                 fullWidth
                 justify="flex-start"
                 size="md"
+                leftSection={headernav.icon ? <headernav.icon size={16} /> : <IconUser size={16} />}
                 radius="md"
                 style={{
                   fontWeight: 700,
@@ -273,22 +267,59 @@ export default function Layout() {
                 {headernav.name}
               </Button>
             ))}
-            <Divider my="sm" />
             <Button
               variant="subtle"
-              color="red"
-              onClick={handleLogout}
+              color="blue"
+              onClick={() => { navigate('/profile'); closeDrawer(); }}
               fullWidth
               justify="flex-start"
               size="md"
               radius="md"
-              rightSection={<IconLogout size={16} />}
+              leftSection={<IconUser size={16} />}
+              style={{ fontWeight: 700, fontSize: '0.78rem', letterSpacing: '0.06em', textTransform: 'uppercase' }}
+            >
+              My Profile
+            </Button>
+            <Button
+              variant="subtle"
+              color="red"
+              onClick={() => { setLogoutModalOpened(true); closeDrawer(); }}
+              fullWidth
+              justify="flex-start"
+              size="md"
+              radius="md"
+              leftSection={<IconLogout size={16} />}
               style={{ fontWeight: 700, fontSize: '0.78rem', letterSpacing: '0.06em', textTransform: 'uppercase' }}
             >
               Sign Out
             </Button>
           </Stack>
         </Drawer>
+
+        <Modal
+          opened={logoutModalOpened}
+          onClose={() => setLogoutModalOpened(false)}
+          title={<Group gap="xs"><IconAlertTriangle color="orange" size={24} /><Text fw={700}>Confirm Logout</Text></Group>}
+          centered
+          radius="md"
+          padding="xl"
+          overlayProps={{
+            backgroundOpacity: 0.55,
+            blur: 3,
+          }}
+        >
+          <Text size="sm" mb="xl">
+            Are you sure you want to log out of your session? You will need to sign in again to access the dashboard.
+          </Text>
+          <Group justify="flex-end" gap="sm">
+            <Button variant="subtle" color="gray" onClick={() => setLogoutModalOpened(false)}>
+              Cancel
+            </Button>
+            <Button color="red" onClick={handleLogout} leftSection={<IconLogout size={16} />}>
+              Sign Out
+            </Button>
+          </Group>
+        </Modal>
 
       </AppShell>
     </ActiveTabContext.Provider>

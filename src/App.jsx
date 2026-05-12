@@ -25,6 +25,7 @@ const NotificationsHub = lazy(() => import('./components/crm/NotificationsHub'))
 const Staff = lazy(() => import('./components/crm/Staff'));
 const Expenses = lazy(() => import('./components/crm/Expenses'));
 const TenantDashboard = lazy(() => import('./components/tenant/TenantDashboard'));
+const Profile = lazy(() => import('./components/profile/Profile'));
 const NotFound = lazy(() => import('./common/NotFound'));
 
 const ProtectedRoute = ({ element: Component }) => {
@@ -104,6 +105,9 @@ function App() {
 
           {/* Expenses */}
           <Route path="/expenses" element={<ProtectedRoute element={Expenses} />} />
+
+          {/* Profile */}
+          <Route path="/profile" element={<ProtectedRoute element={Profile} />} />
 
           {/* Tenant Portal */}
           <Route path="/tenant/dashboard" element={<ProtectedRoute element={TenantDashboard} />} />

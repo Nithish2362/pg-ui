@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Modal, Button, TextInput, Select, Text, Group, Badge, Textarea, Grid, ActionIcon, Tooltip, Stack, Avatar } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useNavigate, useLocation } from "react-router-dom";
-import { IconArrowLeft, IconPlus, IconEdit, IconTrash, IconUserShield, IconMapPin, IconBuilding, IconMail } from "@tabler/icons-react";
+import { IconArrowLeft, IconPlus, IconEdit, IconTrash, IconUserShield, IconMapPin, IconBuilding, IconMail, IconUserStar } from "@tabler/icons-react";
 import api from "../../api/Interceptor";
 import notify from "../utils/Notification";
 import useDebounce from "../../common/useDebounce";
@@ -197,30 +197,33 @@ const Staff = () => {
   return (
     <div>
       <div className="page-header">
-        <Group align="center" gap="xl">
-          <h2 style={{ margin: 0 }}>Staff Management</h2>
+        <Group align="center" gap="xl" wrap="nowrap" style={{ overflowX: 'auto', overflowY: 'hidden', flex: 1, paddingBottom: '5px', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          <Group gap="sm" wrap="nowrap" style={{ flexShrink: 0 }}>
+            <IconUserStar size={28} color="var(--gold)" />
+            <h2 style={{ margin: 0, whiteSpace: 'nowrap' }}>Staff Management</h2>
+          </Group>
           {!isCreateMode && (
-            <Group gap="xs">
-              <Select 
-                placeholder="Select Location" 
-                data={locations.map(l => ({ value: l.locationId, label: l.locationName }))} 
-                value={filterLoc} 
-                onChange={val => { setFilterLoc(val); setFilterBld(null); setPage(1); }} 
-                clearable 
+            <Group gap="xs" wrap="nowrap">
+              <Select
+                placeholder="Select Location"
+                data={locations.map(l => ({ value: l.locationId, label: l.locationName }))}
+                value={filterLoc}
+                onChange={val => { setFilterLoc(val); setFilterBld(null); setPage(1); }}
+                clearable
                 size="md"
                 variant="filled"
-                style={{ width: '180px' }}
+                style={{ width: '180px', flexShrink: 0 }}
               />
-              <Select 
-                placeholder="Select Building" 
-                data={buildings.filter(b => !filterLoc || b.locationId === filterLoc).map(b => ({ value: b.buildingId, label: b.buildingName }))} 
-                value={filterBld} 
-                onChange={val => { setFilterBld(val); setPage(1); }} 
-                clearable 
-                disabled={!filterLoc} 
+              <Select
+                placeholder="Select Building"
+                data={buildings.filter(b => !filterLoc || b.locationId === filterLoc).map(b => ({ value: b.buildingId, label: b.buildingName }))}
+                value={filterBld}
+                onChange={val => { setFilterBld(val); setPage(1); }}
+                clearable
+                disabled={!filterLoc}
                 size="md"
                 variant="filled"
-                style={{ width: '180px' }}
+                style={{ width: '180px', flexShrink: 0 }}
               />
             </Group>
           )}
