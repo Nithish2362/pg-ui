@@ -20,7 +20,7 @@ const PaymentReceipt = React.forwardRef(({ receipt }, ref) => {
       style={{
         fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif",
         color: "#1a1a1a",
-        padding: "40px",
+        padding: "5px",
         background: "#fff",
       }}
     >
@@ -75,7 +75,7 @@ const PaymentReceipt = React.forwardRef(({ receipt }, ref) => {
       </div>
 
       {/* Payment Details */}
-      <div style={{ background: "#f8fafc", borderRadius: "12px", padding: "20px", marginBottom: "24px" }}>
+      <div style={{ background: "#f8fafc", borderRadius: "12px", padding: "20px", marginBottom: "4px" }}>
         <h3 style={{ fontSize: "14px", color: "#94a3b8", fontWeight: 600, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "12px" }}>Payment Details</h3>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <tbody>
@@ -138,6 +138,7 @@ const Payments = () => {
   const [form, setForm] = useState(emptyForm);
   const [selectedReceipt, setSelectedReceipt] = useState(null);
   const [showReceipt, setShowReceipt] = useState(false);
+  const [showScreenshot, setShowScreenshot] = useState(false);
   const [selectedTenantRent, setSelectedTenantRent] = useState(null);
   const [selectedItem, setSelectedItem] = useState(null);
   const [opened, { open, close }] = useDisclosure(false);
@@ -297,6 +298,23 @@ const Payments = () => {
   const openReceipt = (p) => {
     setSelectedReceipt(p);
     setShowReceipt(true);
+  };
+
+  const shareReceipt = async (paymentId, target, type) => {
+    try {
+      await api.post(`/admin/payments/${paymentId}/share?target=${target}&type=${type}`);
+      notify({
+        title: "Success",
+        message: `Receipt shared with ${target} via ${type.toUpperCase()}`,
+        success: true
+      });
+    } catch (err) {
+      notify({
+        title: "Error",
+        message: err.response?.data?.message || "Failed to share receipt",
+        error: true
+      });
+    }
   };
 
   const approvePayment = async (p) => {
@@ -569,9 +587,48 @@ const Payments = () => {
           <PaymentReceipt receipt={selectedReceipt} ref={receiptRef} />
           <Group justify="center" mt="md">
             {selectedReceipt?.status === 'APPROVED' && <Button size="sm" leftSection={<IconPrinter size={20} />} onClick={printReceipt}>Print</Button>}
-            {selectedReceipt?.screenshotUrl && <Button size="sm" color="teal" onClick={() => window.open(selectedReceipt.screenshotUrl, '_blank')}>View Screenshot</Button>}
+            {selectedReceipt?.screenshotUrl && (
+              <>
+                <Button size="sm" color="teal" onClick={() => setShowScreenshot(true)}>View Screenshot</Button>
+                <Button 
+                  size="sm" 
+                  color="blue" 
+                  component="a" 
+                  href={selectedReceipt.screenshotUrl} 
+                  download={`receipt_${selectedReceipt.receiptNo || 'screenshot'}.png`}
+                >
+                  Download Screenshot
+                </Button>
+              </>
+            )}
+          </Group>
+          <Divider my="sm" label="Share Receipt" labelPosition="center" />
+          <Group justify="center" gap="xs">
+            <Button size="xs" variant="outline" color="dark" onClick={() => shareReceipt(selectedReceipt.id, 'tenant', 'email')}>Email Tenant</Button>
+            <Button size="xs" variant="outline" color="dark" onClick={() => shareReceipt(selectedReceipt.id, 'tenant', 'sms')}>SMS Tenant</Button>
+            <Button size="xs" variant="outline" color="dark" onClick={() => shareReceipt(selectedReceipt.id, 'parent', 'email')}>Email Parents</Button>
+            <Button size="xs" variant="outline" color="dark" onClick={() => shareReceipt(selectedReceipt.id, 'parent', 'sms')}>SMS Parents</Button>
           </Group>
         </Stack>
+      </Modal>
+
+      <Modal opened={showScreenshot} onClose={() => setShowScreenshot(false)} size="xl" title="Payment Screenshot">
+        {selectedReceipt?.screenshotUrl && (
+          <Stack>
+            <img src={selectedReceipt.screenshotUrl} alt="Screenshot" style={{ width: '100%', height: 'auto', objectFit: 'contain', maxHeight: '70vh' }} />
+            <Group justify="center">
+              <Button 
+                size="sm" 
+                color="blue" 
+                component="a" 
+                href={selectedReceipt.screenshotUrl} 
+                download={`receipt_${selectedReceipt.receiptNo || 'screenshot'}.png`}
+              >
+                Download Image
+              </Button>
+            </Group>
+          </Stack>
+        )}
       </Modal>
     </div>
   );

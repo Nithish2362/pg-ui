@@ -17,7 +17,7 @@ const Complaints = () => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
   const debouncedSearch = useDebounce(search, 500);
-  
+
   const [form, setForm] = useState({ status: "OPEN", adminRemark: "" });
 
   const load = async () => {
@@ -63,14 +63,14 @@ const Complaints = () => {
     { header: "PG Number", key: "pgNumber", render: (val) => <strong>{val}</strong> },
     { header: "Issue", key: "issue", render: (val) => <div style={{ maxWidth: "300px", margin: "0 auto" }}>{val}</div> },
     { header: "Created At", key: "createdAt", render: (val) => <Text size="xs">{new Date(val).toLocaleDateString()}</Text> },
-    { 
-      header: "Status", 
-      key: "status", 
-      render: (val) => <Badge color={statusColors[val]}>{val}</Badge> 
+    {
+      header: "Status",
+      key: "status",
+      render: (val) => <Badge color={statusColors[val]}>{val}</Badge>
     },
-    { 
-      header: "Actions", 
-      key: "actions", 
+    {
+      header: "Actions",
+      key: "actions",
       render: (_, c) => (
         <Group justify="center">
           <Button size="xs" variant="light" onClick={() => openModal(c)}>Update</Button>
@@ -88,7 +88,7 @@ const Complaints = () => {
         </Group>
       </div>
 
-      <DataTable 
+      <DataTable
         title="All Complaints"
         columns={columns}
         data={items}

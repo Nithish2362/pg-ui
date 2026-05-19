@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Button, TextInput, Select, Text, Group, Badge, Modal, ActionIcon, Tooltip, Tabs, Stack } from '@mantine/core';
+import { Button, TextInput, Select, Text, Group, Badge, Modal, ActionIcon, Tooltip, Tabs, Stack, SimpleGrid, Divider } from '@mantine/core';
 import { useNavigate } from 'react-router-dom';
-import { IconX, IconUserPlus, IconCurrencyRupee, IconLogout, IconUsers } from '@tabler/icons-react';
+import { IconX, IconUserPlus, IconCurrencyRupee, IconLogout, IconUsers, IconEdit } from '@tabler/icons-react';
 import api from '../../api/Interceptor';
 import notify from '../utils/Notification';
 import useDebounce from '../../common/useDebounce';
@@ -32,6 +32,23 @@ const Tenants = () => {
 
   const [checkoutOpened, setCheckoutOpened] = useState(false);
   const [selectedTenant, setSelectedTenant] = useState(null);
+
+  // Edit Modal State
+  const [editOpened, setEditOpened] = useState(false);
+  const [editForm, setEditForm] = useState({
+    pgNumber: '',
+    studentName: '',
+    mobileNumber: '',
+    email: '',
+    address: '',
+    fatherName: '',
+    fatherMobile: '',
+    motherName: '',
+    motherMobile: '',
+    guardianName: '',
+    guardianMobile: '',
+    bedId: ''
+  });
 
   const loadMasters = async () => {
     try {
@@ -80,6 +97,53 @@ const Tenants = () => {
       load();
     } catch (error) {
       notify({ message: "Checkout failed", error: true });
+    }
+  };
+
+  const openEditModal = (t) => {
+    setSelectedTenant(t);
+    setEditForm({
+      pgNumber: t.pgNumber || '',
+      studentName: t.studentName || '',
+      mobileNumber: t.mobileNumber || '',
+      email: t.email || '',
+      address: t.address || '',
+      fatherName: t.fatherName || '',
+      fatherMobile: t.fatherMobile || '',
+      motherName: t.motherName || '',
+      motherMobile: t.motherMobile || '',
+      guardianName: t.guardianName || '',
+      guardianMobile: t.guardianMobile || '',
+      bedId: t.bedId || ''
+    });
+    setEditOpened(true);
+  };
+
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+
+    // Validation
+    const hasFather = editForm.fatherName && editForm.fatherMobile;
+    const hasMother = editForm.motherName && editForm.motherMobile;
+    const hasGuardian = editForm.guardianName && editForm.guardianMobile;
+
+    if (!hasFather && !hasMother && !hasGuardian) {
+      notify({
+        title: "Validation Error",
+        message: "At least one parent or guardian's details (Name and Mobile) are mandatory.",
+        error: true
+      });
+      return;
+    }
+
+    try {
+      await api.put(`/admin/tenants/${editForm.pgNumber}`, editForm);
+      notify({ title: "Success", message: "Resident updated successfully!", success: true });
+      setEditOpened(false);
+      load();
+      loadCounts();
+    } catch (err) {
+      notify({ title: "Error", message: err.response?.data?.message || "Failed to update resident", error: true });
     }
   };
 
@@ -145,6 +209,13 @@ const Tenants = () => {
     {
       header: "Manage", key: "actions", render: (_, t) => (
         <Group gap="xs" justify="center">
+          {(t.status === 'ACTIVE' || t.status === 'NOT_APPROVED') && (
+            <Tooltip label="Update Details">
+              <ActionIcon color="blue" variant="subtle" onClick={() => openEditModal(t)}>
+                <IconEdit size={18} />
+              </ActionIcon>
+            </Tooltip>
+          )}
           {t.status === 'ACTIVE' && (
             <Tooltip label="Checkout Resident">
               <ActionIcon color="red" variant="subtle" onClick={() => {
@@ -236,7 +307,7 @@ const Tenants = () => {
 
       <DataTable
         title="Resident List"
-        columns={activeTab === 'ACTIVE' ? columns : columns.filter(c => c.key !== 'actions')}
+        columns={activeTab !== 'INACTIVE' ? columns : columns.filter(c => c.key !== 'actions')}
         data={items}
         loading={loading}
         search={search}
@@ -255,6 +326,87 @@ const Tenants = () => {
           <Button variant="outline" color="gray" onClick={() => setCheckoutOpened(false)}>Cancel</Button>
           <Button color="red" onClick={handleCheckout}>Confirm Checkout</Button>
         </Group>
+      </Modal>
+
+      <Modal opened={editOpened} onClose={() => setEditOpened(false)} title="Update Resident Details" size="lg" centered>
+        <form onSubmit={handleUpdate}>
+          <Stack>
+            <SimpleGrid cols={2}>
+              <TextInput
+                label="Resident Name"
+                value={editForm.studentName}
+                onChange={(e) => setEditForm({ ...editForm, studentName: e.target.value })}
+                required
+              />
+              <TextInput
+                label="Mobile Number"
+                value={editForm.mobileNumber}
+                onChange={(e) => setEditForm({ ...editForm, mobileNumber: e.target.value })}
+                required
+              />
+            </SimpleGrid>
+
+            <SimpleGrid cols={2}>
+              <TextInput
+                label="Email"
+                value={editForm.email}
+                onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                required
+              />
+              <TextInput
+                label="Permanent Address"
+                value={editForm.address}
+                onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
+              />
+            </SimpleGrid>
+
+            <Divider label="Parent / Guardian Details" labelPosition="center" />
+
+            <SimpleGrid cols={2}>
+              <TextInput
+                label="Father's Name"
+                value={editForm.fatherName}
+                onChange={(e) => setEditForm({ ...editForm, fatherName: e.target.value })}
+              />
+              <TextInput
+                label="Father's Mobile"
+                value={editForm.fatherMobile}
+                onChange={(e) => setEditForm({ ...editForm, fatherMobile: e.target.value })}
+              />
+            </SimpleGrid>
+
+            <SimpleGrid cols={2}>
+              <TextInput
+                label="Mother's Name"
+                value={editForm.motherName}
+                onChange={(e) => setEditForm({ ...editForm, motherName: e.target.value })}
+              />
+              <TextInput
+                label="Mother's Mobile"
+                value={editForm.motherMobile}
+                onChange={(e) => setEditForm({ ...editForm, motherMobile: e.target.value })}
+              />
+            </SimpleGrid>
+
+            <SimpleGrid cols={2}>
+              <TextInput
+                label="Guardian's Name"
+                value={editForm.guardianName}
+                onChange={(e) => setEditForm({ ...editForm, guardianName: e.target.value })}
+              />
+              <TextInput
+                label="Guardian's Mobile"
+                value={editForm.guardianMobile}
+                onChange={(e) => setEditForm({ ...editForm, guardianMobile: e.target.value })}
+              />
+            </SimpleGrid>
+
+            <Group justify="flex-end" mt="md">
+              <Button variant="outline" color="gray" onClick={() => setEditOpened(false)}>Cancel</Button>
+              <Button type="submit" color="brand">Save Changes</Button>
+            </Group>
+          </Stack>
+        </form>
       </Modal>
     </div>
   );
