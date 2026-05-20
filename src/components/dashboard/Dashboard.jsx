@@ -86,6 +86,7 @@ const Dashboard = () => {
         </h2>
         {!isStaff && (
           <Group gap="sm">
+             <div className="slide-right first-select">
             <Select
               placeholder="All Locations"
               data={locations.map(l => ({ value: l.locationId, label: l.locationName }))}
@@ -96,6 +97,8 @@ const Dashboard = () => {
               size="sm"
               variant="filled"
             />
+            </div>
+             <div className="slide-right second-select">
             <Select
               placeholder="All Buildings"
               data={buildings.filter(b => !filterLoc || b.locationId === filterLoc).map(b => ({ value: b.buildingId, label: b.buildingName }))}
@@ -107,6 +110,7 @@ const Dashboard = () => {
               size="sm"
               variant="filled"
             />
+            </div>
           </Group>
         )}
       </div>

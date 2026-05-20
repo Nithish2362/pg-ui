@@ -197,13 +197,14 @@ const Staff = () => {
   return (
     <div>
       <div className="page-header">
-        <Group align="center" gap="xl">
+        <Group align="center" gap="xs">
           <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <IconUserStar size={28} color="var(--gold)" />
             Staff Management
           </h2>
           {!isCreateMode && (
             <Group gap="xs">
+              <div className="slide-left first-select">
               <Select
                 placeholder="Select Location"
                 data={locations.map(l => ({ value: l.locationId, label: l.locationName }))}
@@ -214,6 +215,8 @@ const Staff = () => {
                 variant="filled"
                 style={{ width: '180px' }}
               />
+              </div>
+              <div className="slide-left second-select">
               <Select
                 placeholder="Select Building"
                 data={buildings.filter(b => !filterLoc || b.locationId === filterLoc).map(b => ({ value: b.buildingId, label: b.buildingName }))}
@@ -225,6 +228,7 @@ const Staff = () => {
                 variant="filled"
                 style={{ width: '180px' }}
               />
+              </div>
             </Group>
           )}
         </Group>

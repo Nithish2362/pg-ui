@@ -177,13 +177,14 @@ const Beds = () => {
   return (
     <div>
       <div className="page-header">
-        <Group align="center" gap="xl">
+        <Group align="center" gap="xs">
           <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <IconBed size={28} color="var(--gold)" />
             Bed Registry
           </h2>
           {!isCreateMode && (
             <Group gap="xs">
+               <div className="slide-left first-select">
               <Select
                 placeholder="Select Location"
                 data={locations.map(l => ({ value: l.locationId, label: l.locationName }))}
@@ -194,6 +195,8 @@ const Beds = () => {
                 variant="filled"
                 style={{ width: '180px' }}
               />
+              </div>
+               <div className="slide-left second-select">
               <Select
                 placeholder="Select Building"
                 data={buildings.filter(b => !filterLoc || b.locationId === filterLoc).map(b => ({ value: b.buildingId, label: b.buildingName }))}
@@ -205,6 +208,8 @@ const Beds = () => {
                 variant="filled"
                 style={{ width: '180px' }}
               />
+              </div>
+               <div className="slide-left third-select">
               <Select
                 placeholder="Select Floor"
                 data={floors.filter(f => !filterBld || f.buildingId === filterBld).map(f => ({ value: f.floorId, label: f.floorName }))}
@@ -216,6 +221,8 @@ const Beds = () => {
                 variant="filled"
                 style={{ width: '180px' }}
               />
+              </div>
+               <div className="slide-left fourth-select">
               <Select
                 placeholder="Select Room"
                 data={rooms.filter(r => !filterFlr || r.floorId === filterFlr).map(r => ({ value: r.roomId, label: `Room ${r.roomNumber}` }))}
@@ -227,6 +234,7 @@ const Beds = () => {
                 variant="filled"
                 style={{ width: '180px' }}
               />
+              </div>
             </Group>
           )}
         </Group>

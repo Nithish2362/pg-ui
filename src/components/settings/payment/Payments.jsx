@@ -75,7 +75,7 @@ const PaymentReceipt = React.forwardRef(({ receipt }, ref) => {
       </div>
 
       {/* Payment Details */}
-      <div style={{ background: "#f8fafc", borderRadius: "12px", padding: "20px", marginBottom: "4px" }}>
+      <div style={{ background: "#f8fafc", borderRadius: "12px", marginBottom: "4px" }}>
         <h3 style={{ fontSize: "14px", color: "#94a3b8", fontWeight: 600, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "12px" }}>Payment Details</h3>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <tbody>
@@ -384,13 +384,14 @@ const Payments = () => {
   return (
     <div>
       <div className="page-header">
-        <Group align="center" gap="xl">
+        <Group align="center" gap="xs">
           <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <IconCurrencyRupee size={28} color="var(--gold)" />
             Financial Ledger
           </h2>
           {!isCreateMode && (
             <Group gap="xs">
+               <div className="slide-left first-select">
               <Select
                 placeholder="Select Location"
                 data={locations.map(l => ({ value: l.locationId, label: l.locationName }))}
@@ -401,6 +402,8 @@ const Payments = () => {
                 variant="filled"
                 style={{ width: '180px' }}
               />
+              </div>
+               <div className="slide-left second-select">
               <Select
                 placeholder="Select Building"
                 data={buildings.filter(b => !filterLoc || b.locationId === filterLoc).map(b => ({ value: b.buildingId, label: b.buildingName }))}
@@ -412,6 +415,7 @@ const Payments = () => {
                 variant="filled"
                 style={{ width: '180px' }}
               />
+              </div>
             </Group>
           )}
         </Group>
@@ -585,7 +589,7 @@ const Payments = () => {
       <Modal opened={showReceipt} onClose={() => setShowReceipt(false)} size="lg">
         <Stack>
           <PaymentReceipt receipt={selectedReceipt} ref={receiptRef} />
-          <Group justify="center" mt="md">
+          <Group justify="center" >
             {selectedReceipt?.status === 'APPROVED' && <Button size="sm" leftSection={<IconPrinter size={20} />} onClick={printReceipt}>Print</Button>}
             {selectedReceipt?.screenshotUrl && (
               <>

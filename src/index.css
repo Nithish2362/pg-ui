@@ -339,16 +339,26 @@ button[data-color="red"].mantine-Button-root {
   background: var(--white) !important;
   border: 1px solid var(--border) !important;
   box-shadow: var(--shadow-sm) !important;
-  transition: var(--t) !important;
+  transition:
+    transform 0.4s cubic-bezier(0.23, 1, 0.32, 1),
+    box-shadow 0.4s ease,
+    border-color 0.4s ease !important;
+
   cursor: pointer;
   overflow: hidden;
+
+  transform: scale(1);
 }
 
 .premium-card:hover {
-  transform: translateY(-8px) !important;
+  transform: scale(1.035) !important;
   border-color: var(--gold) !important;
-  box-shadow: var(--shadow-lg) !important;
+
+  box-shadow:
+    0 20px 45px rgba(0, 0, 0, 0.10),
+    0 8px 24px rgba(197, 160, 89, 0.16) !important;
 }
+
 
 .data-row-card {
   background: var(--white) !important;
@@ -545,6 +555,82 @@ tr:hover td {
   padding: 32px;
   overflow-y: auto;
   background: var(--bg);
+}
+
+.slide-left {
+  opacity: 0;
+  transform: translateX(-20px);
+  animation: slideFromLeft 0.55s ease-out forwards;
+}
+
+.first-select {
+  animation-delay: 0.1s;
+}
+
+.second-select {
+  animation-delay: 0.2s;
+}
+
+.third-select {
+  animation-delay: 0.3s;
+}
+
+.fourth-select {
+  animation-delay: 0.4s;
+}
+
+.fivth-select {
+  animation-delay: 0.5s;
+}
+
+@keyframes slideFromLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.slide-right {
+  opacity: 0;
+  transform: translateX(20px);
+  animation: slideFromRight 0.55s ease-out forwards;
+}
+
+.first-select {
+  animation-delay: 0.1s;
+}
+
+.second-select {
+  animation-delay: 0.2s;
+}
+
+.third-select {
+  animation-delay: 0.3s;
+}
+
+.fourth-select {
+  animation-delay: 0.4s;
+}
+
+.fivth-select {
+  animation-delay: 0.5s;
+}
+
+@keyframes slideFromRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 @media (max-width: 768px) {

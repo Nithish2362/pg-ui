@@ -2,15 +2,23 @@
 
 :root {
   /* Sidebar tokens */
-  --sidebar-bg:     #000000;
-  --sidebar-hover:  #1a1a1a;
+  --sidebar-bg: #000000;
+  --sidebar-hover: #1a1a1a;
   --sidebar-active: #c5a059;
 
   /* Aliases for any legacy component references */
-  --accent:         var(--gold);
-  --card:           #ffffff;
-  --text:           #1a1a1a;
-  --border:         #ebebeb;
-  --success:        #2f9e44;
-  --danger:         #e03131;
+  --accent: var(--gold);
+  --card: #ffffff;
+  --text: #1a1a1a;
+  --border: #ebebeb;
+  --success: #2f9e44;
+  --danger: #e03131;
+}
+
+.mantine-Select-input:disabled {
+  background: white !important;
+  color: #1a1a1a !important;
+  opacity: 1 !important;
+  border-color: #e5e5e5 !important;
+  box-shadow: none !important;
 }
